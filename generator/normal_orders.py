@@ -9,7 +9,6 @@ from .config import (
 
 from .ids import make_order_id
 
-
 rng = np.random.default_rng(SEED)
 
 
@@ -76,18 +75,14 @@ def random_datetime_after(start, end):
     if start >= end:
         return start
 
-    seconds = int(
-        (end - start).total_seconds()
-    )
+    seconds = int((end - start).total_seconds())
 
     offset = rng.integers(
         0,
         seconds + 1,
     )
 
-    return start + pd.Timedelta(
-        seconds=int(offset)
-    )
+    return start + pd.Timedelta(seconds=int(offset))
 
 
 def assign_entities(
@@ -105,21 +100,13 @@ def assign_entities(
     account creation timestamp are eligible.
     """
 
-    available_devices = devices[
-        devices["first_seen_at"] <= account_created
-    ]
+    available_devices = devices[devices["first_seen_at"] <= account_created]
 
-    available_addresses = addresses[
-        addresses["first_seen_at"] <= account_created
-    ]
+    available_addresses = addresses[addresses["first_seen_at"] <= account_created]
 
-    available_phones = phones[
-        phones["first_seen_at"] <= account_created
-    ]
+    available_phones = phones[phones["first_seen_at"] <= account_created]
 
-    available_instruments = instruments[
-        instruments["first_seen_at"] <= account_created
-    ]
+    available_instruments = instruments[instruments["first_seen_at"] <= account_created]
 
     # If not enough entities existed yet,
     # fall back to earliest available entities.
@@ -162,37 +149,25 @@ def assign_entities(
         len(available_instruments),
     )
 
-    selected_devices = (
-        available_devices.sample(
-            n=n_devices,
-            random_state=int(rng.integers(0, 1_000_000)),
-        )["device_id"]
-        .tolist()
-    )
+    selected_devices = available_devices.sample(
+        n=n_devices,
+        random_state=int(rng.integers(0, 1_000_000)),
+    )["device_id"].tolist()
 
-    selected_addresses = (
-        available_addresses.sample(
-            n=n_addresses,
-            random_state=int(rng.integers(0, 1_000_000)),
-        )["address_id"]
-        .tolist()
-    )
+    selected_addresses = available_addresses.sample(
+        n=n_addresses,
+        random_state=int(rng.integers(0, 1_000_000)),
+    )["address_id"].tolist()
 
-    selected_phone = (
-        available_phones.sample(
-            n=1,
-            random_state=int(rng.integers(0, 1_000_000)),
-        )["phone_hash"]
-        .tolist()
-    )
+    selected_phone = available_phones.sample(
+        n=1,
+        random_state=int(rng.integers(0, 1_000_000)),
+    )["phone_hash"].tolist()
 
-    selected_instruments = (
-        available_instruments.sample(
-            n=n_instruments,
-            random_state=int(rng.integers(0, 1_000_000)),
-        )["instrument_id"]
-        .tolist()
-    )
+    selected_instruments = available_instruments.sample(
+        n=n_instruments,
+        random_state=int(rng.integers(0, 1_000_000)),
+    )["instrument_id"].tolist()
 
     return {
         "devices": selected_devices,
@@ -207,13 +182,9 @@ def get_entity_first_seen(
     id_column,
     entity_id,
 ):
-    row = entity_df[
-        entity_df[id_column] == entity_id
-    ]
+    row = entity_df[entity_df[id_column] == entity_id]
 
-    return pd.Timestamp(
-        row.iloc[0]["first_seen_at"]
-    )
+    return pd.Timestamp(row.iloc[0]["first_seen_at"])
 
 
 def generate_order_amount(category):
@@ -258,9 +229,7 @@ def generate_discount(amount):
         return discount_amount, coupon_code
 
     # ~2% rare coupon
-    coupon_code = (
-        f"RARE_{rng.integers(100, 1000)}"
-    )
+    coupon_code = f"RARE_{rng.integers(100, 1000)}"
 
     discount_pct = rng.uniform(
         0.20,
@@ -282,21 +251,14 @@ def generate_delivery(order_timestamp):
     # 90% delivered
     if roll < 0.90:
 
-        delivery_timestamp = (
-            order_timestamp
-            + pd.Timedelta(
-                days=int(
-                    rng.integers(1, 5)
-                )
-            )
+        delivery_timestamp = order_timestamp + pd.Timedelta(
+            days=int(rng.integers(1, 5))
         )
 
         return {
             "delivery_status": "delivered",
             "delivery_timestamp": delivery_timestamp,
-            "delivery_attempts": int(
-                rng.integers(1, 4)
-            ),
+            "delivery_attempts": int(rng.integers(1, 4)),
             "rto_flag": False,
         }
 
@@ -306,9 +268,7 @@ def generate_delivery(order_timestamp):
         return {
             "delivery_status": "pending",
             "delivery_timestamp": pd.NaT,
-            "delivery_attempts": int(
-                rng.integers(1, 3)
-            ),
+            "delivery_attempts": int(rng.integers(1, 3)),
             "rto_flag": False,
         }
 
@@ -316,9 +276,7 @@ def generate_delivery(order_timestamp):
     return {
         "delivery_status": "failed",
         "delivery_timestamp": pd.NaT,
-        "delivery_attempts": int(
-            rng.integers(1, 3)
-        ),
+        "delivery_attempts": int(rng.integers(1, 3)),
         "rto_flag": True,
     }
 
@@ -333,9 +291,7 @@ def generate_normal_orders(
 
     # CRITICAL:
     # Ring and hard-negative accounts are excluded.
-    normal_accounts = accounts[
-        accounts["population_type"] == "normal"
-    ].copy()
+    normal_accounts = accounts[accounts["population_type"] == "normal"].copy()
 
     orders = []
 
@@ -355,9 +311,7 @@ def generate_normal_orders(
 
         account_id = account["account_id"]
 
-        account_created = pd.Timestamp(
-            account["account_created_at"]
-        )
+        account_created = pd.Timestamp(account["account_created_at"])
 
         account_entities = assign_entities(
             account_created,
@@ -370,21 +324,13 @@ def generate_normal_orders(
         for _ in range(n_orders):
 
             # Choose entities for this order.
-            device_id = rng.choice(
-                account_entities["devices"]
-            )
+            device_id = rng.choice(account_entities["devices"])
 
-            address_id = rng.choice(
-                account_entities["addresses"]
-            )
+            address_id = rng.choice(account_entities["addresses"])
 
-            phone_hash = rng.choice(
-                account_entities["phones"]
-            )
+            phone_hash = rng.choice(account_entities["phones"])
 
-            instrument_id = rng.choice(
-                account_entities["instruments"]
-            )
+            instrument_id = rng.choice(account_entities["instruments"])
 
             # Find when those entities first existed.
             device_first_seen = get_entity_first_seen(
@@ -433,23 +379,15 @@ def generate_normal_orders(
             )
 
             # Amount
-            amount = generate_order_amount(
-                category
-            )
+            amount = generate_order_amount(category)
 
             # Discount
-            discount_amount, coupon_code = (
-                generate_discount(amount)
-            )
+            discount_amount, coupon_code = generate_discount(amount)
 
             # Delivery
-            delivery = generate_delivery(
-                order_timestamp
-            )
+            delivery = generate_delivery(order_timestamp)
 
-            order_id = make_order_id(
-                order_counter
-            )
+            order_id = make_order_id(order_counter)
 
             order_counter += 1
 
@@ -457,48 +395,32 @@ def generate_normal_orders(
                 {
                     "order_id": order_id,
                     "account_id": account_id,
-
                     "device_id": device_id,
                     "address_id": address_id,
                     "phone_hash": phone_hash,
                     "instrument_id": instrument_id,
-
                     "amount": amount,
                     "discount_amount": discount_amount,
                     "coupon_code": coupon_code,
-
                     "category": category,
-
                     "order_timestamp": order_timestamp,
-
-                    "delivery_status":
-                        delivery["delivery_status"],
-
-                    "delivery_attempts":
-                        delivery["delivery_attempts"],
-
-                    "delivery_timestamp":
-                        delivery["delivery_timestamp"],
-
-                    "rto_flag":
-                        delivery["rto_flag"],
-
+                    "delivery_status": delivery["delivery_status"],
+                    "delivery_attempts": delivery["delivery_attempts"],
+                    "delivery_timestamp": delivery["delivery_timestamp"],
+                    "rto_flag": delivery["rto_flag"],
                     # These remain untouched until
                     # refunds_disputes.py.
                     "return_flag": False,
                     "return_reason_code": None,
                     "return_timestamp": pd.NaT,
                     "return_lag_hours": None,
-
                     "refund_flag": False,
                     "refund_amount": None,
                     "refund_timestamp": pd.NaT,
-
                     "dispute_flag": False,
                     "dispute_phase": None,
                     "dispute_reason_code": None,
                     "dispute_reason_category": None,
-
                     # Evidence will be populated later.
                     "evidence_availability": None,
                 }
@@ -530,10 +452,7 @@ def main():
         index=False,
     )
 
-    print(
-        f"Normal orders generated: "
-        f"{len(orders_df):,}"
-    )
+    print(f"Normal orders generated: " f"{len(orders_df):,}")
 
 
 if __name__ == "__main__":

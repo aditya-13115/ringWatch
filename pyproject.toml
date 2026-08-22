@@ -9,3 +9,8 @@ dependencies = [
     "numpy>=2.5.2",
     "pandas>=3.0.5",
 ]
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+]

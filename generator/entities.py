@@ -30,7 +30,6 @@ from .ids import (
     make_instrument_hash,
 )
 
-
 fake = Faker("en_IN")
 fake.seed_instance(SEED)
 
@@ -55,16 +54,11 @@ def get_population_type(account_index):
     if RING_ACCOUNT_START <= account_index <= RING_ACCOUNT_END:
         return "ring"
 
-    if (
-        HARD_NEGATIVE_ACCOUNT_START
-        <= account_index
-        <= HARD_NEGATIVE_ACCOUNT_END
-    ):
+    if HARD_NEGATIVE_ACCOUNT_START <= account_index <= HARD_NEGATIVE_ACCOUNT_END:
         return "hard_negative"
 
     raise ValueError(
-        f"Account index {account_index} "
-        "does not belong to a valid population range."
+        f"Account index {account_index} " "does not belong to a valid population range."
     )
 
 
@@ -74,10 +68,7 @@ def generate_accounts():
     account_start = pd.Timestamp(START_DATE)
 
     # Keep normal accounts available for ordinary behaviour.
-    account_end = (
-        pd.Timestamp(END_DATE)
-        - pd.Timedelta(days=30)
-    )
+    account_end = pd.Timestamp(END_DATE) - pd.Timedelta(days=30)
 
     customer_types = [
         "regular",
@@ -98,26 +89,21 @@ def generate_accounts():
         rows.append(
             {
                 "account_id": make_account_id(i),
-
                 "account_created_at": random_datetime(
                     account_start,
                     account_end,
                 ),
-
                 "customer_type": rng.choice(
                     customer_types,
                     p=probabilities,
                 ),
-
                 "population_type": population_type,
             }
         )
 
     df = pd.DataFrame(rows)
 
-    df = df.sort_values(
-        "account_id"
-    ).reset_index(drop=True)
+    df = df.sort_values("account_id").reset_index(drop=True)
 
     return df
 
@@ -174,15 +160,9 @@ def generate_devices():
             p=os_probabilities,
         )
 
-        browser_family = rng.choice(
-            browser_by_os[os_family]
-        )
+        browser_family = rng.choice(browser_by_os[os_family])
 
-        ip_prefix = (
-            f"10."
-            f"{rng.integers(0, 256)}."
-            f"{rng.integers(0, 256)}.0/24"
-        )
+        ip_prefix = f"10." f"{rng.integers(0, 256)}." f"{rng.integers(0, 256)}.0/24"
 
         rows.append(
             {
@@ -240,10 +220,8 @@ def generate_addresses():
                 "canonical_address": address,
                 "city": city,
                 "pincode": pincode,
-
                 # Ring injection can update this later.
                 "is_drop_address": False,
-
                 "first_seen_at": random_datetime(
                     START_DATE,
                     END_DATE,
@@ -299,12 +277,8 @@ def generate_payment_instruments():
         rows.append(
             {
                 "instrument_id": make_instrument_id(i),
-
                 "instrument_type": instrument_type,
-
-                "bin_or_vpa_hash":
-                    make_instrument_hash(i),
-
+                "bin_or_vpa_hash": make_instrument_hash(i),
                 "first_seen_at": random_datetime(
                     START_DATE,
                     END_DATE,

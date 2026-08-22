@@ -27,5 +27,22 @@ def make_instrument_hash(i: int) -> str:
     return hashlib.sha256(value.encode()).hexdigest()[:16]
 
 
-def make_order_id(i):
+def make_order_id(i: int) -> str:
     return f"ORD{i:07d}"
+
+
+# ============================================================
+# DAY 3 IDs
+# ============================================================
+
+
+def make_refund_id(i: int) -> str:
+    return f"REF{i:07d}"
+
+
+def make_dispute_id(i: int) -> str:
+    return f"DIS{i:07d}"
+
+
+def make_ring_id(i: int) -> str:
+    return f"R{i:03d}"

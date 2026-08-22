@@ -12,8 +12,7 @@ def check_unique(df, column, table_name):
 
     if duplicates > 0:
         raise ValueError(
-            f"{table_name}.{column}: "
-            f"{duplicates} duplicate values found."
+            f"{table_name}.{column}: " f"{duplicates} duplicate values found."
         )
 
 
@@ -27,8 +26,7 @@ def check_timestamps(df, column, table_name):
 
     if invalid > 0:
         raise ValueError(
-            f"{table_name}.{column}: "
-            f"{invalid} timestamps outside dataset window."
+            f"{table_name}.{column}: " f"{invalid} timestamps outside dataset window."
         )
 
 
@@ -37,9 +35,7 @@ def validate_entities():
     devices = pd.read_csv(PATHS["devices"])
     addresses = pd.read_csv(PATHS["addresses"])
     phones = pd.read_csv(PATHS["phones"])
-    instruments = pd.read_csv(
-        PATHS["payment_instruments"]
-    )
+    instruments = pd.read_csv(PATHS["payment_instruments"])
 
     tables = {
         "accounts": accounts,
@@ -92,10 +88,7 @@ def validate_entities():
 
         for column in columns:
             if column not in df.columns:
-                raise ValueError(
-                    f"Missing column: "
-                    f"{table_name}.{column}"
-                )
+                raise ValueError(f"Missing column: " f"{table_name}.{column}")
 
     # Unique IDs
     check_unique(
@@ -158,10 +151,7 @@ def validate_entities():
         if df.isnull().any().any():
             null_count = int(df.isnull().sum().sum())
 
-            raise ValueError(
-                f"{table_name}: "
-                f"{null_count} null values found."
-            )
+            raise ValueError(f"{table_name}: " f"{null_count} null values found.")
 
     # Valid categorical values
     valid_customer_types = {
@@ -170,12 +160,8 @@ def validate_entities():
         "guest",
     }
 
-    if not set(accounts["customer_type"]).issubset(
-        valid_customer_types
-    ):
-        raise ValueError(
-            "Invalid customer_type found."
-        )
+    if not set(accounts["customer_type"]).issubset(valid_customer_types):
+        raise ValueError("Invalid customer_type found.")
 
     valid_os = {
         "Android",
@@ -185,12 +171,8 @@ def validate_entities():
         "Linux",
     }
 
-    if not set(devices["os_family"]).issubset(
-        valid_os
-    ):
-        raise ValueError(
-            "Invalid os_family found."
-        )
+    if not set(devices["os_family"]).issubset(valid_os):
+        raise ValueError("Invalid os_family found.")
 
     valid_instruments = {
         "card",
@@ -199,21 +181,14 @@ def validate_entities():
         "wallet",
     }
 
-    if not set(
-        instruments["instrument_type"]
-    ).issubset(valid_instruments):
-        raise ValueError(
-            "Invalid instrument_type found."
-        )
+    if not set(instruments["instrument_type"]).issubset(valid_instruments):
+        raise ValueError("Invalid instrument_type found.")
 
     print(f"Accounts:              {len(accounts):,}")
     print(f"Devices:               {len(devices):,}")
     print(f"Addresses:             {len(addresses):,}")
     print(f"Phones:                {len(phones):,}")
-    print(
-        f"Payment instruments:   "
-        f"{len(instruments):,}"
-    )
+    print(f"Payment instruments:   " f"{len(instruments):,}")
 
     print()
     print("Duplicate IDs:         0")
@@ -289,70 +264,42 @@ def validate_orders():
     ]
 
     missing_columns = [
-        column
-        for column in required_columns
-        if column not in orders.columns
+        column for column in required_columns if column not in orders.columns
     ]
 
     if missing_columns:
-        raise AssertionError(
-            f"Missing order columns: "
-            f"{missing_columns}"
-        )
+        raise AssertionError(f"Missing order columns: " f"{missing_columns}")
 
     # --------------------------------------------------------
     # Order ID uniqueness
     # --------------------------------------------------------
 
-    duplicate_orders = (
-        orders["order_id"].duplicated().sum()
-    )
+    duplicate_orders = orders["order_id"].duplicated().sum()
 
     if duplicate_orders:
-        raise AssertionError(
-            f"Duplicate order IDs: "
-            f"{duplicate_orders}"
-        )
+        raise AssertionError(f"Duplicate order IDs: " f"{duplicate_orders}")
 
     # --------------------------------------------------------
     # Foreign keys
     # --------------------------------------------------------
 
-    account_ids = set(
-        accounts["account_id"]
-    )
+    account_ids = set(accounts["account_id"])
 
-    device_ids = set(
-        devices["device_id"]
-    )
+    device_ids = set(devices["device_id"])
 
-    address_ids = set(
-        addresses["address_id"]
-    )
+    address_ids = set(addresses["address_id"])
 
-    phone_ids = set(
-        phones["phone_hash"]
-    )
+    phone_ids = set(phones["phone_hash"])
 
-    instrument_ids = set(
-        instruments["instrument_id"]
-    )
+    instrument_ids = set(instruments["instrument_id"])
 
-    assert set(orders["account_id"]).issubset(
-        account_ids
-    ), "Invalid account_id found."
+    assert set(orders["account_id"]).issubset(account_ids), "Invalid account_id found."
 
-    assert set(orders["device_id"]).issubset(
-        device_ids
-    ), "Invalid device_id found."
+    assert set(orders["device_id"]).issubset(device_ids), "Invalid device_id found."
 
-    assert set(orders["address_id"]).issubset(
-        address_ids
-    ), "Invalid address_id found."
+    assert set(orders["address_id"]).issubset(address_ids), "Invalid address_id found."
 
-    assert set(orders["phone_hash"]).issubset(
-        phone_ids
-    ), "Invalid phone_hash found."
+    assert set(orders["phone_hash"]).issubset(phone_ids), "Invalid phone_hash found."
 
     assert set(orders["instrument_id"]).issubset(
         instrument_ids
@@ -375,9 +322,7 @@ def validate_orders():
         how="left",
     )
 
-    non_normal_orders = merged[
-        merged["population_type"] != "normal"
-    ]
+    non_normal_orders = merged[merged["population_type"] != "normal"]
 
     if len(non_normal_orders) > 0:
         raise AssertionError(
@@ -403,21 +348,12 @@ def validate_orders():
         "delivery_status",
     ]
 
-    null_counts = (
-        orders[required_non_null]
-        .isna()
-        .sum()
-    )
+    null_counts = orders[required_non_null].isna().sum()
 
-    invalid_nulls = (
-        null_counts[null_counts > 0]
-    )
+    invalid_nulls = null_counts[null_counts > 0]
 
     if len(invalid_nulls) > 0:
-        raise AssertionError(
-            f"Required fields contain nulls:\n"
-            f"{invalid_nulls}"
-        )
+        raise AssertionError(f"Required fields contain nulls:\n" f"{invalid_nulls}")
 
     # --------------------------------------------------------
     # Account timestamp consistency
@@ -435,31 +371,23 @@ def validate_orders():
     )
 
     invalid_account_time = merged[
-        merged["order_timestamp"]
-        < merged["account_created_at"]
+        merged["order_timestamp"] < merged["account_created_at"]
     ]
 
     if len(invalid_account_time) > 0:
         raise AssertionError(
-            f"{len(invalid_account_time)} orders "
-            "occur before account creation."
+            f"{len(invalid_account_time)} orders " "occur before account creation."
         )
 
     # --------------------------------------------------------
     # Delivery timestamp consistency
     # --------------------------------------------------------
 
-    delivered = orders[
-        orders["delivery_status"] == "delivered"
-    ]
+    delivered = orders[orders["delivery_status"] == "delivered"]
 
     invalid_delivery = delivered[
         delivered["delivery_timestamp"].isna()
-        |
-        (
-            delivered["delivery_timestamp"]
-            < delivered["order_timestamp"]
-        )
+        | (delivered["delivery_timestamp"] < delivered["order_timestamp"])
     ]
 
     if len(invalid_delivery) > 0:
@@ -469,17 +397,9 @@ def validate_orders():
         )
 
     # Pending/failed orders must not have delivery timestamp.
-    not_delivered = orders[
-        orders["delivery_status"].isin(
-            ["pending", "failed"]
-        )
-    ]
+    not_delivered = orders[orders["delivery_status"].isin(["pending", "failed"])]
 
-    invalid_not_delivered = (
-        not_delivered[
-            not_delivered["delivery_timestamp"].notna()
-        ]
-    )
+    invalid_not_delivered = not_delivered[not_delivered["delivery_timestamp"].notna()]
 
     if len(invalid_not_delivered) > 0:
         raise AssertionError(
@@ -491,18 +411,10 @@ def validate_orders():
     # RTO consistency
     # --------------------------------------------------------
 
-    invalid_rto = orders[
-        (
-            orders["delivery_status"] == "failed"
-        )
-        != orders["rto_flag"]
-    ]
+    invalid_rto = orders[(orders["delivery_status"] == "failed") != orders["rto_flag"]]
 
     if len(invalid_rto) > 0:
-        raise AssertionError(
-            f"{len(invalid_rto)} orders have "
-            "invalid RTO flags."
-        )
+        raise AssertionError(f"{len(invalid_rto)} orders have " "invalid RTO flags.")
 
     # --------------------------------------------------------
     # Distribution report
@@ -510,73 +422,429 @@ def validate_orders():
 
     total_orders = len(orders)
 
-    delivered_count = (
-        orders["delivery_status"]
-        .eq("delivered")
-        .sum()
-    )
+    delivered_count = orders["delivery_status"].eq("delivered").sum()
 
-    pending_count = (
-        orders["delivery_status"]
-        .eq("pending")
-        .sum()
-    )
+    pending_count = orders["delivery_status"].eq("pending").sum()
 
-    failed_count = (
-        orders["delivery_status"]
-        .eq("failed")
-        .sum()
-    )
+    failed_count = orders["delivery_status"].eq("failed").sum()
 
-    print(
-        "-----------------------------------------------"
-    )
+    print("-----------------------------------------------")
 
-    print(
-        f"Orders:                 {total_orders:,}"
-    )
+    print(f"Orders:                 {total_orders:,}")
 
-    print(
-        f"Average orders/account: "
-        f"{total_orders / len(accounts):.2f}"
-    )
+    print(f"Average orders/account: " f"{total_orders / len(accounts):.2f}")
 
-    print(
-        f"Delivered:              "
-        f"{delivered_count / total_orders:.2%}"
-    )
+    print(f"Delivered:              " f"{delivered_count / total_orders:.2%}")
 
-    print(
-        f"Pending:                "
-        f"{pending_count / total_orders:.2%}"
-    )
+    print(f"Pending:                " f"{pending_count / total_orders:.2%}")
 
-    print(
-        f"Failed:                 "
-        f"{failed_count / total_orders:.2%}"
-    )
+    print(f"Failed:                 " f"{failed_count / total_orders:.2%}")
 
-    print(
-        f"Average order value:    "
-        f"₹{orders['amount'].mean():,.2f}"
-    )
+    print(f"Average order value:    " f"₹{orders['amount'].mean():,.2f}")
 
-    print(
-        "\nAverage amount by category:"
-    )
+    print("\nAverage amount by category:")
 
-    print(
-        orders.groupby("category")[
-            "amount"
-        ].mean().round(2)
-    )
+    print(orders.groupby("category")["amount"].mean().round(2))
 
-    print(
-        "\nOrder validation passed."
-    )
+    print("\nOrder validation passed.")
 
     return True
 
+
+# ============================================================
+# DAY 3 VALIDATION
+# ============================================================
+
+
+def validate_day3():
+
+    print("\n")
+    print("=" * 55)
+    print("RINGWATCH DAY-3 DATASET VALIDATION")
+    print("=" * 55)
+
+    accounts = pd.read_csv(
+        PATHS["accounts"],
+        parse_dates=["account_created_at"],
+    )
+
+    devices = pd.read_csv(
+        PATHS["devices"],
+        parse_dates=["first_seen_at"],
+    )
+
+    addresses = pd.read_csv(
+        PATHS["addresses"],
+        parse_dates=["first_seen_at"],
+    )
+
+    phones = pd.read_csv(
+        PATHS["phones"],
+        parse_dates=["first_seen_at"],
+    )
+
+    instruments = pd.read_csv(
+        PATHS["payment_instruments"],
+        parse_dates=["first_seen_at"],
+    )
+
+    orders = pd.read_csv(
+        PATHS["orders"],
+        parse_dates=[
+            "order_timestamp",
+            "delivery_timestamp",
+            "return_timestamp",
+            "refund_timestamp",
+        ],
+    )
+
+    refunds = pd.read_csv(
+        PATHS["refunds"],
+        parse_dates=[
+            "refund_timestamp",
+        ],
+    )
+
+    disputes = pd.read_csv(
+        PATHS["disputes"],
+        parse_dates=[
+            "dispute_created_at",
+            "respond_by",
+        ],
+    )
+
+    ground_truth = pd.read_csv(
+        PATHS["ring_ground_truth"],
+        parse_dates=[
+            "ring_start_time",
+            "ring_end_time",
+        ],
+    )
+
+    # ========================================================
+    # BASIC FILE CHECKS
+    # ========================================================
+
+    required_files = [
+        PATHS["accounts"],
+        PATHS["orders"],
+        PATHS["refunds"],
+        PATHS["disputes"],
+        PATHS["ring_ground_truth"],
+    ]
+
+    for path in required_files:
+
+        if not path.exists():
+            raise FileNotFoundError(f"Missing file: {path}")
+
+    # ========================================================
+    # UNIQUE IDS
+    # ========================================================
+
+    if accounts["account_id"].duplicated().any():
+        raise AssertionError("Duplicate account IDs.")
+
+    if orders["order_id"].duplicated().any():
+        raise AssertionError("Duplicate order IDs.")
+
+    if len(refunds) > 0:
+
+        if refunds["refund_id"].duplicated().any():
+
+            raise AssertionError("Duplicate refund IDs.")
+
+    if len(disputes) > 0:
+
+        if disputes["dispute_id"].duplicated().any():
+
+            raise AssertionError("Duplicate dispute IDs.")
+
+    # ========================================================
+    # FOREIGN KEYS
+    # ========================================================
+
+    account_ids = set(accounts["account_id"])
+
+    order_ids = set(orders["order_id"])
+
+    if not set(orders["account_id"]).issubset(account_ids):
+
+        raise AssertionError("Invalid account FK in orders.")
+    device_ids = set(devices["device_id"])
+
+    address_ids = set(addresses["address_id"])
+
+    phone_ids = set(phones["phone_hash"])
+
+    instrument_ids = set(instruments["instrument_id"])
+
+    if not set(orders["device_id"]).issubset(device_ids):
+        raise AssertionError("Invalid device FK in orders.")
+
+    if not set(orders["address_id"]).issubset(address_ids):
+        raise AssertionError("Invalid address FK in orders.")
+
+    if not set(orders["phone_hash"]).issubset(phone_ids):
+        raise AssertionError("Invalid phone FK in orders.")
+
+    if not set(orders["instrument_id"]).issubset(instrument_ids):
+        raise AssertionError("Invalid instrument FK in orders.")
+
+    if len(refunds) > 0:
+
+        if not set(refunds["order_id"]).issubset(order_ids):
+
+            raise AssertionError("Invalid order FK in refunds.")
+
+        if not set(refunds["account_id"]).issubset(account_ids):
+
+            raise AssertionError("Invalid account FK in refunds.")
+
+    if len(disputes) > 0:
+
+        if not set(disputes["order_id"]).issubset(order_ids):
+
+            raise AssertionError("Invalid order FK in disputes.")
+
+        if not set(disputes["account_id"]).issubset(account_ids):
+
+            raise AssertionError("Invalid account FK in disputes.")
+
+    # ========================================================
+    # REFUND CONSISTENCY
+    # ========================================================
+
+    if len(refunds) > 0:
+
+        refund_orders = orders[orders["order_id"].isin(refunds["order_id"])]
+
+        if not refund_orders["refund_flag"].all():
+
+            raise AssertionError("Refund table contains " "orders without refund_flag.")
+
+    # ========================================================
+    # DISPUTE CONSISTENCY
+    # ========================================================
+
+    if len(disputes) > 0:
+
+        dispute_orders = orders[orders["order_id"].isin(disputes["order_id"])]
+
+        if not dispute_orders["dispute_flag"].all():
+
+            raise AssertionError(
+                "Dispute table contains " "orders without dispute_flag."
+            )
+
+    # ========================================================
+    # TIMESTAMP CHECKS
+    # ========================================================
+
+    invalid_delivery = orders[
+        (orders["delivery_status"] == "delivered")
+        & (orders["delivery_timestamp"] < orders["order_timestamp"])
+    ]
+
+    if len(invalid_delivery) > 0:
+
+        raise AssertionError(f"{len(invalid_delivery)} " "invalid delivery timestamps.")
+
+    returned_orders = orders[orders["return_flag"] == True]
+
+    if len(returned_orders) > 0:
+
+        invalid_returns = returned_orders[
+            returned_orders["return_timestamp"] < returned_orders["delivery_timestamp"]
+        ]
+
+        if len(invalid_returns) > 0:
+
+            raise AssertionError("Invalid return timestamps.")
+
+    refunded_orders = orders[orders["refund_flag"] == True]
+
+    if len(refunded_orders) > 0:
+
+        invalid_refunds = refunded_orders[
+            refunded_orders["refund_timestamp"] < refunded_orders["return_timestamp"]
+        ]
+
+        if len(invalid_refunds) > 0:
+
+            raise AssertionError("Invalid refund timestamps.")
+
+    # ========================================================
+    # DISPUTE TIMESTAMP CHECKS
+    # ========================================================
+
+    if len(disputes) > 0:
+
+        dispute_orders = orders[orders["order_id"].isin(disputes["order_id"])][
+            [
+                "order_id",
+                "refund_timestamp",
+                "delivery_timestamp",
+            ]
+        ]
+
+        dispute_check = disputes.merge(
+            dispute_orders,
+            on="order_id",
+            how="left",
+        )
+
+        # Dispute must occur after refund when
+        # a refund exists, otherwise after delivery.
+        expected_base = dispute_check["refund_timestamp"].where(
+            dispute_check["refund_timestamp"].notna(),
+            dispute_check["delivery_timestamp"],
+        )
+
+        invalid_dispute_created = dispute_check["dispute_created_at"] < expected_base
+
+        if invalid_dispute_created.any():
+            raise AssertionError("Invalid dispute_created_at " "timestamps.")
+
+        invalid_respond_by = disputes["respond_by"] < disputes["dispute_created_at"]
+
+        if invalid_respond_by.any():
+            raise AssertionError("Invalid dispute respond_by " "timestamps.")
+
+    # ========================================================
+    # RING CHECKS
+    # ========================================================
+
+    ring_accounts = accounts[accounts["population_type"] == "ring"]
+
+    true_ring_members = ground_truth[ground_truth["true_ring_member"] == True]
+
+    if len(true_ring_members) != 44:
+
+        raise AssertionError(
+            "Expected 44 true ring members, " f"found {len(true_ring_members)}."
+        )
+
+    ring_orders = orders[orders["account_id"].isin(ring_accounts["account_id"])]
+
+    if len(ring_orders) == 0:
+
+        raise AssertionError("No ring orders found.")
+
+    # ========================================================
+    # HARD NEGATIVE CHECK
+    # ========================================================
+
+    hard_accounts = accounts[accounts["population_type"] == "hard_negative"]
+
+    hard_orders = orders[orders["account_id"].isin(hard_accounts["account_id"])]
+
+    if len(hard_orders) == 0:
+
+        raise AssertionError("No hard-negative orders found.")
+
+    # Hard negatives must NOT be true ring members.
+    hard_truth = ground_truth[
+        ground_truth["account_id"].isin(hard_accounts["account_id"])
+    ]
+
+    if hard_truth["true_ring_member"].any():
+
+        raise AssertionError("Hard-negative account marked " "as true ring member.")
+
+    # ========================================================
+    # RING RELATIONSHIP CHECKS
+    # ========================================================
+
+    wardrobing_ids = true_ring_members[true_ring_members["ring_type"] == "wardrobing"][
+        "account_id"
+    ]
+
+    wardrobing_orders = orders[orders["account_id"].isin(wardrobing_ids)]
+
+    if wardrobing_orders["device_id"].nunique() != 1:
+
+        raise AssertionError("Wardrobing ring does not " "share exactly one device.")
+
+    # Promo ring should share IP through
+    # devices. Merge and check.
+    devices = pd.read_csv(PATHS["devices"])
+
+    promo_ids = true_ring_members[
+        true_ring_members["ring_type"] == "promo_refund_farming"
+    ]["account_id"]
+
+    promo_orders = orders[orders["account_id"].isin(promo_ids)]
+
+    promo_devices = devices[devices["device_id"].isin(promo_orders["device_id"])]
+
+    if promo_devices["ip_prefix"].nunique() != 1:
+
+        raise AssertionError("Promo ring does not share " "one IP prefix.")
+
+    # Friendly fraud shared address
+    # and phone.
+    friendly_ids = true_ring_members[
+        true_ring_members["ring_type"] == "friendly_fraud"
+    ]["account_id"]
+
+    friendly_orders = orders[orders["account_id"].isin(friendly_ids)]
+
+    if friendly_orders["address_id"].nunique() != 1:
+
+        raise AssertionError("Friendly fraud ring does not " "share one address.")
+
+    if friendly_orders["phone_hash"].nunique() != 1:
+
+        raise AssertionError("Friendly fraud ring does not " "share one phone.")
+
+    # ========================================================
+    # REPORT
+    # ========================================================
+
+    print(f"Accounts:              {len(accounts):,}")
+
+    print(f"Orders:                {len(orders):,}")
+
+    print(f"Refunds:               {len(refunds):,}")
+
+    print(f"Disputes:              {len(disputes):,}")
+
+    print()
+
+    print(f"Ring accounts:         {len(ring_accounts):,}")
+
+    print(f"True ring members:     " f"{len(true_ring_members):,}")
+
+    print(f"Hard-negative accounts:" f" {len(hard_accounts):,}")
+
+    print(f"Ring orders:           " f"{len(ring_orders):,}")
+
+    print(f"Hard-negative orders:  " f"{len(hard_orders):,}")
+
+    print()
+
+    print("Foreign-key failures:  0")
+
+    print("Duplicate IDs:         0")
+
+    print("Timestamp violations:  0")
+
+    print()
+
+    if len(orders) > 0:
+
+        print(f"Return rate:           " f"{orders['return_flag'].mean():.2%}")
+
+        print(f"Refund rate:           " f"{orders['refund_flag'].mean():.2%}")
+
+        print(f"Dispute rate:          " f"{orders['dispute_flag'].mean():.2%}")
+
+    print("=" * 55)
+    print("DAY-3 VALIDATION PASSED")
+    print("=" * 55)
+
+    return True
 
 
 if __name__ == "__main__":

@@ -1,15 +1,26 @@
 from pathlib import Path
 
+# ============================================================
+# RANDOM SEED
+# ============================================================
+
 SEED = 42
+
+
+# ============================================================
+# DATASET WINDOW
+# ============================================================
 
 START_DATE = "2026-01-01"
 END_DATE = "2026-03-01"
+
 
 # ============================================================
 # DEBUG DATASET
 # ============================================================
 
 N_ACCOUNTS = 1000
+
 
 # ============================================================
 # ACCOUNT RESERVATION
@@ -24,26 +35,16 @@ RING_ACCOUNT_END = 899
 HARD_NEGATIVE_ACCOUNT_START = 900
 HARD_NEGATIVE_ACCOUNT_END = 999
 
-N_NORMAL_ACCOUNTS = (
-    NORMAL_ACCOUNT_END - NORMAL_ACCOUNT_START + 1
-)
 
-N_RING_RESERVED = (
-    RING_ACCOUNT_END - RING_ACCOUNT_START + 1
-)
+N_NORMAL_ACCOUNTS = NORMAL_ACCOUNT_END - NORMAL_ACCOUNT_START + 1
 
-N_HARD_NEGATIVE_RESERVED = (
-    HARD_NEGATIVE_ACCOUNT_END
-    - HARD_NEGATIVE_ACCOUNT_START
-    + 1
-)
+N_RING_RESERVED = RING_ACCOUNT_END - RING_ACCOUNT_START + 1
 
-assert (
-    N_NORMAL_ACCOUNTS
-    + N_RING_RESERVED
-    + N_HARD_NEGATIVE_RESERVED
-    == N_ACCOUNTS
-)
+N_HARD_NEGATIVE_RESERVED = HARD_NEGATIVE_ACCOUNT_END - HARD_NEGATIVE_ACCOUNT_START + 1
+
+
+assert N_NORMAL_ACCOUNTS + N_RING_RESERVED + N_HARD_NEGATIVE_RESERVED == N_ACCOUNTS
+
 
 # ============================================================
 # OTHER ENTITIES
@@ -53,6 +54,7 @@ N_DEVICES = 1200
 N_ADDRESSES = 600
 N_PHONES = 900
 N_INSTRUMENTS = 1400
+
 
 # ============================================================
 # PATHS
@@ -68,5 +70,10 @@ PATHS = {
     "addresses": DATA_DIR / "addresses.csv",
     "phones": DATA_DIR / "phones.csv",
     "payment_instruments": DATA_DIR / "payment_instruments.csv",
+    # Day 2
     "orders": DATA_DIR / "orders.csv",
+    # Day 3
+    "refunds": DATA_DIR / "refunds.csv",
+    "disputes": DATA_DIR / "disputes.csv",
+    "ring_ground_truth": DATA_DIR / "ring_ground_truth.csv",
 }
