@@ -25,3 +25,7 @@ def make_instrument_id(i: int) -> str:
 def make_instrument_hash(i: int) -> str:
     value = f"ringwatch_instrument_{i}"
     return hashlib.sha256(value.encode()).hexdigest()[:16]
+
+
+def make_order_id(i):
+    return f"ORD{i:07d}"

@@ -68,4 +68,5 @@ PATHS = {
     "addresses": DATA_DIR / "addresses.csv",
     "phones": DATA_DIR / "phones.csv",
     "payment_instruments": DATA_DIR / "payment_instruments.csv",
+    "orders": DATA_DIR / "orders.csv",
 }
