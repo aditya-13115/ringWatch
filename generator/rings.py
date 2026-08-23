@@ -538,7 +538,7 @@ def inject_promo_farming(
     ring_start = pd.Timestamp("2026-01-20 09:00:00")
 
     shared_ip = "10.77.77.0/24"
-    shared_coupon = "RARE_777"
+    shared_coupon = "RING_RARE_777"
 
     instruments, shared_instrument = create_instrument(
         instruments,
@@ -634,6 +634,13 @@ def inject_promo_farming(
 
             order_counter += 1
 
+            # Use the shared rare coupon only once for the first 5 accounts.
+            # All other orders get a normal promo coupon.
+            if idx < 5 and order_num == 0:
+                coupon_code = shared_coupon
+            else:
+                coupon_code = f"PROMO_{rng.integers(1000, 9999)}"
+
             orders.append(
                 build_order(
                     order_id,
@@ -645,7 +652,7 @@ def inject_promo_farming(
                     order_time,
                     amount,
                     discount_amount,
-                    shared_coupon,
+                    coupon_code,
                     category,
                     delivery_time,
                     return_flag,
@@ -817,7 +824,7 @@ def inject_subtle_distributed(
     ring_id = "R004"
     ring_start = pd.Timestamp("2026-02-10")
 
-    shared_coupon = "RARE_555"
+    shared_coupon = "RING_RARE_555"
 
     orders = []
     members = []
@@ -928,6 +935,13 @@ def inject_subtle_distributed(
 
             order_counter += 1
 
+            # Use the shared rare coupon only once for the first 5 accounts.
+            # Other orders have no coupon.
+            if idx < 5 and order_num == 0:
+                coupon_code = shared_coupon
+            else:
+                coupon_code = None
+
             orders.append(
                 build_order(
                     order_id,
@@ -939,7 +953,7 @@ def inject_subtle_distributed(
                     order_time,
                     amount,
                     discount_amount,
-                    shared_coupon,
+                    coupon_code,
                     rng.choice(
                         [
                             "fashion",

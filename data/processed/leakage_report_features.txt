@@ -8,10 +8,10 @@ Max order timestamp used:
 2026-02-19 23:53:57
 
 Max refund timestamp used:
-2026-02-19 22:09:57
+2026-02-19 14:40:48
 
 Max dispute timestamp used:
-2026-02-15 12:54:59
+2026-02-17 17:34:00
 
 Orders after T excluded:
 337

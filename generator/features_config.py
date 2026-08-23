@@ -22,7 +22,55 @@ PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 FEATURES_PATH = PROCESSED_DIR / "features_accounts.csv"
 LEAKAGE_REPORT_PATH = PROCESSED_DIR / "leakage_report_features.txt"
 
-# Raw input paths
+# ------------------------------------------------------------
+# Day 4 / Day 5 Feature Engineering Configuration
+# ------------------------------------------------------------
+
+PREDICTION_CUTOFF = "2026-02-20 00:00:00"
+
+# Project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Raw data directory
+DATA_DIR = PROJECT_ROOT / "data"
+
+# Processed feature output directory
+PROCESSED_DIR = DATA_DIR / "processed"
+
+# Create processed directory automatically
+PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# ============================================================
+# DAY 4 OUTPUT PATHS
+# ============================================================
+
+FEATURES_PATH = PROCESSED_DIR / "features_accounts.csv"
+LEAKAGE_REPORT_PATH = PROCESSED_DIR / "leakage_report_features.txt"
+
+
+# ============================================================
+# DAY 5 OUTPUT PATHS
+# ============================================================
+
+GRAPH_EDGES_PATH = PROCESSED_DIR / "account_graph_edges.csv"
+COMMUNITIES_PATH = PROCESSED_DIR / "communities.csv"
+FEATURES_GRAPH_PATH = PROCESSED_DIR / "features_graph.csv"
+BASELINE_METRICS_PATH = PROCESSED_DIR / "baseline_metrics.json"
+DAY5_LEAKAGE_REPORT_PATH = PROCESSED_DIR / "leakage_report_day5.txt"
+
+
+# ============================================================
+# DAY 5 EVALUATION INPUT
+# ============================================================
+
+GROUND_TRUTH_PATH = DATA_DIR / "ring_ground_truth.csv"
+
+
+# ============================================================
+# RAW INPUT PATHS
+# ============================================================
+
 PATHS = {
     "accounts": DATA_DIR / "accounts.csv",
     "orders": DATA_DIR / "orders.csv",
