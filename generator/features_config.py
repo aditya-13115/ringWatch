@@ -81,3 +81,19 @@ PATHS = {
     "phones": DATA_DIR / "phones.csv",
     "payment_instruments": DATA_DIR / "payment_instruments.csv",
 }
+
+
+# ============================================================
+# DAY 6–7 MODEL OUTPUTS
+# ============================================================
+
+MODEL_DIR = PROCESSED_DIR / "model"
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+MODEL_A_PATH = MODEL_DIR / "model_lgbm_A.pkl"
+MODEL_B_PATH = MODEL_DIR / "model_lgbm_B.pkl"
+
+PREDICTIONS_TEST_PATH = MODEL_DIR / "model_predictions_test.csv"
+MODEL_METRICS_PATH = MODEL_DIR / "model_metrics.json"
+FEATURE_IMPORTANCE_PATH = MODEL_DIR / "model_feature_importance.csv"
+MODEL_LEAKAGE_REPORT_PATH = MODEL_DIR / "model_leakage_report.txt"

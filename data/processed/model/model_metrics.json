@@ -1,0 +1,48 @@
+{
+  "model_A": {
+    "operating_k": 195,
+    "precision": 0.05128205128205128,
+    "recall": 1.0,
+    "f1": 0.0975609756097561,
+    "pr_auc": 0.8243578643578643,
+    "roc_auc": 0.9965156794425087,
+    "tp": 10,
+    "fp": 185,
+    "tn": 102,
+    "fn": 0,
+    "cost": 370000.0
+  },
+  "model_B": {
+    "operating_k": 7,
+    "precision": 0.5714285714285714,
+    "recall": 0.4,
+    "f1": 0.47058823529411764,
+    "pr_auc": 0.6631845931845931,
+    "roc_auc": 0.9902439024390244,
+    "tp": 4,
+    "fp": 3,
+    "tn": 284,
+    "fn": 6,
+    "cost": 96000.0
+  },
+  "baseline": {
+    "precision": 0.4375,
+    "recall": 0.7,
+    "f1": 0.5384615384615384,
+    "tp": 7,
+    "fp": 9,
+    "tn": 278,
+    "fn": 3,
+    "cost": 63000.0
+  },
+  "validation": {
+    "operating_k_A": 195,
+    "operating_k_B": 7,
+    "validation_recall_A": 1.0,
+    "validation_recall_B": 1.0,
+    "validation_precision_A": 0.03076923076923077,
+    "validation_precision_B": 0.8571428571428571,
+    "validation_cost_A": 378000.0,
+    "validation_cost_B": 2000.0
+  }
+}

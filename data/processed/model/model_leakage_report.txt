@@ -1,0 +1,27 @@
+RingWatch — Model Leakage Report
+====================================
+
+Prediction cutoff:
+2026-02-20 00:00:00
+
+Train/Validation/Test split:
+  Train:        ['R001', 'R002'] + 478 non-ring accounts
+  Validation:   ['R003'] + 191 non-ring accounts
+  Test:         ['R004'] + 287 non-ring accounts
+
+Train positives:        28
+Validation positives:   6
+Test positives:         10
+
+Ring-aware split: YES
+Top-K operating point selected on validation only: YES
+Ground truth used only after feature generation: YES
+No future events used: YES
+
+Model A: Day 4 behavioral + identity features only.
+Model B: Day 5 behavioral + identity + graph features.
+
+Probability threshold calibration: NOT USED.
+Rank-based top-K operating point: YES.
+
+LEAKAGE CHECK: PASSED
