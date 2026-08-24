@@ -1,0 +1,8 @@
+timestamp,account_id,model_version,proba,rank,risk_tier,top_k_flag,action_recommended,case_report_generated
+2026-08-24 18:32:07.424554,A000529,LightGBM_Model_B,0.009550332617597159,1,CRITICAL,True,CRITICAL: recommend human review + soft-hold refunds,True
+2026-08-24 18:32:07.424554,A000842,LightGBM_Model_B,0.00014956609131264734,2,HIGH,True,HIGH: recommend human review,True
+2026-08-24 18:32:07.424554,A000841,LightGBM_Model_B,0.0001488728769200691,3,MEDIUM,True,MEDIUM: recommend step-up verification on refund,True
+2026-08-24 18:32:07.424554,A000836,LightGBM_Model_B,0.00013588677539276775,4,MEDIUM,True,MEDIUM: recommend step-up verification on refund,True
+2026-08-24 18:32:07.424554,A000838,LightGBM_Model_B,0.00013588677539276775,5,MEDIUM,True,MEDIUM: recommend step-up verification on refund,True
+2026-08-24 18:32:07.424554,A000902,LightGBM_Model_B,0.00012046933398434798,6,LOW,True,LOW: monitor — no immediate refund action,True
+2026-08-24 18:32:07.424554,A000073,LightGBM_Model_B,0.00010754374802900233,7,LOW,True,LOW: monitor — no immediate refund action,True

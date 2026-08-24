@@ -97,3 +97,24 @@ PREDICTIONS_TEST_PATH = MODEL_DIR / "model_predictions_test.csv"
 MODEL_METRICS_PATH = MODEL_DIR / "model_metrics.json"
 FEATURE_IMPORTANCE_PATH = MODEL_DIR / "model_feature_importance.csv"
 MODEL_LEAKAGE_REPORT_PATH = MODEL_DIR / "model_leakage_report.txt"
+
+
+# ============================================================
+# DAY 8–9 — EXPLAINABILITY
+# ============================================================
+
+EXPLAINABILITY_DIR = PROCESSED_DIR / "explainability"
+EXPLAINABILITY_DIR.mkdir(parents=True, exist_ok=True)
+
+SHAP_VALUES_PATH = EXPLAINABILITY_DIR / "shap_values_test.csv"
+SHAP_SUMMARY_PATH = EXPLAINABILITY_DIR / "shap_summary.png"
+
+EVIDENCE_GAP_PATH = EXPLAINABILITY_DIR / "evidence_gap_test.csv"
+
+GRAPH_EVIDENCE_PATH = EXPLAINABILITY_DIR / "graph_evidence_test.csv"
+
+CASE_REPORTS_PATH = EXPLAINABILITY_DIR / "case_reports_test.csv"
+
+BOUNDED_ACTIONS_PATH = EXPLAINABILITY_DIR / "bounded_actions_test.csv"
+
+AUDIT_LOG_PATH = EXPLAINABILITY_DIR / "investigation_audit_log.csv"

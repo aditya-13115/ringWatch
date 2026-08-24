@@ -1,0 +1,246 @@
+account_id,rank,proba,case_report_text
+A000073,7,0.00010754374802900233,"Account ID: A000073
+Risk score (Model B): 0.000108
+Investigation rank: 7 / top-7
+
+Observed facts:
+  total_orders: 2.0
+  return_rate: 0.5
+  refund_rate: 0.5
+  dispute_rate: 0.0
+  shared_device_count: 3.0
+  shared_ip_prefix_count: 0.0
+  community_size: 41
+
+Top model contributors:
+  refund_rate: 3.339907 (increased model risk)
+  shared_edge_weight_sum: 2.345106 (increased model risk)
+  total_returns: 1.326280 (increased model risk)
+  account_age_days: -1.199606 (decreased model risk)
+  accounts_per_address: -1.072243 (decreased model risk)
+
+Graph evidence:
+  shares_phone -> A000000
+  shares_phone -> A000008
+  shares_phone -> A000032
+  shares_phone -> A000061
+  shares_payment_instrument -> A000095
+  shares_device -> A000096
+  shares_phone -> A000118
+  shares_phone -> A000140
+  shares_address -> A000225
+  shares_phone -> A000270
+  shares_address -> A000349
+  shares_address -> A000375
+  shares_device -> A000450
+  shares_address -> A000501
+  shares_phone -> A000510
+  shares_address -> A000577
+  shares_device -> A000587
+  shares_phone -> A000686
+  shares_address -> A000715
+  shares_phone -> A000738
+  shares_payment_instrument -> A000767
+
+Evidence status:
+  No dispute observed at prediction cutoff.
+
+Recommended action:
+  LOW: monitor — no immediate refund action"
+A000529,1,0.009550332617597159,"Account ID: A000529
+Risk score (Model B): 0.009550
+Investigation rank: 1 / top-7
+
+Observed facts:
+  total_orders: 2.0
+  return_rate: 0.5
+  refund_rate: 0.5
+  dispute_rate: 0.0
+  shared_device_count: 3.0
+  shared_ip_prefix_count: 1.0
+  community_size: 57
+
+Top model contributors:
+  refund_rate: 3.661342 (increased model risk)
+  shared_edge_weight_sum: 3.282579 (increased model risk)
+  total_returns: 1.365602 (increased model risk)
+  return_rate: 1.304238 (increased model risk)
+  accounts_per_address: -1.065398 (decreased model risk)
+
+Graph evidence:
+  shares_device -> A000003
+  shares_address -> A000004
+  shares_phone -> A000013
+  shares_address -> A000068
+  shares_address -> A000079
+  shares_phone -> A000163
+  shares_device -> A000383
+  shares_address -> A000467
+  shares_address -> A000481
+  shares_payment_instrument -> A000513
+  shares_phone -> A000597
+  shares_payment_instrument -> A000642
+  shares_address -> A000664
+  shares_device -> A000759
+
+Evidence status:
+  No dispute observed at prediction cutoff.
+
+Recommended action:
+  CRITICAL: recommend human review + soft-hold refunds"
+A000836,4,0.00013588677539276775,"Account ID: A000836
+Risk score (Model B): 0.000136
+Investigation rank: 4 / top-7
+
+Observed facts:
+  total_orders: 3.0
+  return_rate: 0.6666666666666666
+  refund_rate: 0.6666666666666666
+  dispute_rate: 0.0
+  shared_device_count: 0.0
+  shared_ip_prefix_count: 0.0
+  community_size: 5
+
+Top model contributors:
+  total_returns: 2.545089 (increased model risk)
+  shared_edge_weight_sum: -2.506567 (decreased model risk)
+  refund_rate: 1.698343 (increased model risk)
+  accounts_per_address: 1.312313 (increased model risk)
+  community_return_rate: 1.021740 (increased model risk)
+
+Graph evidence:
+  shares_coupon -> A000834
+  shares_coupon -> A000835
+  shares_coupon -> A000837
+  shares_coupon -> A000838
+
+Evidence status:
+  No dispute observed at prediction cutoff.
+
+Recommended action:
+  MEDIUM: recommend step-up verification on refund"
+A000838,5,0.00013588677539276775,"Account ID: A000838
+Risk score (Model B): 0.000136
+Investigation rank: 5 / top-7
+
+Observed facts:
+  total_orders: 3.0
+  return_rate: 0.6666666666666666
+  refund_rate: 0.6666666666666666
+  dispute_rate: 0.0
+  shared_device_count: 0.0
+  shared_ip_prefix_count: 0.0
+  community_size: 5
+
+Top model contributors:
+  total_returns: 2.545089 (increased model risk)
+  shared_edge_weight_sum: -2.506567 (decreased model risk)
+  refund_rate: 1.698343 (increased model risk)
+  accounts_per_address: 1.312313 (increased model risk)
+  community_return_rate: 1.021740 (increased model risk)
+
+Graph evidence:
+  shares_coupon -> A000834
+  shares_coupon -> A000835
+  shares_coupon -> A000836
+  shares_coupon -> A000837
+
+Evidence status:
+  No dispute observed at prediction cutoff.
+
+Recommended action:
+  MEDIUM: recommend step-up verification on refund"
+A000841,3,0.0001488728769200691,"Account ID: A000841
+Risk score (Model B): 0.000149
+Investigation rank: 3 / top-7
+
+Observed facts:
+  total_orders: 3.0
+  return_rate: 0.6666666666666666
+  refund_rate: 0.6666666666666666
+  dispute_rate: 0.0
+  shared_device_count: 0.0
+  shared_ip_prefix_count: 0.0
+  community_size: 1
+
+Top model contributors:
+  total_returns: 2.544483 (increased model risk)
+  shared_edge_weight_sum: -2.507058 (decreased model risk)
+  refund_rate: 1.698312 (increased model risk)
+  accounts_per_address: 1.316620 (increased model risk)
+  community_return_rate: 1.015725 (increased model risk)
+
+Graph evidence:
+  No graph relationships observed.
+
+Evidence status:
+  No dispute observed at prediction cutoff.
+
+Recommended action:
+  MEDIUM: recommend step-up verification on refund"
+A000842,2,0.00014956609131264734,"Account ID: A000842
+Risk score (Model B): 0.000150
+Investigation rank: 2 / top-7
+
+Observed facts:
+  total_orders: 3.0
+  return_rate: 0.6666666666666666
+  refund_rate: 0.6666666666666666
+  dispute_rate: 0.0
+  shared_device_count: 0.0
+  shared_ip_prefix_count: 0.0
+  community_size: 1
+
+Top model contributors:
+  total_returns: 2.544483 (increased model risk)
+  shared_edge_weight_sum: -2.506360 (decreased model risk)
+  refund_rate: 1.698343 (increased model risk)
+  accounts_per_address: 1.317590 (increased model risk)
+  community_return_rate: 1.015719 (increased model risk)
+
+Graph evidence:
+  No graph relationships observed.
+
+Evidence status:
+  No dispute observed at prediction cutoff.
+
+Recommended action:
+  HIGH: recommend human review"
+A000902,6,0.00012046933398434798,"Account ID: A000902
+Risk score (Model B): 0.000120
+Investigation rank: 6 / top-7
+
+Observed facts:
+  total_orders: 3.0
+  return_rate: 0.0
+  refund_rate: 0.0
+  dispute_rate: 0.0
+  shared_device_count: 3.0
+  shared_ip_prefix_count: 11.0
+  community_size: 12
+
+Top model contributors:
+  shared_ip_prefix_count: 5.970040 (increased model risk)
+  community_return_rate: 1.026559 (increased model risk)
+  shared_edge_weight_sum: -0.793851 (decreased model risk)
+  clustering_coefficient: -0.380577 (decreased model risk)
+  community_avg_order_value: -0.318116 (decreased model risk)
+
+Graph evidence:
+  shares_ip_prefix -> A000800
+  shares_ip_prefix -> A000801
+  shares_ip_prefix -> A000802
+  shares_ip_prefix -> A000803
+  shares_ip_prefix -> A000804
+  shares_ip_prefix -> A000805
+  shares_ip_prefix -> A000806
+  shares_ip_prefix -> A000807
+  shares_device -> A000900
+  shares_device -> A000901
+  shares_device -> A000903
+
+Evidence status:
+  No dispute observed at prediction cutoff.
+
+Recommended action:
+  LOW: monitor — no immediate refund action"

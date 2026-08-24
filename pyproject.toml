@@ -8,10 +8,12 @@ dependencies = [
     "faker>=40.37.0",
     "ipykernel>=7.3.0",
     "lightgbm>=4.7.0",
+    "matplotlib>=3.11.1",
     "numpy>=2.5.2",
     "pandas>=3.0.5",
     "python-louvain>=0.16",
     "scikit-learn>=1.9.0",
+    "shap>=0.52.0",
 ]
 
 [dependency-groups]

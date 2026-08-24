@@ -1,0 +1,8 @@
+account_id,rank,proba,risk_tier,recommended_action
+A000529,1,0.009550332617597159,CRITICAL,CRITICAL: recommend human review + soft-hold refunds
+A000842,2,0.00014956609131264734,HIGH,HIGH: recommend human review
+A000841,3,0.0001488728769200691,MEDIUM,MEDIUM: recommend step-up verification on refund
+A000836,4,0.00013588677539276775,MEDIUM,MEDIUM: recommend step-up verification on refund
+A000838,5,0.00013588677539276775,MEDIUM,MEDIUM: recommend step-up verification on refund
+A000902,6,0.00012046933398434798,LOW,LOW: monitor — no immediate refund action
+A000073,7,0.00010754374802900233,LOW,LOW: monitor — no immediate refund action
