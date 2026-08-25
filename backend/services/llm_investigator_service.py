@@ -1,76 +1,379 @@
+import json
 import uuid
 from datetime import datetime, timezone
+from typing import Any
+
+import pandas as pd
+from groq import AsyncGroq
 
 from backend.core.config import get_settings
 from backend.core.concurrency import LLM_SEMAPHORE
+from backend.core.exceptions import LLMServiceError
 from backend.repositories.explainability_repository import ExplainabilityRepository
 from backend.repositories.feature_repository import FeatureRepository
 from backend.services.action_service import ActionService
 
 
 class LLMInvestigatorService:
-    def __init__(self, explainability_repo, feature_repo, action_service):
+    def __init__(
+        self,
+        explainability_repo: ExplainabilityRepository,
+        feature_repo: FeatureRepository,
+        action_service: ActionService,
+    ):
         self.explainability_repo = explainability_repo
         self.feature_repo = feature_repo
         self.action_service = action_service
         self.settings = get_settings()
+        self.client = AsyncGroq(api_key=self.settings.groq_api_key)
 
     async def investigate(self, account_id: str) -> dict:
         async with LLM_SEMAPHORE:
-            # Check if API key exists
-            if not self.settings.anthropic_api_key:
-                # Fallback deterministic report
-                return self._fallback_deterministic(account_id)
+            try:
+                return await self._run_groq_investigation(account_id)
+            except Exception:
+                # Fallback to deterministic report if LLM fails
+                return await self._fallback_deterministic(account_id)
 
-            # Real LLM implementation would go here.
-            # For now, we return a stub with deterministic content.
-            return self._fallback_deterministic(account_id)
+    async def _run_groq_investigation(self, account_id: str) -> dict:
+        if not self.settings.groq_api_key:
+            return await self._fallback_deterministic(account_id)
 
-    def _fallback_deterministic(self, account_id: str) -> dict:
-        # Gather data from repositories
-        actions_df = self.explainability_repo.get_actions()
-        reports_df = self.explainability_repo.get_reports()
-        evidence_df = self.explainability_repo.get_evidence()
-        graph_df = self.explainability_repo.get_graph_evidence()
-        shap_df = self.explainability_repo.get_shap()
-        features_df = self.feature_repo.get_features()
-
-        row = actions_df[actions_df["account_id"] == account_id].iloc[0]
-        report_row = reports_df[reports_df["account_id"] == account_id].iloc[0]
-        evidence_row = evidence_df[evidence_df["account_id"] == account_id].iloc[0]
-        graph_row = graph_df[graph_df["account_id"] == account_id].iloc[0]
-        shap_row = shap_df[shap_df["account_id"] == account_id].iloc[0]
-        feat_row = features_df[features_df["account_id"] == account_id].iloc[0]
-
-        # Generate simple summary from deterministic data
-        summary = f"Account {account_id} is ranked #{row['rank']} with risk tier {row['risk_tier']}."
-        key_findings = [
-            f"Graph links: {graph_row['total_graph_links']}",
-            f"Risk score: {row['proba']:.6f}",
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_related_accounts",
+                    "description": "Get accounts related to the given account via graph edges.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "account_id": {"type": "string"}
+                        },
+                        "required": ["account_id"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_shared_attributes",
+                    "description": "Get shared entities (device, address, phone, instrument) for a set of account IDs.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "account_ids": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            }
+                        },
+                        "required": ["account_ids"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "check_evidence_availability",
+                    "description": "Check which Razorpay evidence fields are available/missing for an account.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "account_id": {"type": "string"}
+                        },
+                        "required": ["account_id"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_financial_exposure",
+                    "description": "Calculate gross order value, refunds, pending refunds, and potential exposure for an account.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "account_id": {"type": "string"}
+                        },
+                        "required": ["account_id"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_merchant_policy",
+                    "description": "Get the merchant's refund/dispute policy for a given category.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "category": {"type": "string"}
+                        },
+                        "required": ["category"],
+                    },
+                },
+            },
         ]
-        evidence_gaps = []
-        if not evidence_row["has_dispute_at_cutoff"]:
-            evidence_gaps.append("No dispute observed at cutoff; no evidence required yet.")
+
+        system_prompt = (
+            "You are an investigator assistant for RingWatch, a post-delivery "
+            "refund/return abuse detection system for merchants. "
+            "Use the provided tools to gather information about the flagged account. "
+            "Then produce a concise investigation report with key findings, evidence gaps, "
+            "uncertainties, and a recommended action from the allowed list: "
+            "LOW, MEDIUM, HIGH, CRITICAL. "
+            "Do not invent facts. Only use tool outputs. "
+            "Do not treat model score as calibrated probability. "
+            "Do not make final financial decisions. The final action is determined by the system."
+        )
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Investigate account {account_id}."},
+        ]
+
+        tool_calls_log = []
+
+        for attempt in range(self.settings.llm_max_retries + 1):
+            try:
+                response = await self.client.chat.completions.create(
+                    model=self.settings.groq_model,
+                    messages=messages,
+                    tools=tools,
+                    tool_choice="auto",
+                    temperature=0.2,
+                    max_tokens=1024,
+                )
+
+                message = response.choices[0].message
+                messages.append(message)
+
+                if message.tool_calls:
+                    for tool_call in message.tool_calls:
+                        function_name = tool_call.function.name
+                        arguments = json.loads(tool_call.function.arguments)
+
+                        # Execute the tool locally
+                        tool_result = await self._execute_tool(
+                            function_name, arguments
+                        )
+
+                        tool_calls_log.append(
+                            {
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                                "tool": function_name,
+                                "args": arguments,
+                                "result_summary": str(tool_result)[:200],
+                            }
+                        )
+
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": tool_call.id,
+                                "content": json.dumps(tool_result),
+                            }
+                        )
+
+                    # Continue conversation to get final answer
+                    final_response = await self.client.chat.completions.create(
+                        model=self.settings.groq_model,
+                        messages=messages,
+                        temperature=0.2,
+                        max_tokens=1024,
+                    )
+
+                    final_message = final_response.choices[0].message.content
+
+                    # Parse the final message if it's JSON; else treat as plain text
+                    try:
+                        parsed = json.loads(final_message)
+                        summary = parsed.get("summary", final_message)
+                        key_findings = parsed.get("key_findings", [])
+                        evidence_gaps = parsed.get("evidence_gaps", [])
+                        uncertainties = parsed.get("uncertainties", [])
+                    except json.JSONDecodeError:
+                        summary = final_message
+                        key_findings = []
+                        evidence_gaps = []
+                        uncertainties = []
+
+                    # Determine action deterministically from action service
+                    action = await self.action_service.get_action(account_id)
+
+                    return {
+                        "account_id": account_id,
+                        "source": "llm",
+                        "summary": summary,
+                        "key_findings": key_findings,
+                        "evidence_gaps": evidence_gaps,
+                        "uncertainties": uncertainties,
+                        "tool_calls": tool_calls_log,
+                        "recommended_action": action.action_description,
+                        "action_source": "deterministic_policy",
+                    }
+
+                else:
+                    # No tool calls, just content
+                    content = message.content
+
+                    try:
+                        parsed = json.loads(content)
+                        summary = parsed.get("summary", content)
+                        key_findings = parsed.get("key_findings", [])
+                        evidence_gaps = parsed.get("evidence_gaps", [])
+                        uncertainties = parsed.get("uncertainties", [])
+                    except json.JSONDecodeError:
+                        summary = content
+                        key_findings = []
+                        evidence_gaps = []
+                        uncertainties = []
+
+                    action = await self.action_service.get_action(account_id)
+
+                    return {
+                        "account_id": account_id,
+                        "source": "llm",
+                        "summary": summary,
+                        "key_findings": key_findings,
+                        "evidence_gaps": evidence_gaps,
+                        "uncertainties": uncertainties,
+                        "tool_calls": tool_calls_log,
+                        "recommended_action": action.action_description,
+                        "action_source": "deterministic_policy",
+                    }
+
+            except Exception as e:
+                if attempt == self.settings.llm_max_retries:
+                    raise LLMServiceError(str(e)) from e
+                continue
+
+        # Should not reach here
+        return await self._fallback_deterministic(account_id)
+
+    async def _execute_tool(self, function_name: str, args: dict) -> Any:
+        if function_name == "get_related_accounts":
+            graph_evidence = self.explainability_repo.get_graph_evidence()
+            row = graph_evidence[
+                graph_evidence["account_id"] == args["account_id"]
+            ]
+
+            if row.empty:
+                return {"linked_accounts": []}
+
+            linked = row.iloc[0]["linked_accounts"]
+
+            if pd.isna(linked):
+                return {"linked_accounts": []}
+
+            accounts = []
+
+            for rel in str(linked).split("|"):
+                rel = rel.strip()
+
+                if "->" in rel:
+                    _, linked_account = rel.split("->", 1)
+                    accounts.append(linked_account.strip())
+
+            return {"linked_accounts": accounts}
+
+        elif function_name == "get_shared_attributes":
+            # Implement based on graph edges or features
+            # For now return placeholder
+            return {
+                "shared_attributes": {
+                    "device": [],
+                    "address": [],
+                    "phone": [],
+                    "instrument": [],
+                }
+            }
+
+        elif function_name == "check_evidence_availability":
+            evidence_df = self.explainability_repo.get_evidence()
+            row = evidence_df[
+                evidence_df["account_id"] == args["account_id"]
+            ]
+
+            if row.empty:
+                return {
+                    "has_dispute_at_cutoff": False,
+                    "fields": {},
+                }
+
+            return {
+                "has_dispute_at_cutoff": bool(
+                    row.iloc[0]["has_dispute_at_cutoff"]
+                ),
+                "fields": {
+                    field: row.iloc[0][field]
+                    for field in [
+                        "proof_of_service",
+                        "explanation_letter",
+                        "refund_confirmation",
+                        "access_activity_log",
+                        "refund_cancellation_policy",
+                        "terms_and_conditions",
+                    ]
+                },
+            }
+
+        elif function_name == "calculate_financial_exposure":
+            # Load orders and refunds? Not directly available in explainability repo.
+            # For now, use features_graph to estimate.
+            features = self.feature_repo.get_features()
+            row = features[
+                features["account_id"] == args["account_id"]
+            ]
+
+            if row.empty:
+                return {
+                    "gross_order_value": 0,
+                    "refund_amount": 0,
+                    "potential_exposure": 0,
+                }
+
+            total_amount = row.iloc[0].get("total_amount", 0)
+            total_refund_amount = row.iloc[0].get(
+                "total_refund_amount", 0
+            )
+            potential_exposure = total_amount - total_refund_amount
+
+            return {
+                "gross_order_value": total_amount,
+                "refund_amount": total_refund_amount,
+                "potential_exposure": potential_exposure,
+            }
+
+        elif function_name == "get_merchant_policy":
+            # Placeholder
+            return {
+                "policy": "Manual review required for refunds in this category."
+            }
+
         else:
-            # Add missing fields
-            missing = [f for f, v in evidence_row.items() if v == "MISSING"]
-            evidence_gaps.extend(missing)
+            raise ValueError(f"Unknown tool: {function_name}")
 
-        uncertainties = [
-            "Model score is not a calibrated probability.",
-            "SHAP values indicate model contribution, not causality.",
-        ]
+    async def _fallback_deterministic(self, account_id: str) -> dict:
+        # Use existing deterministic report
+        report = self.explainability_repo.get_reports()
+        row = report[report["account_id"] == account_id]
+        case_report = (
+            str(row.iloc[0]["case_report_text"])
+            if not row.empty
+            else ""
+        )
 
-        tool_calls = []  # In real implementation, list tool calls with timestamps.
+        action = await self.action_service.get_action(account_id)
 
         return {
             "account_id": account_id,
             "source": "deterministic",
-            "summary": summary,
-            "key_findings": key_findings,
-            "evidence_gaps": evidence_gaps,
-            "uncertainties": uncertainties,
-            "tool_calls": tool_calls,
-            "recommended_action": row["recommended_action"],
+            "summary": case_report.split("\n")[0] if case_report else "",
+            "key_findings": [],
+            "evidence_gaps": [],
+            "uncertainties": [],
+            "tool_calls": [],
+            "recommended_action": action.action_description,
             "action_source": "deterministic_policy",
         }

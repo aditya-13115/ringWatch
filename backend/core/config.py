@@ -10,9 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     app_name: str = "RingWatch API"
     app_version: str = "1.0.0"
-
     api_prefix: str = "/api"
-
     frontend_origin: str = "http://localhost:5173"
 
     general_concurrency: int = 10
@@ -22,15 +20,24 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 30.0
     llm_max_retries: int = 2
 
+    # Anthropic
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-5"
 
+    # Groq
+    groq_api_key: str | None = None
+    groq_model: str = "llama-3.3-70b-versatile"
+
     data_dir: Path = PROJECT_ROOT / "data"
     processed_dir: Path = PROJECT_ROOT / "data" / "processed"
+
     explainability_dir: Path = (
         PROJECT_ROOT / "data" / "processed" / "explainability"
     )
-    model_dir: Path = PROJECT_ROOT / "data" / "processed" / "model"
+
+    model_dir: Path = (
+        PROJECT_ROOT / "data" / "processed" / "model"
+    )
 
     model_predictions_path: Path = (
         PROJECT_ROOT

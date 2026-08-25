@@ -110,3 +110,23 @@ def test_address_normalize_unresolved():
         )
         assert response.status_code == 200
         assert response.json()["requires_human_review"] is True
+
+
+def test_timeline_valid():
+    with TestClient(app) as client:
+        response = client.get("/api/accounts/A000529/timeline")
+        assert response.status_code == 200
+        data = response.json()
+        assert "events" in data
+        assert isinstance(data["events"], list)
+
+
+def test_investigate_valid():
+    with TestClient(app) as client:
+        response = client.post("/api/accounts/A000529/investigate")
+        assert response.status_code == 200
+        data = response.json()
+        assert "summary" in data
+        assert "recommended_action" in data
+        # Source can be either "llm" or "deterministic" depending on API key
+        assert data["source"] in ["llm", "deterministic"]

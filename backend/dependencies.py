@@ -3,7 +3,8 @@ from functools import lru_cache
 from backend.core.config import get_settings
 from backend.repositories.explainability_repository import ExplainabilityRepository
 from backend.repositories.feature_repository import FeatureRepository
-
+from backend.repositories.event_repository import EventRepository
+from backend.services.timeline_service import TimelineService
 from backend.services.queue_service import QueueService
 from backend.services.account_service import AccountService
 from backend.services.graph_service import GraphService
@@ -15,6 +16,7 @@ from backend.services.metrics_service import MetricsService
 from backend.services.failure_service import FailureDemoService
 from backend.services.llm_investigator_service import LLMInvestigatorService
 from backend.services.address_normalizer_service import AddressNormalizerService
+
 
 settings = get_settings()
 
@@ -103,3 +105,9 @@ def get_llm_investigator_service() -> LLMInvestigatorService:
 
 def get_address_normalizer_service() -> AddressNormalizerService:
     return AddressNormalizerService(settings.addresses_path)
+
+def get_event_repo() -> EventRepository:
+    return EventRepository(settings.data_dir)
+
+def get_timeline_service() -> TimelineService:
+    return TimelineService(get_event_repo())

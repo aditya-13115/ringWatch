@@ -7,6 +7,7 @@ from backend.core.config import get_settings
 from backend.core.logging import configure_logging
 from backend.core.middleware import RequestIDMiddleware
 from backend.dependencies import set_data_store
+from backend.api import timeline
 
 from backend.api import (
     health,
@@ -66,3 +67,4 @@ app.include_router(metrics.router, prefix=settings.api_prefix)
 app.include_router(failure.router, prefix=settings.api_prefix)
 app.include_router(investigator.router, prefix=settings.api_prefix)
 app.include_router(address.router, prefix=settings.api_prefix)
+app.include_router(timeline.router, prefix=settings.api_prefix)
