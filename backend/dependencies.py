@@ -71,8 +71,22 @@ def get_audit_service() -> AuditService:
     return AuditService(get_explainability_repo())
 
 
+def get_account_service() -> AccountService:
+    return AccountService(
+        explainability_repo=get_explainability_repo(),
+        feature_repo=get_feature_repo(),
+        graph_service=get_graph_service(),
+        evidence_service=get_evidence_service(),
+        action_service=get_action_service(),
+        report_service=get_report_service(),
+    )
+
+
 def get_metrics_service() -> MetricsService:
-    return MetricsService(settings.model_metrics_path, get_explainability_repo())
+    return MetricsService(
+        settings.model_metrics_path,
+        get_explainability_repo(),
+    )
 
 
 def get_failure_service() -> FailureDemoService:
