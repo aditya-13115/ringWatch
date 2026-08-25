@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import List, Optional
 
 
 class InvestigationRequest(BaseModel):
@@ -7,11 +8,13 @@ class InvestigationRequest(BaseModel):
 
 class InvestigationResponse(BaseModel):
     account_id: str
-    source: str  # "llm" or "deterministic"
+    source: str = Field(default="llm", description="llm or deterministic")
     summary: str
-    key_findings: list[str]
-    evidence_gaps: list[str]
-    uncertainties: list[str]
-    tool_calls: list[dict]
+    key_findings: List[str] = []
+    evidence_gaps: List[str] = []
+    uncertainties: List[str] = []
+    confidence: str = "LOW"
+    tool_calls: List[dict] = []
     recommended_action: str
-    action_source: str
+    action_source: str = "deterministic_policy"
+    error: Optional[str] = None

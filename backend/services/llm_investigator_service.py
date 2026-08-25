@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -32,14 +33,12 @@ class LLMInvestigatorService:
         async with LLM_SEMAPHORE:
             try:
                 return await self._run_investigation(account_id)
-
             except Exception as exc:
                 try:
                     return await self._fallback_deterministic(
                         account_id,
                         error=str(exc),
                     )
-
                 except Exception as fallback_exc:
                     return {
                         "account_id": account_id,
@@ -62,8 +61,7 @@ class LLMInvestigatorService:
             )
 
         # ----------------------------------------------------------------
-        # Define tools for Groq. These allow the LLM to perform additional
-        # investigation if it deems necessary.
+        # Define tools for Groq
         # ----------------------------------------------------------------
         tools = [
             {
@@ -146,8 +144,7 @@ class LLMInvestigatorService:
         ]
 
         # ----------------------------------------------------------------
-        # Step 1: Pre-execute essential tools deterministically.
-        # This guarantees the investigator has minimum evidence.
+        # Step 1: Pre-execute essential tools deterministically
         # ----------------------------------------------------------------
         tool_calls_log = []
 
@@ -248,8 +245,7 @@ class LLMInvestigatorService:
         )
 
         # ----------------------------------------------------------------
-        # Step 2: Build initial messages with all pre-gathered evidence.
-        # Also include the tools so Groq can call them if needed.
+        # Step 2: Build evidence packet and prompt
         # ----------------------------------------------------------------
         evidence_packet = {
             "account_id": account_id,
@@ -279,6 +275,10 @@ class LLMInvestigatorService:
             "- Do not make final financial decisions.\n"
             "- Use only the provided evidence and tool outputs.\n"
             "- The final action is determined by the system's deterministic policy, not by you.\n"
+            "- Use ₹ for Indian Rupees. Do not use $ or USD.\n"
+            "- If has_dispute_at_cutoff is false, describe evidence gaps as "
+            "'not yet applicable' rather than 'missing'.\n"
+            "- Return ONLY the JSON object, no additional text.\n"
         )
 
         messages = [
@@ -290,8 +290,7 @@ class LLMInvestigatorService:
         ]
 
         # ----------------------------------------------------------------
-        # Step 3: Let Groq call additional tools if needed.
-        # We use tool_choice="auto" to allow optional extra investigation.
+        # Step 3: Call Groq with tools (optional additional tools)
         # ----------------------------------------------------------------
         final_content = None
 
@@ -309,7 +308,6 @@ class LLMInvestigatorService:
                 messages.append(message)
 
                 if message.tool_calls:
-                    # Execute any additional tool calls requested by Groq
                     for tool_call in message.tool_calls:
                         function_name = tool_call.function.name
                         arguments = json.loads(tool_call.function.arguments)
@@ -335,18 +333,21 @@ class LLMInvestigatorService:
                             }
                         )
 
-                    # Continue conversation to get final answer
+                    # Final call with JSON response format (no tools)
                     final_response = await self.client.chat.completions.create(
                         model=self.settings.groq_model,
                         messages=messages,
+                        response_format={"type": "json_object"},
                         temperature=0.2,
                         max_tokens=1024,
                     )
                     final_content = final_response.choices[0].message.content
                 else:
+                    # No tool calls, but we can still request JSON
+                    # However, we cannot use response_format with tools present, so we just take content
                     final_content = message.content
 
-                break  # success; exit retry loop
+                break
 
             except Exception as exc:
                 if attempt == self.settings.llm_max_retries:
@@ -361,25 +362,37 @@ class LLMInvestigatorService:
             )
 
         # ----------------------------------------------------------------
-        # Step 4: Parse structured JSON output
+        # Step 4: Parse structured output
         # ----------------------------------------------------------------
-        try:
-            parsed = json.loads(final_content)
-            summary = parsed.get("summary", "")
-            key_findings = parsed.get("key_findings", [])
-            evidence_gaps = parsed.get("evidence_gaps", [])
-            uncertainties = parsed.get("uncertainties", [])
-            confidence = parsed.get("confidence", "LOW")
-        except json.JSONDecodeError:
-            # If not JSON, use plain text as summary
-            summary = final_content
+        parsed = self._extract_json_from_text(final_content)
+        if parsed is None:
+            summary = final_content.strip()
             key_findings = []
             evidence_gaps = []
             uncertainties = []
             confidence = "LOW"
+        else:
+            summary = parsed.get("summary", "").strip()
+            key_findings = parsed.get("key_findings", [])
+            evidence_gaps = parsed.get("evidence_gaps", [])
+            uncertainties = parsed.get("uncertainties", [])
+            confidence = parsed.get("confidence", "LOW")
+
+        # Normalize lists (handle string input)
+        if isinstance(key_findings, str):
+            key_findings = [key_findings]
+        if isinstance(evidence_gaps, str):
+            evidence_gaps = [evidence_gaps]
+        if isinstance(uncertainties, str):
+            uncertainties = [uncertainties]
+
+        # Ensure lists contain only strings, converting if necessary
+        key_findings = [str(item) for item in key_findings]
+        evidence_gaps = [str(item) for item in evidence_gaps]
+        uncertainties = [str(item) for item in uncertainties]
 
         # ----------------------------------------------------------------
-        # Step 5: Deterministic action from action service
+        # Step 5: Deterministic action
         # ----------------------------------------------------------------
         action = await self.action_service.get_action(account_id)
 
@@ -396,9 +409,39 @@ class LLMInvestigatorService:
             "action_source": "deterministic_policy",
         }
 
-        # Save audit
         await self._save_investigation_audit(result, success=True)
         return result
+
+    def _extract_json_from_text(self, text: str) -> dict | None:
+        """Robustly extract a JSON object from possibly messy text."""
+        if not text:
+            return None
+
+        # Direct parse
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # Find first '{' and last '}', attempt parse
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            json_str = text[start : end + 1]
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                pass
+
+        # Regex fallback
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError:
+                pass
+
+        return None
 
     def _summarize_tool_result(self, tool_name: str, result: Any) -> str:
         if tool_name == "get_related_accounts":
@@ -410,8 +453,11 @@ class LLMInvestigatorService:
 
         if tool_name == "check_evidence_availability":
             fields = result.get("fields", {})
-            available = sum(1 for v in fields.values() if v == "AVAILABLE")
-            missing = sum(1 for v in fields.values() if v == "MISSING")
+            # If no dispute, return that
+            if not result.get("has_dispute_at_cutoff", False):
+                return "no dispute at cutoff"
+            available = sum(1 for v in fields.values() if v is True or v == "AVAILABLE")
+            missing = sum(1 for v in fields.values() if v is False or v == "MISSING")
             return f"{available} available, {missing} missing"
 
         if tool_name == "calculate_financial_exposure":
@@ -429,6 +475,14 @@ class LLMInvestigatorService:
             return result.get("policy", "")
 
         return str(result)[:200]
+
+    async def _execute_tool(self, function_name: str, args: dict) -> Any:
+        # ... (same as before, but ensure native types)
+        # We'll keep the existing implementation, but make sure to cast to native types.
+        pass
+
+    # The _execute_tool implementation is unchanged except for the numerical casts.
+    # For brevity, we assume it's already correct; we'll provide the complete method below.
 
     async def _execute_tool(self, function_name: str, args: dict) -> Any:
         if function_name == "get_related_accounts":
@@ -501,9 +555,9 @@ class LLMInvestigatorService:
             row = features[features["account_id"] == args["account_id"]]
             if row.empty:
                 return {
-                    "gross_order_value": 0,
-                    "refund_amount": 0,
-                    "potential_exposure": 0,
+                    "gross_order_value": 0.0,
+                    "refund_amount": 0.0,
+                    "potential_exposure": 0.0,
                 }
             total_amount = float(row.iloc[0].get("total_amount", 0) or 0)
             total_refund_amount = float(row.iloc[0].get("total_refund_amount", 0) or 0)
@@ -569,7 +623,6 @@ class LLMInvestigatorService:
         success: bool = True,
     ):
         """Append a detailed investigation record."""
-
         audit_dir = self.explainability_repo.explainability_dir
         audit_path = audit_dir / "investigation_audit_log.csv"
 
@@ -599,11 +652,7 @@ class LLMInvestigatorService:
             ),
         }
 
-        df = pd.concat(
-            [df, pd.DataFrame([entry])],
-            ignore_index=True,
-        )
-
+        df = pd.concat([df, pd.DataFrame([entry])], ignore_index=True)
         df.to_csv(audit_path, index=False)
 
     async def _fallback_deterministic(self, account_id: str, error: str = "") -> dict:

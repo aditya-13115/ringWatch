@@ -392,114 +392,78 @@ export default function AccountInvestigation() {
 
 
         {investigation && (
-          <div className="space-y-4">
-
-            {/* Summary */}
-            <div className="bg-muted p-4 rounded-md">
-              <h4 className="text-sm font-semibold">
-                Summary
-              </h4>
-
-              <p className="text-sm">
-                {investigation.summary}
+        <div className="space-y-6">
+          {/* Summary */}
+          <div className="rounded-lg bg-muted p-4">
+            <h4 className="text-sm font-semibold mb-2">Investigation Summary</h4>
+            <p className="text-sm leading-relaxed">{investigation.summary}</p>
+            {investigation.confidence && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Confidence: <span className="font-medium">{investigation.confidence}</span>
               </p>
-            </div>
-
-
-            {/* Key Findings */}
-            {investigation.key_findings.length > 0 && (
-              <div>
-                <h4 className="text-sm font-semibold">
-                  Key Findings
-                </h4>
-
-                <ul className="list-disc list-inside text-sm">
-                  {investigation.key_findings.map(
-                    (finding, idx) => (
-                      <li key={idx}>{finding}</li>
-                    )
-                  )}
-                </ul>
-              </div>
             )}
-
-
-            {/* Evidence Gaps */}
-            {investigation.evidence_gaps.length > 0 && (
-              <div>
-                <h4 className="text-sm font-semibold">
-                  Evidence Gaps
-                </h4>
-
-                <ul className="list-disc list-inside text-sm">
-                  {investigation.evidence_gaps.map(
-                    (gap, idx) => (
-                      <li key={idx}>{gap}</li>
-                    )
-                  )}
-                </ul>
-              </div>
-            )}
-
-
-            {/* Uncertainties */}
-            {investigation.uncertainties.length > 0 && (
-              <div>
-                <h4 className="text-sm font-semibold">
-                  Uncertainties
-                </h4>
-
-                <ul className="list-disc list-inside text-sm">
-                  {investigation.uncertainties.map(
-                    (u, idx) => (
-                      <li key={idx}>{u}</li>
-                    )
-                  )}
-                </ul>
-              </div>
-            )}
-
-
-            {/* Tool Trace */}
-            {investigation.tool_calls.length > 0 && (
-              <div>
-                <h4 className="text-sm font-semibold">
-                  Tool Trace
-                </h4>
-
-                <ul className="space-y-2 text-sm">
-                  {investigation.tool_calls.map(
-                    (call, idx) => (
-                      <li
-                        key={idx}
-                        className="text-muted-foreground"
-                      >
-                        <span className="font-mono">
-                          {call.tool}
-                        </span>{" "}
-                        → {call.result_summary}
-                      </li>
-                    )
-                  )}
-                </ul>
-              </div>
-            )}
-
-
-            {/* Recommended Action */}
-            <div className="text-sm text-muted-foreground">
-              Recommended action:{" "}
-              <span className="font-medium text-black">
-                {investigation.recommended_action}
-              </span>
-
-              <p className="text-xs">
-                Action source: {investigation.action_source}
-              </p>
-            </div>
-
           </div>
-        )}
+
+          {/* Key Findings */}
+          {investigation.key_findings?.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Key Findings</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {investigation.key_findings.map((finding, idx) => (
+                  <li key={idx}>{finding}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Evidence Gaps */}
+          {investigation.evidence_gaps?.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Evidence Gaps</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {investigation.evidence_gaps.map((gap, idx) => (
+                  <li key={idx}>{gap}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Uncertainties */}
+          {investigation.uncertainties?.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Uncertainties</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {investigation.uncertainties.map((u, idx) => (
+                  <li key={idx}>{u}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Tool Trace */}
+          {investigation.tool_calls?.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Tool Trace</h4>
+              <ul className="space-y-2 text-sm">
+                {investigation.tool_calls.map((call, idx) => (
+                  <li key={idx} className="text-muted-foreground">
+                    <span className="font-mono">{call.tool}</span> → {call.result_summary}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Recommended Action */}
+          <div className="text-sm text-muted-foreground">
+            Recommended action:{" "}
+            <span className="font-medium text-black dark:text-white">
+              {investigation.recommended_action}
+            </span>
+            <p className="text-xs mt-1">Action source: {investigation.action_source}</p>
+          </div>
+        </div>
+      )}
 
       </Card>
 
