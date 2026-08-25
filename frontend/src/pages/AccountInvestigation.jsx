@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getAccount, investigateAccount, getAccountTimeline } from "../api/account";
+import {
+  getAccount,
+  investigateAccount,
+  getAccountTimeline,
+} from "../api/account";
 import Badge from "../components/Badge";
 import Card from "../components/Card";
 import GraphView from "../components/GraphView";

@@ -7,3 +7,13 @@ export function getAccount(accountId) {
 export function getAccountGraph(accountId) {
   return apiFetch(`/api/accounts/${accountId}/graph`);
 }
+
+export function investigateAccount(accountId) {
+  return apiFetch(`/api/accounts/${accountId}/investigate`, {
+    method: "POST",
+  });
+}
+
+export function getAccountTimeline(accountId) {
+  return apiFetch(`/api/accounts/${accountId}/timeline`);
+}

@@ -13,11 +13,12 @@ export default function GraphView({ accountId }) {
       .finally(() => setLoading(false));
   }, [accountId]);
 
-  if (loading) return <div>Loading graph…</div>;
+  if (loading) return <div className="text-sm text-muted-foreground">Loading graph…</div>;
   if (error) return <div className="text-destructive">{error}</div>;
-  if (!graph || graph.nodes.length === 0) return <div>No graph relationships.</div>;
+  if (!graph || graph.nodes.length === 0) {
+    return <div className="text-sm text-muted-foreground">No graph relationships.</div>;
+  }
 
-  // Simple layout: place focus node in center, others around it
   const focus = graph.nodes.find((n) => n.is_focus) || graph.nodes[0];
   const others = graph.nodes.filter((n) => n.id !== focus.id);
 
@@ -39,7 +40,7 @@ export default function GraphView({ accountId }) {
   });
 
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} className="border rounded-lg bg-card">
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} className="rounded-lg border border-border bg-card">
       {graph.edges.map((edge, i) => {
         const source = positions[edge.source];
         const target = positions[edge.target];
@@ -70,13 +71,7 @@ export default function GraphView({ accountId }) {
               stroke="black"
               strokeWidth="2"
             />
-            <text
-              x={pos.x}
-              y={pos.y + 30}
-              textAnchor="middle"
-              fontSize="10"
-              fill="black"
-            >
+            <text x={pos.x} y={pos.y + 30} textAnchor="middle" fontSize="10" fill="black">
               {node.id}
             </text>
             {node.is_focus && (
@@ -87,7 +82,6 @@ export default function GraphView({ accountId }) {
           </g>
         );
       })}
-      {/* Edge labels */}
       {graph.edges.map((edge, i) => {
         const source = positions[edge.source];
         const target = positions[edge.target];
