@@ -99,8 +99,12 @@ def get_llm_investigator_service() -> LLMInvestigatorService:
     return LLMInvestigatorService(
         explainability_repo=get_explainability_repo(),
         feature_repo=get_feature_repo(),
+        event_repo=get_event_repo(),
         action_service=get_action_service(),
     )
+
+def get_event_repo() -> EventRepository:
+    return EventRepository(settings.data_dir)
 
 
 def get_address_normalizer_service() -> AddressNormalizerService:
