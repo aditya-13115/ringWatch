@@ -12,6 +12,7 @@ class AuditService:
         records = []
 
         for _, row in audit_df.iterrows():
+
             def safe_float(value, default=0.0):
                 return float(value) if pd.notna(value) else default
 
@@ -35,7 +36,9 @@ class AuditService:
 
             # Optional investigation fields
             if "investigation_source" in audit_df.columns:
-                record["investigation_source"] = safe_str(row.get("investigation_source"))
+                record["investigation_source"] = safe_str(
+                    row.get("investigation_source")
+                )
             if "tool_calls" in audit_df.columns:
                 record["tool_calls"] = safe_str(row.get("tool_calls"))
             if "summary" in audit_df.columns:

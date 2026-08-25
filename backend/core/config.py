@@ -3,7 +3,6 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -31,49 +30,28 @@ class Settings(BaseSettings):
     data_dir: Path = PROJECT_ROOT / "data"
     processed_dir: Path = PROJECT_ROOT / "data" / "processed"
 
-    explainability_dir: Path = (
-        PROJECT_ROOT / "data" / "processed" / "explainability"
-    )
+    explainability_dir: Path = PROJECT_ROOT / "data" / "processed" / "explainability"
 
-    model_dir: Path = (
-        PROJECT_ROOT / "data" / "processed" / "model"
-    )
+    model_dir: Path = PROJECT_ROOT / "data" / "processed" / "model"
 
     model_predictions_path: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "processed"
-        / "model"
-        / "model_predictions_test.csv"
+        PROJECT_ROOT / "data" / "processed" / "model" / "model_predictions_test.csv"
     )
 
     model_metrics_path: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "processed"
-        / "model"
-        / "model_metrics.json"
+        PROJECT_ROOT / "data" / "processed" / "model" / "model_metrics.json"
     )
 
     features_accounts_path: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "processed"
-        / "features_accounts.csv"
+        PROJECT_ROOT / "data" / "processed" / "features_accounts.csv"
     )
 
     features_graph_path: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "processed"
-        / "features_graph.csv"
+        PROJECT_ROOT / "data" / "processed" / "features_graph.csv"
     )
 
     account_graph_edges_path: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "processed"
-        / "account_graph_edges.csv"
+        PROJECT_ROOT / "data" / "processed" / "account_graph_edges.csv"
     )
 
     addresses_path: Path = PROJECT_ROOT / "data" / "addresses.csv"

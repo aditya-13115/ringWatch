@@ -10,7 +10,9 @@ router = APIRouter(prefix="/accounts", tags=["investigator"])
 @router.post("/{account_id}/investigate", response_model=InvestigationResponse)
 async def investigate_account(
     account_id: str,
-    investigator_service: LLMInvestigatorService = Depends(get_llm_investigator_service),
+    investigator_service: LLMInvestigatorService = Depends(
+        get_llm_investigator_service
+    ),
 ):
     try:
         result = await investigator_service.investigate(account_id)

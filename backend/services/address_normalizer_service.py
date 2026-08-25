@@ -87,7 +87,7 @@ class AddressNormalizerService:
         prompt = (
             "Extract the following fields from this Indian address:\n"
             f"Address: {raw_address}\n"
-            "Return JSON: {\"flat\": \"...\", \"building\": \"...\", \"street\": \"...\", \"area\": \"...\", \"city\": \"...\", \"state\": \"...\", \"pincode\": \"...\"}\n"
+            'Return JSON: {"flat": "...", "building": "...", "street": "...", "area": "...", "city": "...", "state": "...", "pincode": "..."}\n'
             "If a field is missing, use null."
         )
         response = await self.client.chat.completions.create(

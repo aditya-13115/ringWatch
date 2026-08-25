@@ -45,7 +45,8 @@ def load_data() -> DataStore:
     missing = [f for f in required_files if not f.exists()]
     if missing:
         raise FileNotFoundError(
-            "Required RingWatch data files missing: " + ", ".join(str(f) for f in missing)
+            "Required RingWatch data files missing: "
+            + ", ".join(str(f) for f in missing)
         )
 
     return DataStore(

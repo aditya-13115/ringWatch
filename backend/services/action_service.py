@@ -1,7 +1,6 @@
 from backend.domain.action import BoundedAction
 from backend.repositories.explainability_repository import ExplainabilityRepository
 
-
 ACTION_MAP = {
     "LOW": {
         "action_code": "NO_ACTION",

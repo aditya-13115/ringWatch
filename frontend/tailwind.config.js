@@ -1,9 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: "class",
+
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+
   theme: {
     extend: {
       colors: {
@@ -20,6 +23,7 @@ export default {
         "accent-foreground": "hsl(var(--accent-foreground))",
         destructive: "hsl(var(--destructive))",
       },
+
       borderRadius: {
         lg: "0.5rem",
         md: "0.375rem",
@@ -27,5 +31,6 @@ export default {
       },
     },
   },
+
   plugins: [],
-}
+};

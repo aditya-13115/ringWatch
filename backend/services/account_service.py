@@ -11,7 +11,6 @@ from backend.services.evidence_service import EvidenceService
 from backend.services.action_service import ActionService
 from backend.services.report_service import ReportService
 
-
 EVIDENCE_FIELDS = [
     "proof_of_service",
     "explanation_letter",
@@ -107,7 +106,9 @@ class AccountService:
 
         # Report
         try:
-            result["case_report_text"] = await self.report_service.get_case_report(account_id)
+            result["case_report_text"] = await self.report_service.get_case_report(
+                account_id
+            )
         except Exception:
             pass
 
@@ -117,7 +118,8 @@ class AccountService:
             shap_row = shap_df[shap_df["account_id"] == account_id]
             if not shap_row.empty:
                 feature_cols = [
-                    c for c in shap_df.columns
+                    c
+                    for c in shap_df.columns
                     if c not in ["account_id", "rank", "proba", "top_k_flag"]
                 ]
                 values = shap_row.iloc[0][feature_cols]

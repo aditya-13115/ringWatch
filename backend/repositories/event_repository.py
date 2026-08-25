@@ -6,7 +6,12 @@ class EventRepository:
     def __init__(self, data_dir: Path):
         self.orders = pd.read_csv(
             data_dir / "orders.csv",
-            parse_dates=["order_timestamp", "delivery_timestamp", "return_timestamp", "refund_timestamp"],
+            parse_dates=[
+                "order_timestamp",
+                "delivery_timestamp",
+                "return_timestamp",
+                "refund_timestamp",
+            ],
         )
         self.refunds = pd.read_csv(
             data_dir / "refunds.csv",

@@ -3,7 +3,6 @@ import pandas as pd
 from backend.domain.evidence import EvidenceStatus
 from backend.repositories.explainability_repository import ExplainabilityRepository
 
-
 EVIDENCE_FIELDS = [
     "proof_of_service",
     "explanation_letter",
@@ -42,7 +41,11 @@ class EvidenceService:
 
         missing_count = None
         if has_dispute:
-            missing_count = int(row["missing_evidence_count"]) if pd.notna(row["missing_evidence_count"]) else 0
+            missing_count = (
+                int(row["missing_evidence_count"])
+                if pd.notna(row["missing_evidence_count"])
+                else 0
+            )
 
         return EvidenceStatus(
             account_id=account_id,

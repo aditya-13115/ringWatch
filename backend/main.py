@@ -1,13 +1,13 @@
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from backend.core.config import get_settings
 from backend.core.logging import configure_logging
 from backend.core.middleware import RequestIDMiddleware
 from backend.dependencies import set_data_store
 from backend.api import timeline
+from backend.api import graph_overview
+
 
 from backend.api import (
     health,
@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
     configure_logging()
     # Load data store (to be implemented in data_loader.py)
     from backend.services.data_loader import DataStore, load_data
+
     store = load_data()
     set_data_store(store)
     app.state.data_store = store
@@ -68,3 +69,4 @@ app.include_router(failure.router, prefix=settings.api_prefix)
 app.include_router(investigator.router, prefix=settings.api_prefix)
 app.include_router(address.router, prefix=settings.api_prefix)
 app.include_router(timeline.router, prefix=settings.api_prefix)
+app.include_router(graph_overview.router, prefix=settings.api_prefix)

@@ -30,15 +30,25 @@ class GraphService:
                 rel = rel.strip()
                 if "->" in rel:
                     edge_type, linked = rel.split("->", 1)
-                    linked_accounts.append({
-                        "edge_type": edge_type.strip(),
-                        "linked_account": linked.strip(),
-                    })
+                    linked_accounts.append(
+                        {
+                            "edge_type": edge_type.strip(),
+                            "linked_account": linked.strip(),
+                        }
+                    )
 
         return {
             "total_graph_links": int(row["total_graph_links"]),
-            "strongest_edge_type": row["strongest_edge_type"] if pd.notna(row["strongest_edge_type"]) else None,
-            "strongest_edge_weight": float(row["strongest_edge_weight"]) if pd.notna(row["strongest_edge_weight"]) else None,
+            "strongest_edge_type": (
+                row["strongest_edge_type"]
+                if pd.notna(row["strongest_edge_type"])
+                else None
+            ),
+            "strongest_edge_weight": (
+                float(row["strongest_edge_weight"])
+                if pd.notna(row["strongest_edge_weight"])
+                else None
+            ),
             "number_of_device_links": int(row["number_of_device_links"]),
             "number_of_ip_links": int(row["number_of_ip_links"]),
             "number_of_coupon_links": int(row["number_of_coupon_links"]),
@@ -64,3 +74,44 @@ class GraphService:
             )
 
         return AccountGraph(account_id=account_id, nodes=nodes, edges=edges)
+
+    async def get_overview_graph(self) -> AccountGraph:
+        """
+        Build an overview graph containing all flagged accounts and
+        their direct relationships.
+        """
+        actions_df = self.explainability_repo.get_actions()
+        flagged_ids = actions_df["account_id"].tolist()
+
+        nodes: list[GraphNode] = []
+        edges: list[GraphEdge] = []
+        seen_nodes: set[str] = set()
+
+        for account_id in flagged_ids:
+            # Add flagged account node
+            if account_id not in seen_nodes:
+                nodes.append(GraphNode(id=account_id, label=account_id, is_focus=True))
+                seen_nodes.add(account_id)
+
+            # Get graph evidence for this flagged account
+            evidence = await self.get_graph_evidence(account_id)
+            for link in evidence["linked_accounts"]:
+                linked = link["linked_account"]
+                if linked not in seen_nodes:
+                    nodes.append(GraphNode(id=linked, label=linked))
+                    seen_nodes.add(linked)
+
+                edges.append(
+                    GraphEdge(
+                        source=account_id,
+                        target=linked,
+                        edge_type=link["edge_type"],
+                        weight=1.0,  # You can later use actual edge weight if available
+                    )
+                )
+
+        return AccountGraph(
+            account_id="overview",
+            nodes=nodes,
+            edges=edges,
+        )

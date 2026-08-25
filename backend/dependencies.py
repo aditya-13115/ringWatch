@@ -17,7 +17,6 @@ from backend.services.failure_service import FailureDemoService
 from backend.services.llm_investigator_service import LLMInvestigatorService
 from backend.services.address_normalizer_service import AddressNormalizerService
 
-
 settings = get_settings()
 
 _data_store = None
@@ -103,6 +102,7 @@ def get_llm_investigator_service() -> LLMInvestigatorService:
         action_service=get_action_service(),
     )
 
+
 def get_event_repo() -> EventRepository:
     return EventRepository(settings.data_dir)
 
@@ -110,8 +110,10 @@ def get_event_repo() -> EventRepository:
 def get_address_normalizer_service() -> AddressNormalizerService:
     return AddressNormalizerService(settings.addresses_path)
 
+
 def get_event_repo() -> EventRepository:
     return EventRepository(settings.data_dir)
+
 
 def get_timeline_service() -> TimelineService:
     return TimelineService(get_event_repo())

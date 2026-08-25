@@ -4,28 +4,42 @@ import { getQueue } from "../api/queue";
 import Badge from "../components/Badge";
 import Card from "../components/Card";
 
+const LIMITS = [7, 10, 25, 50, 100];
+
 export default function Dashboard() {
   const [queue, setQueue] = useState([]);
+  const [limit, setLimit] = useState(7);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    getQueue()
+    setLoading(true);
+    getQueue(limit)
       .then((data) => setQueue(data.accounts))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div>Loading queue…</div>;
-  if (error) return <div className="text-destructive">{error}</div>;
+  }, [limit]);
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold">Investigation Queue</h2>
-        <p className="text-sm text-muted-foreground">
-          {queue.length} accounts flagged by Model B
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Investigation Queue</h2>
+          <p className="text-sm text-muted-foreground">
+            {queue.length} accounts flagged by Model B
+          </p>
+        </div>
+        <select
+          value={limit}
+          onChange={(e) => setLimit(Number(e.target.value))}
+          className="border border-border rounded-md px-3 py-2 text-sm bg-background"
+        >
+          {LIMITS.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
       </div>
       <Card>
         <table className="w-full">

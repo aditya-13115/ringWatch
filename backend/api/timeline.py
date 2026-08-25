@@ -4,6 +4,7 @@ from backend.services.timeline_service import TimelineService
 
 router = APIRouter(prefix="/accounts", tags=["timeline"])
 
+
 @router.get("/{account_id}/timeline")
 async def get_timeline(
     account_id: str,

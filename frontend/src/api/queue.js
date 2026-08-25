@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
 
-export function getQueue() {
-  return apiFetch("/api/queue");
+export function getQueue(limit = 7) {
+  return apiFetch(`/api/queue?limit=${limit}`);
 }

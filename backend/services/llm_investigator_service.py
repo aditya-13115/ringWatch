@@ -155,83 +155,97 @@ class LLMInvestigatorService:
         related_result = await self._execute_tool(
             "get_related_accounts", {"account_id": account_id}
         )
-        tool_calls_log.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tool": "get_related_accounts",
-            "args": {"account_id": account_id},
-            "result_summary": self._summarize_tool_result("get_related_accounts", related_result),
-        })
+        tool_calls_log.append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tool": "get_related_accounts",
+                "args": {"account_id": account_id},
+                "result_summary": self._summarize_tool_result(
+                    "get_related_accounts", related_result
+                ),
+            }
+        )
 
         # 2. Shared attributes for related accounts
         related_ids = related_result.get("linked_accounts", [])
         shared_result = await self._execute_tool(
             "get_shared_attributes", {"account_ids": related_ids}
         )
-        tool_calls_log.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tool": "get_shared_attributes",
-            "args": {"account_ids": related_ids},
-            "result_summary": self._summarize_tool_result(
-                "get_shared_attributes",
-                shared_result,
-            ),
-        })
+        tool_calls_log.append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tool": "get_shared_attributes",
+                "args": {"account_ids": related_ids},
+                "result_summary": self._summarize_tool_result(
+                    "get_shared_attributes",
+                    shared_result,
+                ),
+            }
+        )
 
         # 3. Evidence availability
         evidence_result = await self._execute_tool(
             "check_evidence_availability", {"account_id": account_id}
         )
-        tool_calls_log.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tool": "check_evidence_availability",
-            "args": {"account_id": account_id},
-            "result_summary": self._summarize_tool_result(
-                "check_evidence_availability",
-                evidence_result,
-            ),
-        })
+        tool_calls_log.append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tool": "check_evidence_availability",
+                "args": {"account_id": account_id},
+                "result_summary": self._summarize_tool_result(
+                    "check_evidence_availability",
+                    evidence_result,
+                ),
+            }
+        )
 
         # 4. Financial exposure
         exposure_result = await self._execute_tool(
             "calculate_financial_exposure", {"account_id": account_id}
         )
-        tool_calls_log.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tool": "calculate_financial_exposure",
-            "args": {"account_id": account_id},
-            "result_summary": self._summarize_tool_result(
-                "calculate_financial_exposure",
-                exposure_result,
-            ),
-        })
+        tool_calls_log.append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tool": "calculate_financial_exposure",
+                "args": {"account_id": account_id},
+                "result_summary": self._summarize_tool_result(
+                    "calculate_financial_exposure",
+                    exposure_result,
+                ),
+            }
+        )
 
         # 5. Account timeline
         timeline_result = await self._execute_tool(
             "get_account_timeline", {"account_id": account_id}
         )
-        tool_calls_log.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tool": "get_account_timeline",
-            "args": {"account_id": account_id},
-            "result_summary": self._summarize_tool_result(
-                "get_account_timeline",
-                timeline_result,
-            ),
-        })
+        tool_calls_log.append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tool": "get_account_timeline",
+                "args": {"account_id": account_id},
+                "result_summary": self._summarize_tool_result(
+                    "get_account_timeline",
+                    timeline_result,
+                ),
+            }
+        )
 
         # 6. Merchant policy
         policy_result = await self._execute_tool(
             "get_merchant_policy", {"category": "default"}
         )
-        tool_calls_log.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tool": "get_merchant_policy",
-            "args": {"category": "default"},
-            "result_summary": self._summarize_tool_result(
-                "get_merchant_policy",
-                policy_result,
-            ),
-        })
+        tool_calls_log.append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tool": "get_merchant_policy",
+                "args": {"category": "default"},
+                "result_summary": self._summarize_tool_result(
+                    "get_merchant_policy",
+                    policy_result,
+                ),
+            }
+        )
 
         # ----------------------------------------------------------------
         # Step 2: Build initial messages with all pre-gathered evidence.
@@ -252,13 +266,13 @@ class LLMInvestigatorService:
             "You have already been provided with core investigation evidence.\n"
             "You may call additional tools if you need more information.\n"
             "After investigation, produce a JSON object with the following structure:\n"
-            '{\n'
+            "{\n"
             '  "summary": "...",\n'
             '  "key_findings": ["...", "..."],\n'
             '  "evidence_gaps": ["..."],\n'
             '  "uncertainties": ["..."],\n'
             '  "confidence": "LOW|MEDIUM|HIGH"\n'
-            '}\n'
+            "}\n"
             "Rules:\n"
             "- Do not invent facts.\n"
             "- Do not treat model score as calibrated probability.\n"
@@ -300,18 +314,18 @@ class LLMInvestigatorService:
                         function_name = tool_call.function.name
                         arguments = json.loads(tool_call.function.arguments)
 
-                        tool_result = await self._execute_tool(
-                            function_name, arguments
+                        tool_result = await self._execute_tool(function_name, arguments)
+                        tool_calls_log.append(
+                            {
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                                "tool": function_name,
+                                "args": arguments,
+                                "result_summary": self._summarize_tool_result(
+                                    function_name,
+                                    tool_result,
+                                ),
+                            }
                         )
-                        tool_calls_log.append({
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                            "tool": function_name,
-                            "args": arguments,
-                            "result_summary": self._summarize_tool_result(
-                                function_name,
-                                tool_result,
-                            ),
-                        })
 
                         messages.append(
                             {
@@ -386,7 +400,6 @@ class LLMInvestigatorService:
         await self._save_investigation_audit(result, success=True)
         return result
 
-
     def _summarize_tool_result(self, tool_name: str, result: Any) -> str:
         if tool_name == "get_related_accounts":
             return f"{len(result.get('linked_accounts', []))} linked accounts"
@@ -397,14 +410,8 @@ class LLMInvestigatorService:
 
         if tool_name == "check_evidence_availability":
             fields = result.get("fields", {})
-            available = sum(
-                1 for v in fields.values()
-                if v == "AVAILABLE"
-            )
-            missing = sum(
-                1 for v in fields.values()
-                if v == "MISSING"
-            )
+            available = sum(1 for v in fields.values() if v == "AVAILABLE")
+            missing = sum(1 for v in fields.values() if v == "MISSING")
             return f"{available} available, {missing} missing"
 
         if tool_name == "calculate_financial_exposure":
@@ -461,10 +468,12 @@ class LLMInvestigatorService:
                         if count > 0:
                             shared_attrs[
                                 entity.replace("shared_", "").replace("_count", "")
-                            ].append({
-                                "account_id": account_id,
-                                "count": int(count),
-                            })
+                            ].append(
+                                {
+                                    "account_id": account_id,
+                                    "count": int(count),
+                                }
+                            )
             return shared_attrs
 
         elif function_name == "check_evidence_availability":
@@ -509,29 +518,37 @@ class LLMInvestigatorService:
             orders = self.event_repo.get_orders_for_account(args["account_id"])
             events = []
             for _, order in orders.iterrows():
-                events.append({
-                    "timestamp": str(order["order_timestamp"]),
-                    "event": "Order placed",
-                    "details": f"Amount ₹{float(order['amount'])}",
-                })
+                events.append(
+                    {
+                        "timestamp": str(order["order_timestamp"]),
+                        "event": "Order placed",
+                        "details": f"Amount ₹{float(order['amount'])}",
+                    }
+                )
                 if pd.notna(order["delivery_timestamp"]):
-                    events.append({
-                        "timestamp": str(order["delivery_timestamp"]),
-                        "event": "Order delivered",
-                        "details": "",
-                    })
+                    events.append(
+                        {
+                            "timestamp": str(order["delivery_timestamp"]),
+                            "event": "Order delivered",
+                            "details": "",
+                        }
+                    )
                 if pd.notna(order["return_timestamp"]) and order["return_flag"]:
-                    events.append({
-                        "timestamp": str(order["return_timestamp"]),
-                        "event": "Return requested",
-                        "details": f"Reason: {order['return_reason_code']}",
-                    })
+                    events.append(
+                        {
+                            "timestamp": str(order["return_timestamp"]),
+                            "event": "Return requested",
+                            "details": f"Reason: {order['return_reason_code']}",
+                        }
+                    )
                 if pd.notna(order["refund_timestamp"]) and order["refund_flag"]:
-                    events.append({
-                        "timestamp": str(order["refund_timestamp"]),
-                        "event": "Refund processed",
-                        "details": f"Amount ₹{float(order['refund_amount'])}",
-                    })
+                    events.append(
+                        {
+                            "timestamp": str(order["refund_timestamp"]),
+                            "event": "Refund processed",
+                            "details": f"Amount ₹{float(order['refund_amount'])}",
+                        }
+                    )
             return {"events": events}
 
         elif function_name == "get_merchant_policy":
