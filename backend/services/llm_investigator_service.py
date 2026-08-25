@@ -159,7 +159,7 @@ class LLMInvestigatorService:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "tool": "get_related_accounts",
             "args": {"account_id": account_id},
-            "result_summary": str(related_result)[:200],
+            "result_summary": self._summarize_tool_result("get_related_accounts", related_result),
         })
 
         # 2. Shared attributes for related accounts
@@ -171,7 +171,10 @@ class LLMInvestigatorService:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "tool": "get_shared_attributes",
             "args": {"account_ids": related_ids},
-            "result_summary": str(shared_result)[:200],
+            "result_summary": self._summarize_tool_result(
+                "get_shared_attributes",
+                shared_result,
+            ),
         })
 
         # 3. Evidence availability
@@ -182,7 +185,10 @@ class LLMInvestigatorService:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "tool": "check_evidence_availability",
             "args": {"account_id": account_id},
-            "result_summary": str(evidence_result)[:200],
+            "result_summary": self._summarize_tool_result(
+                "check_evidence_availability",
+                evidence_result,
+            ),
         })
 
         # 4. Financial exposure
@@ -193,7 +199,10 @@ class LLMInvestigatorService:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "tool": "calculate_financial_exposure",
             "args": {"account_id": account_id},
-            "result_summary": str(exposure_result)[:200],
+            "result_summary": self._summarize_tool_result(
+                "calculate_financial_exposure",
+                exposure_result,
+            ),
         })
 
         # 5. Account timeline
@@ -204,7 +213,10 @@ class LLMInvestigatorService:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "tool": "get_account_timeline",
             "args": {"account_id": account_id},
-            "result_summary": str(timeline_result)[:200],
+            "result_summary": self._summarize_tool_result(
+                "get_account_timeline",
+                timeline_result,
+            ),
         })
 
         # 6. Merchant policy
@@ -215,7 +227,10 @@ class LLMInvestigatorService:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "tool": "get_merchant_policy",
             "args": {"category": "default"},
-            "result_summary": str(policy_result)[:200],
+            "result_summary": self._summarize_tool_result(
+                "get_merchant_policy",
+                policy_result,
+            ),
         })
 
         # ----------------------------------------------------------------
@@ -292,7 +307,10 @@ class LLMInvestigatorService:
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                             "tool": function_name,
                             "args": arguments,
-                            "result_summary": str(tool_result)[:200],
+                            "result_summary": self._summarize_tool_result(
+                                function_name,
+                                tool_result,
+                            ),
                         })
 
                         messages.append(
@@ -368,6 +386,43 @@ class LLMInvestigatorService:
         await self._save_investigation_audit(result, success=True)
         return result
 
+
+    def _summarize_tool_result(self, tool_name: str, result: Any) -> str:
+        if tool_name == "get_related_accounts":
+            return f"{len(result.get('linked_accounts', []))} linked accounts"
+
+        if tool_name == "get_shared_attributes":
+            total = sum(len(v) for v in result.values())
+            return f"{total} shared attributes across categories"
+
+        if tool_name == "check_evidence_availability":
+            fields = result.get("fields", {})
+            available = sum(
+                1 for v in fields.values()
+                if v == "AVAILABLE"
+            )
+            missing = sum(
+                1 for v in fields.values()
+                if v == "MISSING"
+            )
+            return f"{available} available, {missing} missing"
+
+        if tool_name == "calculate_financial_exposure":
+            return (
+                f"GMV ₹{result.get('gross_order_value', 0):,.0f}, "
+                f"refund ₹{result.get('refund_amount', 0):,.0f}, "
+                f"exposure ₹{result.get('potential_exposure', 0):,.0f}"
+            )
+
+        if tool_name == "get_account_timeline":
+            events = result.get("events", [])
+            return f"{len(events)} timeline events"
+
+        if tool_name == "get_merchant_policy":
+            return result.get("policy", "")
+
+        return str(result)[:200]
+
     async def _execute_tool(self, function_name: str, args: dict) -> Any:
         if function_name == "get_related_accounts":
             graph_evidence = self.explainability_repo.get_graph_evidence()
@@ -441,8 +496,8 @@ class LLMInvestigatorService:
                     "refund_amount": 0,
                     "potential_exposure": 0,
                 }
-            total_amount = row.iloc[0].get("total_amount", 0)
-            total_refund_amount = row.iloc[0].get("total_refund_amount", 0)
+            total_amount = float(row.iloc[0].get("total_amount", 0) or 0)
+            total_refund_amount = float(row.iloc[0].get("total_refund_amount", 0) or 0)
             potential_exposure = total_amount - total_refund_amount
             return {
                 "gross_order_value": total_amount,
@@ -457,7 +512,7 @@ class LLMInvestigatorService:
                 events.append({
                     "timestamp": str(order["order_timestamp"]),
                     "event": "Order placed",
-                    "details": f"Amount ₹{order['amount']}",
+                    "details": f"Amount ₹{float(order['amount'])}",
                 })
                 if pd.notna(order["delivery_timestamp"]):
                     events.append({
@@ -475,7 +530,7 @@ class LLMInvestigatorService:
                     events.append({
                         "timestamp": str(order["refund_timestamp"]),
                         "event": "Refund processed",
-                        "details": f"Amount ₹{order['refund_amount']}",
+                        "details": f"Amount ₹{float(order['refund_amount'])}",
                     })
             return {"events": events}
 
