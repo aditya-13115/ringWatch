@@ -12,6 +12,12 @@ class AuditRecordResponse(BaseModel):
     action_recommended: str
     case_report_generated: bool
 
+    # Optional investigation fields
+    investigation_source: str | None = None
+    tool_calls: str | None = None
+    summary: str | None = None
+    action_source: str | None = None
+
 
 class AuditResponse(BaseModel):
     records: list[AuditRecordResponse]

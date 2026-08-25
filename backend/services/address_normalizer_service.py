@@ -18,33 +18,47 @@ class AddressNormalizerService:
 
     async def normalize(self, raw_address: str) -> dict:
         async with ADDRESS_LLM_SEMAPHORE:
-            # First try deterministic normalization
+            # Try deterministic first
             det_result = self._deterministic_normalize(raw_address)
             if det_result["confidence"] >= 0.95:
                 return det_result
 
-            # Else use LLM to parse and match
+            # Use LLM to parse components
             try:
-                llm_result = await self._llm_normalize(raw_address)
-                if llm_result["confidence"] >= 0.7:
-                    return llm_result
-                else:
-                    # Low confidence: require human review
+                llm_comps = await self._llm_parse_components(raw_address)
+            except Exception:
+                llm_comps = None
+
+            if llm_comps:
+                best_match, score = self._best_component_match(llm_comps)
+                if score >= 0.90:
                     return {
                         "raw_address": raw_address,
-                        "normalized_address": llm_result.get("normalized_address"),
-                        "candidate_address_id": None,
-                        "confidence": llm_result["confidence"],
+                        "normalized_address": self._format_components(llm_comps),
+                        "candidate_address_id": best_match,
+                        "confidence": score,
+                        "requires_human_review": False,
+                    }
+                elif score >= 0.70:
+                    return {
+                        "raw_address": raw_address,
+                        "normalized_address": self._format_components(llm_comps),
+                        "candidate_address_id": best_match,
+                        "confidence": score,
                         "requires_human_review": True,
                     }
-            except Exception:
-                # LLM failed, fall back to deterministic result
-                det_result["requires_human_review"] = True
-                return det_result
+
+            # Unresolved
+            return {
+                "raw_address": raw_address,
+                "normalized_address": None,
+                "candidate_address_id": None,
+                "confidence": 0.0,
+                "requires_human_review": True,
+            }
 
     def _deterministic_normalize(self, raw_address: str) -> dict:
         normalized = self._basic_normalize(raw_address)
-        # Try exact match
         match = self.addresses[
             self.addresses["canonical_address"].str.lower() == normalized
         ]
@@ -56,65 +70,35 @@ class AddressNormalizerService:
                 "confidence": 1.0,
                 "requires_human_review": False,
             }
-        else:
-            return {
-                "raw_address": raw_address,
-                "normalized_address": normalized,
-                "candidate_address_id": None,
-                "confidence": 0.0,
-                "requires_human_review": True,
-            }
+        return {
+            "raw_address": raw_address,
+            "normalized_address": normalized,
+            "candidate_address_id": None,
+            "confidence": 0.0,
+            "requires_human_review": True,
+        }
 
     def _basic_normalize(self, text: str) -> str:
         return " ".join(text.lower().split())
 
-    async def _llm_normalize(self, raw_address: str) -> dict:
+    async def _llm_parse_components(self, raw_address: str) -> dict | None:
         if not self.settings.groq_api_key:
-            return {"confidence": 0.0, "normalized_address": None}
-
+            return None
         prompt = (
-            "Normalize the following Indian address into canonical form.\n"
+            "Extract the following fields from this Indian address:\n"
             f"Address: {raw_address}\n"
-            "Return JSON with keys: 'flat', 'building', 'street', 'area', 'city', 'state', 'pincode'.\n"
-            "If a component is missing, use null."
+            "Return JSON: {\"flat\": \"...\", \"building\": \"...\", \"street\": \"...\", \"area\": \"...\", \"city\": \"...\", \"state\": \"...\", \"pincode\": \"...\"}\n"
+            "If a field is missing, use null."
         )
-
         response = await self.client.chat.completions.create(
             model=self.settings.groq_model,
             messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
             temperature=0.1,
             max_tokens=200,
         )
         content = response.choices[0].message.content
-        try:
-            parsed = json.loads(content)
-            normalized = self._format_components(parsed)
-            # Find closest match (exact or contains)
-            match = self.addresses[
-                self.addresses["canonical_address"].str.lower().str.contains(
-                    normalized.split(",")[0], na=False
-                )
-            ]
-            if not match.empty:
-                # compute simple confidence based on match length
-                confidence = 0.85
-                return {
-                    "raw_address": raw_address,
-                    "normalized_address": normalized,
-                    "candidate_address_id": match.iloc[0]["address_id"],
-                    "confidence": confidence,
-                    "requires_human_review": False,
-                }
-            else:
-                return {
-                    "raw_address": raw_address,
-                    "normalized_address": normalized,
-                    "candidate_address_id": None,
-                    "confidence": 0.5,
-                    "requires_human_review": True,
-                }
-        except Exception:
-            return {"confidence": 0.0, "normalized_address": None}
+        return json.loads(content)
 
     def _format_components(self, comps: dict) -> str:
         parts = []
@@ -133,3 +117,34 @@ class AddressNormalizerService:
         if comps.get("pincode"):
             parts.append(str(comps["pincode"]))
         return ", ".join(filter(None, parts))
+
+    def _best_component_match(self, comps: dict) -> tuple[str | None, float]:
+        """Score each address based on component overlap."""
+        best_id = None
+        best_score = 0.0
+        for _, addr in self.addresses.iterrows():
+            addr_text = addr["canonical_address"].lower()
+            score = 0.0
+            # Pincode dominates
+            if str(comps.get("pincode")) == str(addr.get("pincode", "")):
+                score += 0.4
+            # City
+            if comps.get("city") and comps["city"].lower() in addr_text:
+                score += 0.15
+            # Area
+            if comps.get("area") and comps["area"].lower() in addr_text:
+                score += 0.15
+            # Building
+            if comps.get("building") and comps["building"].lower() in addr_text:
+                score += 0.15
+            # Street
+            if comps.get("street") and comps["street"].lower() in addr_text:
+                score += 0.10
+            # Flat
+            if comps.get("flat") and f"flat {comps['flat'].lower()}" in addr_text:
+                score += 0.05
+
+            if score > best_score:
+                best_score = score
+                best_id = addr["address_id"]
+        return best_id, best_score

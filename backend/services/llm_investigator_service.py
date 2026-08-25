@@ -1,5 +1,4 @@
 import json
-import uuid
 from datetime import datetime, timezone
 from typing import Any
 
@@ -8,7 +7,6 @@ from groq import AsyncGroq
 
 from backend.core.config import get_settings
 from backend.core.concurrency import LLM_SEMAPHORE
-from backend.core.exceptions import LLMServiceError
 from backend.repositories.explainability_repository import ExplainabilityRepository
 from backend.repositories.feature_repository import FeatureRepository
 from backend.repositories.event_repository import EventRepository
@@ -33,15 +31,40 @@ class LLMInvestigatorService:
     async def investigate(self, account_id: str) -> dict:
         async with LLM_SEMAPHORE:
             try:
-                return await self._run_groq_investigation(account_id)
+                return await self._run_investigation(account_id)
+
             except Exception as exc:
-                # Fallback to deterministic investigation
-                return await self._fallback_deterministic(account_id, error=str(exc))
+                try:
+                    return await self._fallback_deterministic(
+                        account_id,
+                        error=str(exc),
+                    )
 
-    async def _run_groq_investigation(self, account_id: str) -> dict:
+                except Exception as fallback_exc:
+                    return {
+                        "account_id": account_id,
+                        "source": "deterministic",
+                        "summary": "Investigation unavailable.",
+                        "key_findings": [],
+                        "evidence_gaps": [],
+                        "uncertainties": [],
+                        "confidence": "LOW",
+                        "tool_calls": [],
+                        "recommended_action": "Monitor",
+                        "action_source": "deterministic_policy",
+                        "error": str(fallback_exc),
+                    }
+
+    async def _run_investigation(self, account_id: str) -> dict:
         if not self.settings.groq_api_key:
-            return await self._fallback_deterministic(account_id, error="Groq API key not configured")
+            return await self._fallback_deterministic(
+                account_id, error="Groq API key not configured"
+            )
 
+        # ----------------------------------------------------------------
+        # Define tools for Groq. These allow the LLM to perform additional
+        # investigation if it deems necessary.
+        # ----------------------------------------------------------------
         tools = [
             {
                 "type": "function",
@@ -99,6 +122,18 @@ class LLMInvestigatorService:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_account_timeline",
+                    "description": "Get the order/return/refund/dispute timeline for an account.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"account_id": {"type": "string"}},
+                        "required": ["account_id"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_merchant_policy",
                     "description": "Get the merchant's refund/dispute policy for a given category.",
                     "parameters": {
@@ -110,24 +145,126 @@ class LLMInvestigatorService:
             },
         ]
 
+        # ----------------------------------------------------------------
+        # Step 1: Pre-execute essential tools deterministically.
+        # This guarantees the investigator has minimum evidence.
+        # ----------------------------------------------------------------
+        tool_calls_log = []
+
+        # 1. Related accounts
+        related_result = await self._execute_tool(
+            "get_related_accounts", {"account_id": account_id}
+        )
+        tool_calls_log.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "tool": "get_related_accounts",
+            "args": {"account_id": account_id},
+            "result_summary": str(related_result)[:200],
+        })
+
+        # 2. Shared attributes for related accounts
+        related_ids = related_result.get("linked_accounts", [])
+        shared_result = await self._execute_tool(
+            "get_shared_attributes", {"account_ids": related_ids}
+        )
+        tool_calls_log.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "tool": "get_shared_attributes",
+            "args": {"account_ids": related_ids},
+            "result_summary": str(shared_result)[:200],
+        })
+
+        # 3. Evidence availability
+        evidence_result = await self._execute_tool(
+            "check_evidence_availability", {"account_id": account_id}
+        )
+        tool_calls_log.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "tool": "check_evidence_availability",
+            "args": {"account_id": account_id},
+            "result_summary": str(evidence_result)[:200],
+        })
+
+        # 4. Financial exposure
+        exposure_result = await self._execute_tool(
+            "calculate_financial_exposure", {"account_id": account_id}
+        )
+        tool_calls_log.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "tool": "calculate_financial_exposure",
+            "args": {"account_id": account_id},
+            "result_summary": str(exposure_result)[:200],
+        })
+
+        # 5. Account timeline
+        timeline_result = await self._execute_tool(
+            "get_account_timeline", {"account_id": account_id}
+        )
+        tool_calls_log.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "tool": "get_account_timeline",
+            "args": {"account_id": account_id},
+            "result_summary": str(timeline_result)[:200],
+        })
+
+        # 6. Merchant policy
+        policy_result = await self._execute_tool(
+            "get_merchant_policy", {"category": "default"}
+        )
+        tool_calls_log.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "tool": "get_merchant_policy",
+            "args": {"category": "default"},
+            "result_summary": str(policy_result)[:200],
+        })
+
+        # ----------------------------------------------------------------
+        # Step 2: Build initial messages with all pre-gathered evidence.
+        # Also include the tools so Groq can call them if needed.
+        # ----------------------------------------------------------------
+        evidence_packet = {
+            "account_id": account_id,
+            "related_accounts": related_result,
+            "shared_attributes": shared_result,
+            "evidence": evidence_result,
+            "financial_exposure": exposure_result,
+            "timeline": timeline_result,
+            "merchant_policy": policy_result,
+        }
+
         system_prompt = (
-            "You are an investigator assistant for RingWatch, a post-delivery "
-            "refund/return abuse detection system for merchants. "
-            "Use the provided tools to gather information about the flagged account. "
-            "Then produce a concise investigation report with key findings, evidence gaps, "
-            "uncertainties, and a recommended action from the allowed list: "
-            "LOW, MEDIUM, HIGH, CRITICAL. "
-            "Do not invent facts. Only use tool outputs. "
-            "Do not treat model score as calibrated probability. "
-            "Do not make final financial decisions. The final action is determined by the system."
+            "You are an AI investigator for RingWatch, a post-delivery refund/return abuse detection system.\n"
+            "You have already been provided with core investigation evidence.\n"
+            "You may call additional tools if you need more information.\n"
+            "After investigation, produce a JSON object with the following structure:\n"
+            '{\n'
+            '  "summary": "...",\n'
+            '  "key_findings": ["...", "..."],\n'
+            '  "evidence_gaps": ["..."],\n'
+            '  "uncertainties": ["..."],\n'
+            '  "confidence": "LOW|MEDIUM|HIGH"\n'
+            '}\n'
+            "Rules:\n"
+            "- Do not invent facts.\n"
+            "- Do not treat model score as calibrated probability.\n"
+            "- Do not make final financial decisions.\n"
+            "- Use only the provided evidence and tool outputs.\n"
+            "- The final action is determined by the system's deterministic policy, not by you.\n"
         )
 
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Investigate account {account_id}."},
+            {
+                "role": "user",
+                "content": f"Core evidence:\n{json.dumps(evidence_packet)}",
+            },
         ]
 
-        tool_calls_log = []
+        # ----------------------------------------------------------------
+        # Step 3: Let Groq call additional tools if needed.
+        # We use tool_choice="auto" to allow optional extra investigation.
+        # ----------------------------------------------------------------
+        final_content = None
 
         for attempt in range(self.settings.llm_max_retries + 1):
             try:
@@ -143,6 +280,7 @@ class LLMInvestigatorService:
                 messages.append(message)
 
                 if message.tool_calls:
+                    # Execute any additional tool calls requested by Groq
                     for tool_call in message.tool_calls:
                         function_name = tool_call.function.name
                         arguments = json.loads(tool_call.function.arguments)
@@ -150,15 +288,12 @@ class LLMInvestigatorService:
                         tool_result = await self._execute_tool(
                             function_name, arguments
                         )
-
-                        tool_calls_log.append(
-                            {
-                                "timestamp": datetime.now(timezone.utc).isoformat(),
-                                "tool": function_name,
-                                "args": arguments,
-                                "result_summary": str(tool_result)[:200],
-                            }
-                        )
+                        tool_calls_log.append({
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "tool": function_name,
+                            "args": arguments,
+                            "result_summary": str(tool_result)[:200],
+                        })
 
                         messages.append(
                             {
@@ -168,89 +303,70 @@ class LLMInvestigatorService:
                             }
                         )
 
+                    # Continue conversation to get final answer
                     final_response = await self.client.chat.completions.create(
                         model=self.settings.groq_model,
                         messages=messages,
                         temperature=0.2,
                         max_tokens=1024,
                     )
-                    final_message = final_response.choices[0].message.content
-
-                    # Attempt to parse structured JSON; if fails, treat as plain text
-                    try:
-                        parsed = json.loads(final_message)
-                        summary = parsed.get("summary", final_message)
-                        key_findings = parsed.get("key_findings", [])
-                        evidence_gaps = parsed.get("evidence_gaps", [])
-                        uncertainties = parsed.get("uncertainties", [])
-                        confidence = parsed.get("confidence", "LOW")
-                    except json.JSONDecodeError:
-                        summary = final_message
-                        key_findings = []
-                        evidence_gaps = []
-                        uncertainties = []
-                        confidence = "LOW"
-
-                    # Deterministic action from action service
-                    action = await self.action_service.get_action(account_id)
-
-                    result = {
-                        "account_id": account_id,
-                        "source": "llm",
-                        "summary": summary,
-                        "key_findings": key_findings,
-                        "evidence_gaps": evidence_gaps,
-                        "uncertainties": uncertainties,
-                        "confidence": confidence,
-                        "tool_calls": tool_calls_log,
-                        "recommended_action": action.action_description,
-                        "action_source": "deterministic_policy",
-                    }
-
-                    # Save audit
-                    await self._save_investigation_audit(result, success=True)
-                    return result
-
+                    final_content = final_response.choices[0].message.content
                 else:
-                    # No tool calls, just content
-                    content = message.content
-                    try:
-                        parsed = json.loads(content)
-                        summary = parsed.get("summary", content)
-                        key_findings = parsed.get("key_findings", [])
-                        evidence_gaps = parsed.get("evidence_gaps", [])
-                        uncertainties = parsed.get("uncertainties", [])
-                        confidence = parsed.get("confidence", "LOW")
-                    except json.JSONDecodeError:
-                        summary = content
-                        key_findings = []
-                        evidence_gaps = []
-                        uncertainties = []
-                        confidence = "LOW"
+                    final_content = message.content
 
-                    action = await self.action_service.get_action(account_id)
-
-                    result = {
-                        "account_id": account_id,
-                        "source": "llm",
-                        "summary": summary,
-                        "key_findings": key_findings,
-                        "evidence_gaps": evidence_gaps,
-                        "uncertainties": uncertainties,
-                        "confidence": confidence,
-                        "tool_calls": tool_calls_log,
-                        "recommended_action": action.action_description,
-                        "action_source": "deterministic_policy",
-                    }
-                    await self._save_investigation_audit(result, success=True)
-                    return result
+                break  # success; exit retry loop
 
             except Exception as exc:
                 if attempt == self.settings.llm_max_retries:
-                    return await self._fallback_deterministic(account_id, error=str(exc))
+                    return await self._fallback_deterministic(
+                        account_id, error=f"LLM error: {exc}"
+                    )
                 continue
 
-        return await self._fallback_deterministic(account_id, error="Max retries exceeded")
+        if final_content is None:
+            return await self._fallback_deterministic(
+                account_id, error="No LLM response"
+            )
+
+        # ----------------------------------------------------------------
+        # Step 4: Parse structured JSON output
+        # ----------------------------------------------------------------
+        try:
+            parsed = json.loads(final_content)
+            summary = parsed.get("summary", "")
+            key_findings = parsed.get("key_findings", [])
+            evidence_gaps = parsed.get("evidence_gaps", [])
+            uncertainties = parsed.get("uncertainties", [])
+            confidence = parsed.get("confidence", "LOW")
+        except json.JSONDecodeError:
+            # If not JSON, use plain text as summary
+            summary = final_content
+            key_findings = []
+            evidence_gaps = []
+            uncertainties = []
+            confidence = "LOW"
+
+        # ----------------------------------------------------------------
+        # Step 5: Deterministic action from action service
+        # ----------------------------------------------------------------
+        action = await self.action_service.get_action(account_id)
+
+        result = {
+            "account_id": account_id,
+            "source": "llm",
+            "summary": summary,
+            "key_findings": key_findings,
+            "evidence_gaps": evidence_gaps,
+            "uncertainties": uncertainties,
+            "confidence": confidence,
+            "tool_calls": tool_calls_log,
+            "recommended_action": action.action_description,
+            "action_source": "deterministic_policy",
+        }
+
+        # Save audit
+        await self._save_investigation_audit(result, success=True)
+        return result
 
     async def _execute_tool(self, function_name: str, args: dict) -> Any:
         if function_name == "get_related_accounts":
@@ -275,21 +391,24 @@ class LLMInvestigatorService:
             if not account_ids:
                 return shared_attrs
 
-            # Use graph edges to find shared entities
-            # This is a simplification: use explainability repo's graph_evidence or feature repo
-            # We'll leverage the feature repository to get shared counts
             features = self.feature_repo.get_features()
             for account_id in account_ids:
                 row = features[features["account_id"] == account_id]
                 if not row.empty:
                     row = row.iloc[0]
-                    for entity in ["shared_device_count", "shared_address_count",
-                                   "shared_phone_count", "shared_instrument_count"]:
+                    for entity in [
+                        "shared_device_count",
+                        "shared_address_count",
+                        "shared_phone_count",
+                        "shared_instrument_count",
+                    ]:
                         count = row.get(entity, 0)
                         if count > 0:
-                            shared_attrs[entity.replace("shared_", "").replace("_count", "")].append({
+                            shared_attrs[
+                                entity.replace("shared_", "").replace("_count", "")
+                            ].append({
                                 "account_id": account_id,
-                                "count": int(count)
+                                "count": int(count),
                             })
             return shared_attrs
 
@@ -317,7 +436,11 @@ class LLMInvestigatorService:
             features = self.feature_repo.get_features()
             row = features[features["account_id"] == args["account_id"]]
             if row.empty:
-                return {"gross_order_value": 0, "refund_amount": 0, "potential_exposure": 0}
+                return {
+                    "gross_order_value": 0,
+                    "refund_amount": 0,
+                    "potential_exposure": 0,
+                }
             total_amount = row.iloc[0].get("total_amount", 0)
             total_refund_amount = row.iloc[0].get("total_refund_amount", 0)
             potential_exposure = total_amount - total_refund_amount
@@ -327,9 +450,36 @@ class LLMInvestigatorService:
                 "potential_exposure": potential_exposure,
             }
 
+        elif function_name == "get_account_timeline":
+            orders = self.event_repo.get_orders_for_account(args["account_id"])
+            events = []
+            for _, order in orders.iterrows():
+                events.append({
+                    "timestamp": str(order["order_timestamp"]),
+                    "event": "Order placed",
+                    "details": f"Amount ₹{order['amount']}",
+                })
+                if pd.notna(order["delivery_timestamp"]):
+                    events.append({
+                        "timestamp": str(order["delivery_timestamp"]),
+                        "event": "Order delivered",
+                        "details": "",
+                    })
+                if pd.notna(order["return_timestamp"]) and order["return_flag"]:
+                    events.append({
+                        "timestamp": str(order["return_timestamp"]),
+                        "event": "Return requested",
+                        "details": f"Reason: {order['return_reason_code']}",
+                    })
+                if pd.notna(order["refund_timestamp"]) and order["refund_flag"]:
+                    events.append({
+                        "timestamp": str(order["refund_timestamp"]),
+                        "event": "Refund processed",
+                        "details": f"Amount ₹{order['refund_amount']}",
+                    })
+            return {"events": events}
+
         elif function_name == "get_merchant_policy":
-            # In a real system, this would query a policy table.
-            # For now, return a deterministic policy based on category.
             category = args.get("category", "default")
             policies = {
                 "fashion": "Manual review required for refunds over ₹5000",
@@ -341,33 +491,48 @@ class LLMInvestigatorService:
         else:
             raise ValueError(f"Unknown tool: {function_name}")
 
-    async def _save_investigation_audit(self, result: dict, success: bool = True):
-        # Append to existing audit log or create new record
-        audit_entry = {
+    async def _save_investigation_audit(
+        self,
+        result: dict,
+        success: bool = True,
+    ):
+        """Append a detailed investigation record."""
+
+        audit_dir = self.explainability_repo.explainability_dir
+        audit_path = audit_dir / "investigation_audit_log.csv"
+
+        try:
+            df = pd.read_csv(audit_path)
+        except FileNotFoundError:
+            df = pd.DataFrame()
+        except Exception:
+            df = pd.DataFrame()
+
+        entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "account_id": result["account_id"],
             "model_version": "LightGBM_Model_B",
-            "proba": result.get("proba", None),
-            "rank": result.get("rank", None),
-            "risk_tier": result.get("risk_tier", None),
+            "proba": None,
+            "rank": None,
+            "risk_tier": None,
             "top_k_flag": True,
             "action_recommended": result["recommended_action"],
             "case_report_generated": True,
             "investigation_source": result["source"],
-            "tool_calls": result.get("tool_calls", []),
+            "tool_calls": json.dumps(result.get("tool_calls", [])),
             "summary": result.get("summary", ""),
-            "action_source": result.get("action_source", "deterministic_policy"),
+            "action_source": result.get(
+                "action_source",
+                "deterministic_policy",
+            ),
         }
 
-        # Save to a new file or existing audit CSV (append)
-        try:
-            audit_path = self.explainability_repo.audit_path
-            df = pd.read_csv(audit_path)
-            df = pd.concat([df, pd.DataFrame([audit_entry])], ignore_index=True)
-            df.to_csv(audit_path, index=False)
-        except Exception:
-            # If fails, just log
-            pass
+        df = pd.concat(
+            [df, pd.DataFrame([entry])],
+            ignore_index=True,
+        )
+
+        df.to_csv(audit_path, index=False)
 
     async def _fallback_deterministic(self, account_id: str, error: str = "") -> dict:
         report = self.explainability_repo.get_reports()
@@ -389,7 +554,5 @@ class LLMInvestigatorService:
             "action_source": "deterministic_policy",
             "error": error,
         }
-
-        # Save audit as fallback
         await self._save_investigation_audit(result, success=False)
         return result

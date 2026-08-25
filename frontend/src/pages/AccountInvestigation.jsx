@@ -9,14 +9,59 @@ import Badge from "../components/Badge";
 import Card from "../components/Card";
 import GraphView from "../components/GraphView";
 
+
+function ActionPanel({ tier }) {
+  switch (tier) {
+    case "CRITICAL":
+      return (
+        <div className="flex gap-2 mt-2">
+          <button className="bg-black text-white px-4 py-2 rounded-md text-sm">
+            Place Soft Hold
+          </button>
+
+          <button className="border border-black px-4 py-2 rounded-md text-sm">
+            Open Human Review
+          </button>
+        </div>
+      );
+
+    case "HIGH":
+      return (
+        <button className="bg-black text-white px-4 py-2 rounded-md text-sm">
+          Start Review
+        </button>
+      );
+
+    case "MEDIUM":
+      return (
+        <button className="border border-black px-4 py-2 rounded-md text-sm">
+          Start Step-Up Verification
+        </button>
+      );
+
+    case "LOW":
+      return (
+        <button className="border border-black px-4 py-2 rounded-md text-sm">
+          Continue Refund
+        </button>
+      );
+
+    default:
+      return null;
+  }
+}
+
+
 export default function AccountInvestigation() {
   const { accountId } = useParams();
+
   const [detail, setDetail] = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [investigation, setInvestigation] = useState(null);
   const [isInvestigating, setIsInvestigating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
 
   useEffect(() => {
     Promise.all([
@@ -31,9 +76,11 @@ export default function AccountInvestigation() {
       .finally(() => setLoading(false));
   }, [accountId]);
 
+
   const handleInvestigate = async () => {
     setIsInvestigating(true);
     setError(null);
+
     try {
       const result = await investigateAccount(accountId);
       setInvestigation(result);
@@ -44,92 +91,159 @@ export default function AccountInvestigation() {
     }
   };
 
-  if (loading) return <div className="p-6">Loading account…</div>;
-  if (error && !detail) return <div className="p-6 text-destructive">{error}</div>;
-  if (!detail) return <div className="p-6">No account found.</div>;
+
+  if (loading) {
+    return <div className="p-6">Loading account…</div>;
+  }
+
+  if (error && !detail) {
+    return <div className="p-6 text-destructive">{error}</div>;
+  }
+
+  if (!detail) {
+    return <div className="p-6">No account found.</div>;
+  }
+
 
   return (
     <div className="space-y-6">
+
       {/* Hero Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">{detail.account_id}</h2>
+          <h2 className="text-2xl font-semibold">
+            {detail.account_id}
+          </h2>
+
           <p className="text-sm text-muted-foreground">
             Investigation Rank #{detail.rank} of 7
           </p>
         </div>
+
         <Badge tier={detail.risk_tier} />
       </div>
+
 
       {/* Why this account */}
       <Card className="p-6">
         <h3 className="text-sm font-medium text-muted-foreground mb-3">
           Why was this account flagged?
         </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
           <div className="p-3 rounded-md bg-muted">
-            <p className="text-xs text-muted-foreground">Top Signal</p>
+            <p className="text-xs text-muted-foreground">
+              Top Signal
+            </p>
+
             <p className="text-sm font-medium">
               {detail.top_shap_features[0]?.feature || "N/A"}
             </p>
+
             <p className="text-xs text-muted-foreground">
-              SHAP contribution: {detail.top_shap_features[0]?.shap_value.toFixed(4)}
+              SHAP contribution:{" "}
+              {detail.top_shap_features[0]?.shap_value.toFixed(4)}
             </p>
           </div>
+
+
           <div className="p-3 rounded-md bg-muted">
-            <p className="text-xs text-muted-foreground">Graph Relationships</p>
+            <p className="text-xs text-muted-foreground">
+              Graph Relationships
+            </p>
+
             <p className="text-sm font-medium">
               {detail.graph_evidence?.total_graph_links ?? 0} links
             </p>
           </div>
+
+
           <div className="p-3 rounded-md bg-muted">
-            <p className="text-xs text-muted-foreground">Evidence Readiness</p>
+            <p className="text-xs text-muted-foreground">
+              Evidence Readiness
+            </p>
+
             <p className="text-sm font-medium">
               {detail.evidence_status?.missing_evidence_count === null
                 ? "No dispute yet"
                 : `${detail.evidence_status.missing_evidence_count} missing`}
             </p>
           </div>
+
         </div>
       </Card>
 
-      {/* Action */}
+
+      {/* Recommended Action */}
       <Card className="p-6">
         <h3 className="text-sm font-medium text-muted-foreground mb-3">
           Recommended Action
         </h3>
-        <p className="text-lg font-medium">{detail.recommended_action}</p>
+
+        <p className="text-lg font-medium">
+          {detail.recommended_action}
+        </p>
+
         <p className="text-sm text-muted-foreground mt-2">
           Action authority: deterministic policy
         </p>
+
+        <ActionPanel tier={detail.risk_tier} />
       </Card>
+
 
       {/* Main investigation grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Left column */}
         <div className="space-y-6">
+
+          {/* Observed Facts */}
           <Card className="p-4">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Observed Facts
             </h3>
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(detail.observed_facts).map(([key, value]) => (
-                <div key={key}>
-                  <dt className="text-xs text-muted-foreground">{key}</dt>
-                  <dd className="text-sm font-medium">{value}</dd>
-                </div>
-              ))}
+              {Object.entries(detail.observed_facts).map(
+                ([key, value]) => (
+                  <div key={key}>
+                    <dt className="text-xs text-muted-foreground">
+                      {key}
+                    </dt>
+
+                    <dd className="text-sm font-medium">
+                      {value}
+                    </dd>
+                  </div>
+                )
+              )}
             </div>
           </Card>
 
+
+          {/* Top SHAP Contributors */}
           <Card className="p-4">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Top SHAP Contributors
             </h3>
+
             <ul className="space-y-2">
               {detail.top_shap_features.map((f) => (
-                <li key={f.feature} className="flex justify-between text-sm">
+                <li
+                  key={f.feature}
+                  className="flex justify-between text-sm"
+                >
                   <span>{f.feature}</span>
-                  <span className={f.shap_value >= 0 ? "text-black" : "text-gray-500"}>
+
+                  <span
+                    className={
+                      f.shap_value >= 0
+                        ? "text-black"
+                        : "text-gray-500"
+                    }
+                  >
                     {f.shap_value.toFixed(4)}
                   </span>
                 </li>
@@ -137,134 +251,258 @@ export default function AccountInvestigation() {
             </ul>
           </Card>
 
+
+          {/* Evidence Status */}
           <Card className="p-4">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Evidence Status
             </h3>
+
             <div className="space-y-1">
-              {Object.entries(detail.evidence_status.fields).map(([field, status]) => (
-                <div key={field} className="flex justify-between text-sm">
-                  <span>{field}</span>
-                  <span className={status === "MISSING" ? "text-destructive" : "text-muted-foreground"}>
-                    {status}
-                  </span>
-                </div>
-              ))}
+              {Object.entries(detail.evidence_status.fields).map(
+                ([field, status]) => (
+                  <div
+                    key={field}
+                    className="flex justify-between text-sm"
+                  >
+                    <span>{field}</span>
+
+                    <span
+                      className={
+                        status === "MISSING"
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {status}
+                    </span>
+                  </div>
+                )
+              )}
             </div>
           </Card>
+
         </div>
 
+
+        {/* Right column */}
         <div className="space-y-6">
+
+          {/* Adaptive Graph Relationships */}
           <Card className="p-4">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Graph Relationships
             </h3>
-            <GraphView accountId={accountId} />
+
+            {detail.risk_tier === "CRITICAL" ||
+            detail.risk_tier === "HIGH" ? (
+              <GraphView accountId={accountId} />
+            ) : detail.risk_tier === "MEDIUM" ? (
+              <div className="text-sm text-muted-foreground">
+                <p>
+                  {detail.graph_evidence?.total_graph_links || 0} graph
+                  links found.
+                </p>
+
+                <p>
+                  No significant network evidence to display.
+                </p>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                <p>No significant graph evidence.</p>
+
+                <p>
+                  Shared entities:{" "}
+                  {detail.graph_evidence?.total_graph_links || 0} links.
+                </p>
+              </div>
+            )}
           </Card>
 
+
+          {/* Investigation Timeline */}
           <Card className="p-4">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Investigation Timeline
             </h3>
+
             {timeline.length > 0 ? (
               <ol className="relative border-l border-border ml-2 pl-4 space-y-4">
                 {timeline.map((event, idx) => (
                   <li key={idx} className="ml-4">
+
                     <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-black" />
+
                     <time className="text-xs text-muted-foreground">
                       {new Date(event.timestamp).toLocaleString()}
                     </time>
-                    <p className="text-sm font-medium">{event.event}</p>
-                    <p className="text-sm text-muted-foreground">{event.details}</p>
+
+                    <p className="text-sm font-medium">
+                      {event.event}
+                    </p>
+
+                    <p className="text-sm text-muted-foreground">
+                      {event.details}
+                    </p>
+
                   </li>
                 ))}
               </ol>
             ) : (
-              <p className="text-sm text-muted-foreground">No events found.</p>
+              <p className="text-sm text-muted-foreground">
+                No events found.
+              </p>
             )}
           </Card>
+
         </div>
       </div>
 
+
       {/* Case Report */}
       <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-2">Case Report</h3>
-        <pre className="whitespace-pre-wrap text-sm font-mono">{detail.case_report_text}</pre>
+        <h3 className="text-sm font-medium text-muted-foreground mb-2">
+          Case Report
+        </h3>
+
+        <pre className="whitespace-pre-wrap text-sm font-mono">
+          {detail.case_report_text}
+        </pre>
       </Card>
+
 
       {/* AI Investigator */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-muted-foreground">AI Investigator</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">
+            AI Investigator
+          </h3>
+
           <button
             onClick={handleInvestigate}
             disabled={isInvestigating}
             className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
           >
-            {isInvestigating ? "Investigating…" : "Run Investigation"}
+            {isInvestigating
+              ? "Investigating…"
+              : "Run Investigation"}
           </button>
         </div>
 
+
         {investigation && (
           <div className="space-y-4">
+
+            {/* Summary */}
             <div className="bg-muted p-4 rounded-md">
-              <h4 className="text-sm font-semibold">Summary</h4>
-              <p className="text-sm">{investigation.summary}</p>
+              <h4 className="text-sm font-semibold">
+                Summary
+              </h4>
+
+              <p className="text-sm">
+                {investigation.summary}
+              </p>
             </div>
 
+
+            {/* Key Findings */}
             {investigation.key_findings.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold">Key Findings</h4>
+                <h4 className="text-sm font-semibold">
+                  Key Findings
+                </h4>
+
                 <ul className="list-disc list-inside text-sm">
-                  {investigation.key_findings.map((finding, idx) => (
-                    <li key={idx}>{finding}</li>
-                  ))}
+                  {investigation.key_findings.map(
+                    (finding, idx) => (
+                      <li key={idx}>{finding}</li>
+                    )
+                  )}
                 </ul>
               </div>
             )}
 
+
+            {/* Evidence Gaps */}
             {investigation.evidence_gaps.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold">Evidence Gaps</h4>
+                <h4 className="text-sm font-semibold">
+                  Evidence Gaps
+                </h4>
+
                 <ul className="list-disc list-inside text-sm">
-                  {investigation.evidence_gaps.map((gap, idx) => (
-                    <li key={idx}>{gap}</li>
-                  ))}
+                  {investigation.evidence_gaps.map(
+                    (gap, idx) => (
+                      <li key={idx}>{gap}</li>
+                    )
+                  )}
                 </ul>
               </div>
             )}
 
+
+            {/* Uncertainties */}
             {investigation.uncertainties.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold">Uncertainties</h4>
+                <h4 className="text-sm font-semibold">
+                  Uncertainties
+                </h4>
+
                 <ul className="list-disc list-inside text-sm">
-                  {investigation.uncertainties.map((u, idx) => (
-                    <li key={idx}>{u}</li>
-                  ))}
+                  {investigation.uncertainties.map(
+                    (u, idx) => (
+                      <li key={idx}>{u}</li>
+                    )
+                  )}
                 </ul>
               </div>
             )}
 
+
+            {/* Tool Trace */}
             {investigation.tool_calls.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold">Tool Trace</h4>
+                <h4 className="text-sm font-semibold">
+                  Tool Trace
+                </h4>
+
                 <ul className="space-y-2 text-sm">
-                  {investigation.tool_calls.map((call, idx) => (
-                    <li key={idx} className="text-muted-foreground">
-                      <span className="font-mono">{call.tool}</span> → {call.result_summary}
-                    </li>
-                  ))}
+                  {investigation.tool_calls.map(
+                    (call, idx) => (
+                      <li
+                        key={idx}
+                        className="text-muted-foreground"
+                      >
+                        <span className="font-mono">
+                          {call.tool}
+                        </span>{" "}
+                        → {call.result_summary}
+                      </li>
+                    )
+                  )}
                 </ul>
               </div>
             )}
 
+
+            {/* Recommended Action */}
             <div className="text-sm text-muted-foreground">
-              Recommended action: <span className="font-medium text-black">{investigation.recommended_action}</span>
-              <p className="text-xs">Action source: {investigation.action_source}</p>
+              Recommended action:{" "}
+              <span className="font-medium text-black">
+                {investigation.recommended_action}
+              </span>
+
+              <p className="text-xs">
+                Action source: {investigation.action_source}
+              </p>
             </div>
+
           </div>
         )}
+
       </Card>
+
     </div>
   );
 }
