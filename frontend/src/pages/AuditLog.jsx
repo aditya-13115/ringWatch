@@ -6,6 +6,7 @@ export default function AuditLog() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
     getAudit()
@@ -14,8 +15,8 @@ export default function AuditLog() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div>Loading audit log…</div>;
-  if (error) return <div className="text-destructive">{error}</div>;
+  if (loading) return <div className="p-6">Loading audit log…</div>;
+  if (error) return <div className="p-6 text-destructive">{error}</div>;
 
   return (
     <div>
@@ -33,26 +34,48 @@ export default function AuditLog() {
               <th className="px-4 py-2">Account</th>
               <th className="px-4 py-2">Source</th>
               <th className="px-4 py-2">Action</th>
-              <th className="px-4 py-2">Summary</th>
-              <th className="px-4 py-2">Tools</th>
+              <th className="px-4 py-2">Details</th>
             </tr>
           </thead>
           <tbody>
             {records.map((record, idx) => (
-              <tr key={idx} className="border-b border-border hover:bg-muted/50">
-                <td className="px-4 py-3 text-xs text-muted-foreground">
-                  {new Date(record.timestamp).toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-sm">{record.account_id}</td>
-                <td className="px-4 py-3 text-sm">
-                  {record.investigation_source || "model"}
-                </td>
-                <td className="px-4 py-3 text-sm">{record.action_recommended}</td>
-                <td className="px-4 py-3 text-sm">{record.summary || ""}</td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">
-                  {Array.isArray(record.tool_calls) ? record.tool_calls.map(t => t.tool).join(", ") : ""}
-                </td>
-              </tr>
+              <>
+                <tr
+                  key={idx}
+                  className="border-b border-border hover:bg-muted/50 cursor-pointer"
+                  onClick={() => setExpanded(expanded === idx ? null : idx)}
+                >
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {new Date(record.timestamp).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-sm">{record.account_id}</td>
+                  <td className="px-4 py-3 text-sm">
+                    {record.investigation_source || "model"}
+                  </td>
+                  <td className="px-4 py-3 text-sm">{record.action_recommended}</td>
+                  <td className="px-4 py-3 text-sm">
+                    {expanded === idx ? "−" : "+"}
+                  </td>
+                </tr>
+                {expanded === idx && (
+                  <tr key={`expanded-${idx}`} className="border-b border-border bg-muted/30">
+                    <td colSpan="5" className="px-6 py-4">
+                      <div className="space-y-2">
+                        <p><strong>Model:</strong> {record.model_version}</p>
+                        <p><strong>Score:</strong> {record.proba}</p>
+                        <p><strong>Tier:</strong> {record.risk_tier}</p>
+                        {record.summary && <p><strong>Summary:</strong> {record.summary}</p>}
+                        {record.tool_calls && (
+                          <div>
+                            <strong>Tool Calls:</strong>
+                            <pre className="whitespace-pre-wrap text-xs">{record.tool_calls}</pre>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </>
             ))}
           </tbody>
         </table>

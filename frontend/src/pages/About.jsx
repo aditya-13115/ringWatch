@@ -2,6 +2,7 @@ export default function About() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold">About RingWatch</h1>
+
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Problem</h2>
         <p className="text-muted-foreground">
@@ -9,6 +10,7 @@ export default function About() {
           Individual account risk scores miss coordinated behavior.
         </p>
       </section>
+
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Solution</h2>
         <p className="text-muted-foreground">
@@ -17,18 +19,28 @@ export default function About() {
           patterns before disputes occur.
         </p>
       </section>
+
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Architecture</h2>
-        <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-          <li>Synthetic dataset with hidden abuse rings</li>
-          <li>Cutoff-safe feature engineering</li>
-          <li>Graph construction & Louvain communities</li>
-          <li>LightGBM model for ranking</li>
-          <li>SHAP explanations & evidence gap analysis</li>
-          <li>AI investigator with tool calling</li>
-          <li>Deterministic bounded actions</li>
-        </ol>
+        <h2 className="text-xl font-semibold">System Architecture</h2>
+        <div className="rounded-lg border border-border p-4 bg-card">
+          <ol className="list-decimal list-inside space-y-2 text-sm">
+            <li>Synthetic dataset with hidden abuse rings</li>
+            <li>Cutoff-safe feature engineering</li>
+            <li>Graph construction & Louvain communities</li>
+            <li>LightGBM Model B for risk ranking</li>
+            <li>SHAP explanations & evidence gap analysis</li>
+            <li>AI Investigator (Groq) with tool calling</li>
+            <li>Deterministic Policy Engine for action decision</li>
+            <li>Human review and audit trail</li>
+          </ol>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          <strong>Important:</strong> The AI Investigator provides analysis and
+          recommendations, but the final action is always determined by the
+          deterministic policy engine, never the LLM.
+        </p>
       </section>
+
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Limitations</h2>
         <p className="text-muted-foreground">

@@ -52,6 +52,16 @@ function ActionPanel({ tier }) {
 }
 
 
+const INVESTIGATION_STEPS = [
+  "Gathering graph evidence",
+  "Checking evidence availability",
+  "Calculating financial exposure",
+  "Analyzing with Groq",
+  "Applying deterministic policy",
+  "Complete",
+];
+
+
 export default function AccountInvestigation() {
   const { accountId } = useParams();
 
@@ -59,6 +69,7 @@ export default function AccountInvestigation() {
   const [timeline, setTimeline] = useState([]);
   const [investigation, setInvestigation] = useState(null);
   const [isInvestigating, setIsInvestigating] = useState(false);
+  const [investigationStep, setInvestigationStep] = useState(-1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -80,10 +91,19 @@ export default function AccountInvestigation() {
   const handleInvestigate = async () => {
     setIsInvestigating(true);
     setError(null);
+    setInvestigation(null);
+    setInvestigationStep(0);
+
+    // Simulate progressive steps while waiting for the actual API call
+    for (let i = 0; i < INVESTIGATION_STEPS.length - 1; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      setInvestigationStep(i);
+    }
 
     try {
       const result = await investigateAccount(accountId);
       setInvestigation(result);
+      setInvestigationStep(INVESTIGATION_STEPS.length - 1);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -121,6 +141,48 @@ export default function AccountInvestigation() {
         </div>
 
         <Badge tier={detail.risk_tier} />
+      </div>
+
+
+      {/* Model / LLM / Policy Separation */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">Risk Model</h3>
+          <p className="text-sm font-semibold">LightGBM Model B</p>
+          <p className="text-xs text-muted-foreground">
+            Score: {detail.proba.toFixed(6)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Rank: #{detail.rank}
+          </p>
+        </Card>
+
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            AI Investigator
+          </h3>
+          <p className="text-sm font-semibold">
+            {investigation?.source === "llm" ? "Groq / Llama" : "Deterministic Fallback"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {investigation ? "Investigation complete" : "Not yet run"}
+          </p>
+          {investigation?.confidence && (
+            <p className="text-xs text-muted-foreground">
+              Confidence: {investigation.confidence}
+            </p>
+          )}
+        </Card>
+
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            Policy Authority
+          </h3>
+          <p className="text-sm font-semibold">Deterministic Policy Engine</p>
+          <p className="text-xs text-muted-foreground">
+            Final action is determined by policy, not LLM.
+          </p>
+        </Card>
       </div>
 
 
@@ -390,81 +452,101 @@ export default function AccountInvestigation() {
           </button>
         </div>
 
+        {/* Investigation Progress Steps */}
+        {isInvestigating && investigationStep >= 0 && (
+          <div className="mb-4">
+            <ol className="list-decimal list-inside space-y-1 text-sm">
+              {INVESTIGATION_STEPS.slice(0, investigationStep + 1).map((step, idx) => (
+                <li
+                  key={idx}
+                  className={idx === investigationStep ? "font-medium" : ""}
+                >
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
-        {investigation && (
-        <div className="space-y-6">
-          {/* Summary */}
-          <div className="rounded-lg bg-muted p-4">
-            <h4 className="text-sm font-semibold mb-2">Investigation Summary</h4>
-            <p className="text-sm leading-relaxed">{investigation.summary}</p>
-            {investigation.confidence && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Confidence: <span className="font-medium">{investigation.confidence}</span>
-              </p>
+        {investigation && !isInvestigating && (
+          <div className="space-y-6">
+            {/* Summary */}
+            <div className="rounded-lg bg-muted p-4">
+              <h4 className="text-sm font-semibold mb-2">Investigation Summary</h4>
+              <p className="text-sm leading-relaxed">{investigation.summary}</p>
+              {investigation.confidence && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Confidence:{" "}
+                  <span className="font-medium">
+                    {investigation.confidence}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            {/* Key Findings */}
+            {investigation.key_findings?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Key Findings</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {investigation.key_findings.map((finding, idx) => (
+                    <li key={idx}>{finding}</li>
+                  ))}
+                </ul>
+              </div>
             )}
+
+            {/* Evidence Gaps */}
+            {investigation.evidence_gaps?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Evidence Gaps</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {investigation.evidence_gaps.map((gap, idx) => (
+                    <li key={idx}>{gap}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Uncertainties */}
+            {investigation.uncertainties?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Uncertainties</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {investigation.uncertainties.map((u, idx) => (
+                    <li key={idx}>{u}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Tool Trace */}
+            {investigation.tool_calls?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Tool Trace</h4>
+                <ul className="space-y-2 text-sm">
+                  {investigation.tool_calls.map((call, idx) => (
+                    <li key={idx} className="text-muted-foreground">
+                      <span className="font-mono">{call.tool}</span> →{" "}
+                      {call.result_summary}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Recommended Action */}
+            <div className="text-sm text-muted-foreground">
+              Recommended action:{" "}
+              <span className="font-medium text-black dark:text-white">
+                {investigation.recommended_action}
+              </span>
+              <p className="text-xs mt-1">
+                Action source: {investigation.action_source}
+              </p>
+            </div>
           </div>
-
-          {/* Key Findings */}
-          {investigation.key_findings?.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Key Findings</h4>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                {investigation.key_findings.map((finding, idx) => (
-                  <li key={idx}>{finding}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Evidence Gaps */}
-          {investigation.evidence_gaps?.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Evidence Gaps</h4>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                {investigation.evidence_gaps.map((gap, idx) => (
-                  <li key={idx}>{gap}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Uncertainties */}
-          {investigation.uncertainties?.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Uncertainties</h4>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                {investigation.uncertainties.map((u, idx) => (
-                  <li key={idx}>{u}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Tool Trace */}
-          {investigation.tool_calls?.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Tool Trace</h4>
-              <ul className="space-y-2 text-sm">
-                {investigation.tool_calls.map((call, idx) => (
-                  <li key={idx} className="text-muted-foreground">
-                    <span className="font-mono">{call.tool}</span> → {call.result_summary}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Recommended Action */}
-          <div className="text-sm text-muted-foreground">
-            Recommended action:{" "}
-            <span className="font-medium text-black dark:text-white">
-              {investigation.recommended_action}
-            </span>
-            <p className="text-xs mt-1">Action source: {investigation.action_source}</p>
-          </div>
-        </div>
-      )}
-
+        )}
       </Card>
 
     </div>

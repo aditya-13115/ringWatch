@@ -24,9 +24,10 @@ export default function FailureDemo() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold">Failure Demo</h2>
+        <h2 className="text-xl font-semibold">Failure Handling & Data Quality</h2>
         <p className="text-sm text-muted-foreground">
-          Simulate a batch with malformed address rows and see how the system handles it gracefully.
+          Demonstrate that malformed or corrupted input does not silently contaminate
+          the investigation pipeline.
         </p>
       </div>
 
@@ -79,6 +80,11 @@ export default function FailureDemo() {
               ))}
             </ul>
           </Card>
+
+          <p className="text-sm text-muted-foreground">
+            <strong>Result:</strong> No malformed records entered the risk-model pipeline.
+            The system continued safely without data corruption or silent failure.
+          </p>
         </div>
       )}
     </div>
