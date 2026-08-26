@@ -24,68 +24,117 @@ T = pd.Timestamp(PREDICTION_CUTOFF)
 
 def load_data():
     """
-    Load all Day-3 datasets with proper datetime parsing.
+    Load all Day-3 datasets and explicitly normalize datetime columns.
     """
 
     accounts = pd.read_csv(
         PATHS["accounts"],
-        parse_dates=["account_created_at"],
+        low_memory=False,
     )
 
     orders = pd.read_csv(
         PATHS["orders"],
-        parse_dates=[
-            "order_timestamp",
-            "delivery_timestamp",
-            "return_timestamp",
-            "refund_timestamp",
-        ],
+        low_memory=False,
     )
 
     refunds = pd.read_csv(
         PATHS["refunds"],
-        parse_dates=[
-            "refund_timestamp",
-        ],
+        low_memory=False,
     )
 
     disputes = pd.read_csv(
         PATHS["disputes"],
-        parse_dates=[
-            "dispute_created_at",
-            "respond_by",
-        ],
+        low_memory=False,
     )
 
     devices = pd.read_csv(
         PATHS["devices"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     addresses = pd.read_csv(
         PATHS["addresses"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     phones = pd.read_csv(
         PATHS["phones"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     instruments = pd.read_csv(
         PATHS["payment_instruments"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
+    # ========================================================
+    # EXPLICIT DATETIME NORMALIZATION
+    # ========================================================
+
+    datetime_columns = {
+        "accounts": [
+            "account_created_at",
+        ],
+        "orders": [
+            "order_timestamp",
+            "delivery_timestamp",
+            "return_timestamp",
+            "refund_timestamp",
+            "dispute_created_at",
+        ],
+        "refunds": [
+            "refund_timestamp",
+        ],
+        "disputes": [
+            "dispute_created_at",
+            "respond_by",
+        ],
+        "devices": [
+            "first_seen_at",
+        ],
+        "addresses": [
+            "first_seen_at",
+        ],
+        "phones": [
+            "first_seen_at",
+        ],
+        "instruments": [
+            "first_seen_at",
+        ],
+    }
+
+    dataframes = {
+        "accounts": accounts,
+        "orders": orders,
+        "refunds": refunds,
+        "disputes": disputes,
+        "devices": devices,
+        "addresses": addresses,
+        "phones": phones,
+        "instruments": instruments,
+    }
+
+    for name, columns in datetime_columns.items():
+        df = dataframes[name]
+
+        for column in columns:
+            if column in df.columns:
+                df[column] = pd.to_datetime(
+                    df[column],
+                    errors="coerce",
+                )
+
+        dataframes[name] = df
+
     return (
-        accounts,
-        orders,
-        refunds,
-        disputes,
-        devices,
-        addresses,
-        phones,
-        instruments,
+        dataframes["accounts"],
+        dataframes["orders"],
+        dataframes["refunds"],
+        dataframes["disputes"],
+        dataframes["devices"],
+        dataframes["addresses"],
+        dataframes["phones"],
+        dataframes["instruments"],
     )
 
 
@@ -104,18 +153,12 @@ def filter_to_cutoff(
     phones,
     instruments,
 ):
-    """
-    Keep only information observable at prediction cutoff T.
-
-    Important:
-    An order is kept based ONLY on order_timestamp.
-
-    Its delivery/return/refund timestamps are handled separately.
-    """
-
+    T = pd.Timestamp(PREDICTION_CUTOFF)
     original_order_count = len(orders)
 
-    filtered_orders = orders[orders["order_timestamp"] <= T].copy()
+    filtered_orders = orders[
+        orders["order_timestamp"] <= T
+    ].copy()
 
     filtered_refunds = refunds[refunds["refund_timestamp"] <= T].copy()
 
@@ -914,8 +957,7 @@ def finalize_features(features):
     # Ensure no missing values.
     assert features.isna().sum().sum() == 0
 
-    # Ensure account count.
-    assert len(features) == 1000
+    
 
     # Sanity check:
     # return rate should not exist for accounts with

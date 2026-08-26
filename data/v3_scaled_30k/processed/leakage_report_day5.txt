@@ -1,0 +1,53 @@
+RingWatch — Day 5 Graph Leakage Report
+=======================================
+
+Prediction cutoff:
+2026-02-20 00:00:00
+
+Max order timestamp used:
+2026-02-19 23:55:02
+
+Max device first_seen_at used:
+2026-02-19 23:59:59
+
+Max address first_seen_at used:
+2026-02-19 23:59:30
+
+Max phone first_seen_at used:
+2026-02-19 23:57:36
+
+Max instrument first_seen_at used:
+2026-02-19 23:59:13
+
+IP relationships use order time:
+YES — filtered order_timestamp <= T
+
+Coupon rarity uses pre-T orders:
+YES
+
+Coupon observations used:
+1,794
+
+Ground truth used for graph:
+NO
+
+Ground truth used for features:
+NO
+
+population_type used for features:
+NO
+
+Forbidden columns present in final features:
+NONE
+
+Louvain graph cutoff-safe:
+YES
+
+Graph nodes:
+30,000
+
+Graph edges:
+139,417
+
+LEAKAGE CHECK:
+PASSED

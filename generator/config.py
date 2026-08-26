@@ -1,68 +1,60 @@
 from pathlib import Path
-
-# ============================================================
-# RANDOM SEED
-# ============================================================
+import os
 
 SEED = 42
-
-
-# ============================================================
-# DATASET WINDOW
-# ============================================================
-
 START_DATE = "2026-01-01"
 END_DATE = "2026-03-01"
 
+DATASET_VERSION = "v3_scaled_30k"
+DATA_VERSION = os.getenv("RINGWATCH_DATASET_VERSION", DATASET_VERSION)
 
-# ============================================================
-# DEBUG DATASET
-# ============================================================
+N_ACCOUNTS = 30_000
 
-N_ACCOUNTS = 1000
+# Exact ring configuration
+N_RING_TYPES = {
+    "wardrobing": 40,
+    "promo_refund_farming": 30,
+    "friendly_fraud": 30,
+    "subtle_distributed": 40,
+}
 
+RING_ACCOUNTS_PER_TYPE = {
+    "wardrobing": 8,
+    "promo_refund_farming": 20,
+    "friendly_fraud": 6,
+    "subtle_distributed": 10,
+}
 
-# ============================================================
-# ACCOUNT RESERVATION
-# ============================================================
+N_RING_ACCOUNTS = sum(
+    N_RING_TYPES[rt] * RING_ACCOUNTS_PER_TYPE[rt] for rt in N_RING_TYPES
+)
+
+NORMAL_ACCOUNT_PCT = 0.80
+HARD_NEGATIVE_ACCOUNT_PCT = 0.15
+
+N_NORMAL_ACCOUNTS = int(N_ACCOUNTS * NORMAL_ACCOUNT_PCT)
+N_HARD_NEGATIVE_ACCOUNTS = N_ACCOUNTS - N_NORMAL_ACCOUNTS - N_RING_ACCOUNTS
 
 NORMAL_ACCOUNT_START = 0
-NORMAL_ACCOUNT_END = 799
+NORMAL_ACCOUNT_END = N_NORMAL_ACCOUNTS - 1
 
-RING_ACCOUNT_START = 800
-RING_ACCOUNT_END = 899
+RING_ACCOUNT_START = N_NORMAL_ACCOUNTS
+RING_ACCOUNT_END = RING_ACCOUNT_START + N_RING_ACCOUNTS - 1
 
-HARD_NEGATIVE_ACCOUNT_START = 900
-HARD_NEGATIVE_ACCOUNT_END = 999
+HARD_NEGATIVE_ACCOUNT_START = RING_ACCOUNT_END + 1
+HARD_NEGATIVE_ACCOUNT_END = N_ACCOUNTS - 1
 
+N_DEVICES = int(N_ACCOUNTS * 1.2)
+N_ADDRESSES = int(N_ACCOUNTS * 0.6)
+N_PHONES = int(N_ACCOUNTS * 0.9)
+N_INSTRUMENTS = int(N_ACCOUNTS * 1.4)
 
-N_NORMAL_ACCOUNTS = NORMAL_ACCOUNT_END - NORMAL_ACCOUNT_START + 1
-
-N_RING_RESERVED = RING_ACCOUNT_END - RING_ACCOUNT_START + 1
-
-N_HARD_NEGATIVE_RESERVED = HARD_NEGATIVE_ACCOUNT_END - HARD_NEGATIVE_ACCOUNT_START + 1
-
-
-assert N_NORMAL_ACCOUNTS + N_RING_RESERVED + N_HARD_NEGATIVE_RESERVED == N_ACCOUNTS
-
-
-# ============================================================
-# OTHER ENTITIES
-# ============================================================
-
-N_DEVICES = 1200
-N_ADDRESSES = 600
-N_PHONES = 900
-N_INSTRUMENTS = 1400
-
-
-# ============================================================
-# PATHS
-# ============================================================
+RING_START_MIN = "2026-01-05"
+RING_START_MAX = "2026-02-10"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-DATA_DIR = BASE_DIR / "data"
+DATA_DIR = BASE_DIR / "data" / DATA_VERSION
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 PATHS = {
     "accounts": DATA_DIR / "accounts.csv",
@@ -70,9 +62,7 @@ PATHS = {
     "addresses": DATA_DIR / "addresses.csv",
     "phones": DATA_DIR / "phones.csv",
     "payment_instruments": DATA_DIR / "payment_instruments.csv",
-    # Day 2
     "orders": DATA_DIR / "orders.csv",
-    # Day 3
     "refunds": DATA_DIR / "refunds.csv",
     "disputes": DATA_DIR / "disputes.csv",
     "ring_ground_truth": DATA_DIR / "ring_ground_truth.csv",

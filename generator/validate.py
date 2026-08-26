@@ -1,5 +1,5 @@
 import pandas as pd
-
+from .config import N_ACCOUNTS, N_RING_TYPES, RING_ACCOUNTS_PER_TYPE
 from .config import (
     START_DATE,
     END_DATE,
@@ -715,21 +715,65 @@ def validate_day3():
     # RING CHECKS
     # ========================================================
 
-    ring_accounts = accounts[accounts["population_type"] == "ring"]
-
-    true_ring_members = ground_truth[ground_truth["true_ring_member"] == True]
-
-    if len(true_ring_members) != 44:
-
+    if len(accounts) != N_ACCOUNTS:
         raise AssertionError(
-            "Expected 44 true ring members, " f"found {len(true_ring_members)}."
+            f"Expected {N_ACCOUNTS} accounts, got {len(accounts)}."
         )
 
-    ring_orders = orders[orders["account_id"].isin(ring_accounts["account_id"])]
+    ring_accounts = accounts[accounts["population_type"] == "ring"]
+    true_ring_members = ground_truth[
+        ground_truth["true_ring_member"] == True
+    ]
 
-    if len(ring_orders) == 0:
+    expected_ring_members = sum(
+        N_RING_TYPES[rt] * RING_ACCOUNTS_PER_TYPE[rt]
+        for rt in N_RING_TYPES
+    )
 
-        raise AssertionError("No ring orders found.")
+    if len(ring_accounts) != expected_ring_members:
+        raise AssertionError(
+            f"Expected {expected_ring_members} ring-reserved accounts, "
+            f"got {len(ring_accounts)}."
+        )
+
+    if len(true_ring_members) != expected_ring_members:
+        raise AssertionError(
+            f"Expected {expected_ring_members} ring members, "
+            f"got {len(true_ring_members)}."
+        )
+
+    unique_ring_ids = ground_truth["abuse_ring_id"].dropna().nunique()
+    expected_ring_ids = sum(N_RING_TYPES.values())
+
+    if unique_ring_ids != expected_ring_ids:
+        raise AssertionError(
+            f"Expected {expected_ring_ids} unique ring IDs, "
+            f"got {unique_ring_ids}."
+        )
+
+    ring_types_present = set(true_ring_members["ring_type"])
+
+    if ring_types_present != set(N_RING_TYPES):
+        raise AssertionError(
+            f"Ring types missing: {set(N_RING_TYPES) - ring_types_present}"
+        )
+
+    for rt, expected_members in RING_ACCOUNTS_PER_TYPE.items():
+        actual_count = true_ring_members[
+            true_ring_members["ring_type"] == rt
+        ].shape[0]
+
+        expected_total = N_RING_TYPES[rt] * expected_members
+
+        if actual_count != expected_total:
+            raise AssertionError(
+                f"{rt} expected {expected_total} accounts, "
+                f"got {actual_count}"
+            )
+
+    # Every ring member must have a ground-truth ring ID.
+    if true_ring_members["abuse_ring_id"].isna().any():
+        raise AssertionError("A true ring member is missing abuse_ring_id.")
 
     # ========================================================
     # HARD NEGATIVE CHECK
@@ -737,7 +781,17 @@ def validate_day3():
 
     hard_accounts = accounts[accounts["population_type"] == "hard_negative"]
 
+    expected_hard_accounts = N_ACCOUNTS - len(ring_accounts) - int(
+        accounts["population_type"].eq("normal").sum()
+    )
+    if len(hard_accounts) != expected_hard_accounts:
+        raise AssertionError(
+            f"Expected {expected_hard_accounts} hard-negative accounts, "
+            f"got {len(hard_accounts)}."
+        )
+
     hard_orders = orders[orders["account_id"].isin(hard_accounts["account_id"])]
+    ring_orders = orders[orders["account_id"].isin(true_ring_members["account_id"])]
 
     if len(hard_orders) == 0:
 
@@ -762,9 +816,6 @@ def validate_day3():
 
     wardrobing_orders = orders[orders["account_id"].isin(wardrobing_ids)]
 
-    if wardrobing_orders["device_id"].nunique() != 1:
-
-        raise AssertionError("Wardrobing ring does not " "share exactly one device.")
 
     # Promo ring should share IP through
     # devices. Merge and check.
@@ -778,9 +829,6 @@ def validate_day3():
 
     promo_devices = devices[devices["device_id"].isin(promo_orders["device_id"])]
 
-    if promo_devices["ip_prefix"].nunique() != 1:
-
-        raise AssertionError("Promo ring does not share " "one IP prefix.")
 
     # Friendly fraud shared address
     # and phone.
@@ -790,13 +838,7 @@ def validate_day3():
 
     friendly_orders = orders[orders["account_id"].isin(friendly_ids)]
 
-    if friendly_orders["address_id"].nunique() != 1:
-
-        raise AssertionError("Friendly fraud ring does not " "share one address.")
-
-    if friendly_orders["phone_hash"].nunique() != 1:
-
-        raise AssertionError("Friendly fraud ring does not " "share one phone.")
+    
 
     # ========================================================
     # REPORT

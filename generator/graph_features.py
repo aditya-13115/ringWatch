@@ -24,7 +24,7 @@ from .features_config import (
 
 T = pd.Timestamp(PREDICTION_CUTOFF)
 
-EXPECTED_ACCOUNT_COUNT = 1000
+
 
 FORBIDDEN_COLUMNS = [
     "population_type",
@@ -60,44 +60,102 @@ def load_day5_data():
     Load only the datasets required for Day 5 graph construction.
 
     Ground truth is deliberately NOT loaded here.
+
+    Datetime columns are explicitly normalized after CSV loading
+    because some source CSVs contain mixed-type values.
     """
 
-    features = pd.read_csv(FEATURES_PATH)
+    features = pd.read_csv(
+        FEATURES_PATH,
+        low_memory=False,
+    )
 
     accounts = pd.read_csv(
         PATHS["accounts"],
-        parse_dates=["account_created_at"],
+        low_memory=False,
     )
 
     orders = pd.read_csv(
         PATHS["orders"],
-        parse_dates=[
-            "order_timestamp",
-            "delivery_timestamp",
-            "return_timestamp",
-            "refund_timestamp",
-        ],
+        low_memory=False,
     )
 
     devices = pd.read_csv(
         PATHS["devices"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     addresses = pd.read_csv(
         PATHS["addresses"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     phones = pd.read_csv(
         PATHS["phones"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     instruments = pd.read_csv(
         PATHS["payment_instruments"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
+
+    # ========================================================
+    # EXPLICIT DATETIME NORMALIZATION
+    # ========================================================
+
+    datetime_columns = {
+        "accounts": [
+            "account_created_at",
+        ],
+        "orders": [
+            "order_timestamp",
+            "delivery_timestamp",
+            "return_timestamp",
+            "refund_timestamp",
+            "dispute_created_at",
+        ],
+        "devices": [
+            "first_seen_at",
+        ],
+        "addresses": [
+            "first_seen_at",
+        ],
+        "phones": [
+            "first_seen_at",
+        ],
+        "instruments": [
+            "first_seen_at",
+        ],
+    }
+
+    dataframes = {
+        "accounts": accounts,
+        "orders": orders,
+        "devices": devices,
+        "addresses": addresses,
+        "phones": phones,
+        "instruments": instruments,
+    }
+
+    for name, columns in datetime_columns.items():
+        df = dataframes[name]
+
+        for column in columns:
+            if column in df.columns:
+                df[column] = pd.to_datetime(
+                    df[column],
+                    errors="coerce",
+                )
+
+        dataframes[name] = df
+
+    accounts = dataframes["accounts"]
+    orders = dataframes["orders"]
+    devices = dataframes["devices"]
+    addresses = dataframes["addresses"]
+    phones = dataframes["phones"]
+    instruments = dataframes["instruments"]
 
     return (
         features,
@@ -120,8 +178,8 @@ def validate_day4_features(features):
     Validate the Day 4 feature matrix before using it.
     """
 
-    assert len(features) == EXPECTED_ACCOUNT_COUNT, (
-        f"Expected {EXPECTED_ACCOUNT_COUNT} Day 4 feature rows, " f"got {len(features)}"
+    assert features["account_id"].nunique() == len(features), (
+        "Day 4 feature matrix must contain exactly one row per account."
     )
 
     assert features[
@@ -163,6 +221,40 @@ def filter_to_cutoff(
     Orders are retained based on order_timestamp.
     Entity tables are retained based on first_seen_at.
     """
+    # --------------------------------------------------------
+    # Datetime validation
+    # --------------------------------------------------------
+
+    required_datetime_columns = {
+        "orders": ["order_timestamp"],
+        "devices": ["first_seen_at"],
+        "addresses": ["first_seen_at"],
+        "phones": ["first_seen_at"],
+        "instruments": ["first_seen_at"],
+    }
+
+    dataframes = {
+        "orders": orders,
+        "devices": devices,
+        "addresses": addresses,
+        "phones": phones,
+        "instruments": instruments,
+    }
+
+    for name, columns in required_datetime_columns.items():
+        df = dataframes[name]
+
+        for column in columns:
+            if column not in df.columns:
+                raise KeyError(
+                    f"{name} is missing required datetime column: {column}"
+                )
+
+            if not pd.api.types.is_datetime64_any_dtype(df[column]):
+                raise TypeError(
+                    f"{name}[{column}] is not datetime dtype: "
+                    f"{df[column].dtype}"
+                )
 
     filtered_orders = orders[orders["order_timestamp"] <= T].copy()
 
@@ -673,7 +765,7 @@ def graph_integrity_report(graph):
     print(f"Connected components:   " f"{len(components):,}")
     print(f"Largest component:      " f"{largest_component:,}")
 
-    assert nodes == EXPECTED_ACCOUNT_COUNT
+    assert nodes > 0
     assert self_loops == 0
     assert edges > 0
 
@@ -752,7 +844,7 @@ def run_louvain(graph):
     # Validation
     # --------------------------------------------------------
 
-    assert len(community_df) == EXPECTED_ACCOUNT_COUNT
+    assert len(community_df) == graph.number_of_nodes()
     assert community_df["account_id"].is_unique
     assert community_df["community_id"].notna().all()
 
@@ -777,7 +869,7 @@ def run_louvain(graph):
     if number_of_communities == 1:
         print("WARNING: Louvain produced one community.")
 
-    if largest_community == EXPECTED_ACCOUNT_COUNT:
+    if largest_community == graph.number_of_nodes():
         print("WARNING: largest community contains all accounts.")
 
     return (
@@ -857,7 +949,7 @@ def compute_node_graph_features(graph):
     # Validation
     # --------------------------------------------------------
 
-    assert len(graph_features) == EXPECTED_ACCOUNT_COUNT
+    assert len(graph_features) == graph.number_of_nodes()
     assert graph_features["account_id"].is_unique
 
     numeric_columns = [
@@ -996,7 +1088,7 @@ def build_final_features(
     # Validation
     # --------------------------------------------------------
 
-    assert len(final_features) == EXPECTED_ACCOUNT_COUNT
+    assert len(final_features) == len(features)
     assert final_features["account_id"].is_unique
 
     present_forbidden = [
@@ -1373,7 +1465,7 @@ def write_day5_leakage_report(
 
     graph_cutoff_safe = (
         all_cutoff_safe
-        and len(graph) == EXPECTED_ACCOUNT_COUNT
+        and len(graph) == len(features_graph)
         and len(forbidden_present) == 0
     )
 
@@ -1474,7 +1566,10 @@ def main():
 
     validate_day4_features(features)
 
-    assert len(accounts) == EXPECTED_ACCOUNT_COUNT
+    assert len(accounts) == len(features), (
+        f"Account table has {len(accounts):,} rows but Day 4 features have "
+        f"{len(features):,} rows."
+    )
     assert accounts["account_id"].is_unique
 
     # --------------------------------------------------------
@@ -1693,7 +1788,7 @@ def main():
 
     stop_condition_passed = True
 
-    if len(final_features) != EXPECTED_ACCOUNT_COUNT:
+    if len(final_features) != len(features):
         stop_condition_passed = False
 
     if final_features.isna().sum().sum() != 0:

@@ -1,0 +1,44 @@
+RingWatch — Day 4 Feature Leakage Report
+==========================================
+
+Prediction cutoff:
+2026-02-20 00:00:00
+
+Max order timestamp used:
+2026-02-19 23:55:02
+
+Max refund timestamp used:
+2026-02-20 00:00:00
+
+Max dispute timestamp used:
+2026-02-20 00:00:00
+
+Orders after T excluded:
+26307
+
+Refunds after T excluded:
+Not included in filtered refund dataset
+
+Disputes after T excluded:
+Not included in filtered dispute dataset
+
+Ground truth used:
+NO
+
+population_type used:
+NO
+
+Feature matrix rows:
+30000
+
+Feature matrix columns:
+41
+
+Missing values:
+0
+
+Forbidden columns present:
+NO
+
+LEAKAGE CHECK:
+PASSED
