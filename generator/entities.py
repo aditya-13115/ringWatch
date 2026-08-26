@@ -236,7 +236,7 @@ def generate_addresses():
 
         house_num = fake.building_number()
         street = fake.street_name()
-        locality = fake.city_suffix()
+        locality = f"{city} Locality {rng.integers(1, 500)}"
 
         raw_address = f"{house_num}, {street}, {locality}, {city}, {state} {pincode}"
 
