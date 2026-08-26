@@ -1,7 +1,5 @@
 import json
 import pickle
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -115,9 +113,15 @@ def load_data():
     ground_truth[ID_COL] = ground_truth[ID_COL].astype(str)
 
     # Ensure unique IDs
-    assert features_a[ID_COL].is_unique, "Day 4 features contain duplicate account IDs."
-    assert features_b[ID_COL].is_unique, "Day 5 features contain duplicate account IDs."
-    assert ground_truth[ID_COL].is_unique, "Ground truth contains duplicate account IDs."
+    assert features_a[ID_COL].is_unique, (
+        "Day 4 features contain duplicate account IDs."
+    )
+    assert features_b[ID_COL].is_unique, (
+        "Day 5 features contain duplicate account IDs."
+    )
+    assert ground_truth[ID_COL].is_unique, (
+        "Ground truth contains duplicate account IDs."
+    )
 
     # Ensure exact account alignment across files
     assert set(features_a[ID_COL]) == set(features_b[ID_COL]), (
@@ -252,9 +256,10 @@ def ring_aware_split(
     assert set(train_ids).isdisjoint(test_ids)
     assert set(val_ids).isdisjoint(test_ids)
 
-    assert len(train_ids) + len(val_ids) + len(test_ids) == len(ground_truth), (
-        "Split sizes do not sum to total accounts."
-    )
+    assert (
+        len(train_ids) + len(val_ids) + len(test_ids)
+        == len(ground_truth)
+    ), "Split sizes do not sum to total accounts."
 
     # Ensure no ring is split across multiple sets
     validate_ring_split(
@@ -305,12 +310,18 @@ def validate_ring_split(
     )
 
     if not (ring_split_counts == 1).all():
-        bad_rings = ring_split_counts[ring_split_counts != 1].index.tolist()
+        bad_rings = ring_split_counts[
+            ring_split_counts != 1
+        ].index.tolist()
+
         raise AssertionError(
             f"Rings split across multiple sets: {bad_rings}"
         )
 
-    print(f"Ring split validation passed for {len(ring_split_counts)} rings.")
+    print(
+        f"Ring split validation passed for "
+        f"{len(ring_split_counts)} rings."
+    )
 
 
 # ============================================================
@@ -374,12 +385,16 @@ def prepare_model_inputs(
         (X_val, "val"),
         (X_test, "test"),
     ]:
-        assert split_X.select_dtypes(exclude="number").shape[1] == 0, (
+        assert split_X.select_dtypes(
+            exclude="number"
+        ).shape[1] == 0, (
             f"Non-numeric features in {split_name}"
         )
+
         assert np.isfinite(split_X.to_numpy()).all(), (
             f"Non-finite values in {split_name}"
         )
+
         assert not split_X.isna().any().any(), (
             f"NaN values in {split_name}"
         )
@@ -491,11 +506,33 @@ def evaluate_model(
         labels=[0, 1],
     ).ravel()
 
-    precision = precision_score(y_test, y_pred, zero_division=0)
-    recall = recall_score(y_test, y_pred, zero_division=0)
-    f1 = f1_score(y_test, y_pred, zero_division=0)
-    roc_auc = roc_auc_score(y_test, y_proba)
-    pr_auc = average_precision_score(y_test, y_proba)
+    precision = precision_score(
+        y_test,
+        y_pred,
+        zero_division=0,
+    )
+
+    recall = recall_score(
+        y_test,
+        y_pred,
+        zero_division=0,
+    )
+
+    f1 = f1_score(
+        y_test,
+        y_pred,
+        zero_division=0,
+    )
+
+    roc_auc = roc_auc_score(
+        y_test,
+        y_proba,
+    )
+
+    pr_auc = average_precision_score(
+        y_test,
+        y_proba,
+    )
 
     cost = (
         fp * COST_FALSE_POSITIVE
@@ -529,19 +566,27 @@ def apply_locked_baseline_rules(features_graph):
     Re-apply the Day 5 locked rules to a feature subset.
     """
 
-    r1 = (features_graph["return_rate"] > 0.5) & (
+    r1 = (
+        features_graph["return_rate"] > 0.5
+    ) & (
         features_graph["total_orders"] >= 2
     )
 
-    r2 = (features_graph["shared_device_count"] >= 1) & (
+    r2 = (
+        features_graph["shared_device_count"] >= 1
+    ) & (
         features_graph["return_rate"] > 0.3
     )
 
-    r3 = (features_graph["account_creation_burst_score"] >= 5) & (
+    r3 = (
+        features_graph["account_creation_burst_score"] >= 5
+    ) & (
         features_graph["coupon_usage_rate"] > 0.5
     )
 
-    r4 = (features_graph["community_size"] >= 4) & (
+    r4 = (
+        features_graph["community_size"] >= 4
+    ) & (
         features_graph["community_return_rate"] > 0.4
     )
 
@@ -558,7 +603,9 @@ def evaluate_baseline(
     Evaluate the locked rule baseline on the same test set.
     """
 
-    y_pred = apply_locked_baseline_rules(features_graph_test)
+    y_pred = apply_locked_baseline_rules(
+        features_graph_test
+    )
 
     tn, fp, fn, tp = confusion_matrix(
         y_test,
@@ -567,15 +614,28 @@ def evaluate_baseline(
     ).ravel()
 
     return {
-        "precision": precision_score(y_test, y_pred, zero_division=0),
-        "recall": recall_score(y_test, y_pred, zero_division=0),
-        "f1": f1_score(y_test, y_pred, zero_division=0),
+        "precision": precision_score(
+            y_test,
+            y_pred,
+            zero_division=0,
+        ),
+        "recall": recall_score(
+            y_test,
+            y_pred,
+            zero_division=0,
+        ),
+        "f1": f1_score(
+            y_test,
+            y_pred,
+            zero_division=0,
+        ),
         "tp": int(tp),
         "fp": int(fp),
         "tn": int(tn),
         "fn": int(fn),
         "cost": float(
-            fp * COST_FALSE_POSITIVE + fn * COST_FALSE_NEGATIVE
+            fp * COST_FALSE_POSITIVE
+            + fn * COST_FALSE_NEGATIVE
         ),
         "y_pred": y_pred,
     }
@@ -644,6 +704,14 @@ def main():
         )
     )
 
+    print("\nFeature counts:")
+    print(f"Model A features: {len(feature_cols_a):,}")
+    print(f"Model B features: {len(feature_cols_b):,}")
+    print(
+        f"Graph-only features: "
+        f"{len(set(feature_cols_b) - set(feature_cols_a)):,}"
+    )
+
     X_train_B, y_train_B, train_ids_B = data_b_train
     X_val_B, y_val_B, val_ids_B = data_b_val
     X_test_B, y_test_B, test_ids_B = data_b_test
@@ -652,6 +720,7 @@ def main():
     assert test_ids_A.tolist() == test_ids_B.tolist(), (
         "Model A and Model B test account IDs do not match."
     )
+
     assert y_test_A.tolist() == y_test_B.tolist(), (
         "Model A and Model B test labels do not match."
     )
@@ -747,6 +816,30 @@ def main():
     print(f"  F1:        {baseline_metrics['f1']:.4f}")
     print(f"  Cost:      ₹{baseline_metrics['cost']:,.0f}")
 
+    print("\n===================================")
+    print("MODEL COMPARISON")
+    print("===================================")
+
+    print(
+        f"Model B vs A F1:       "
+        f"{metrics_b['f1'] - metrics_a['f1']:+.4f}"
+    )
+
+    print(
+        f"Model B vs A PR-AUC:   "
+        f"{metrics_b['pr_auc'] - metrics_a['pr_auc']:+.4f}"
+    )
+
+    print(
+        f"Model B vs A ROC-AUC:  "
+        f"{metrics_b['roc_auc'] - metrics_a['roc_auc']:+.4f}"
+    )
+
+    print(
+        f"Model B vs A Cost:     "
+        f"₹{metrics_b['cost'] - metrics_a['cost']:+,.0f}"
+    )
+
     # --------------------------------------------------------
     # Save models
     # --------------------------------------------------------
@@ -779,6 +872,54 @@ def main():
     )
 
     # --------------------------------------------------------
+    # Save feature importance
+    # --------------------------------------------------------
+
+    importance_a = pd.DataFrame({
+        "feature": feature_cols_a,
+        "importance": model_a.feature_importances_,
+    }).sort_values(
+        "importance",
+        ascending=False,
+    )
+
+    importance_b = pd.DataFrame({
+        "feature": feature_cols_b,
+        "importance": model_b.feature_importances_,
+    }).sort_values(
+        "importance",
+        ascending=False,
+    )
+
+    model_a_importance_path = (
+        MODEL_DIR / "model_a_feature_importance.csv"
+    )
+
+    model_b_importance_path = (
+        MODEL_DIR / "model_b_feature_importance.csv"
+    )
+
+    importance_a.to_csv(
+        model_a_importance_path,
+        index=False,
+    )
+
+    importance_b.to_csv(
+        model_b_importance_path,
+        index=False,
+    )
+
+    print(
+        f"\nModel A feature importance saved to:\n"
+        f"{model_a_importance_path}"
+    )
+
+    print(
+        f"Model B feature importance saved to:\n"
+        f"{model_b_importance_path}"
+    )
+
+    # --------------------------------------------------------
     # Save metrics
     # --------------------------------------------------------
 
@@ -787,6 +928,17 @@ def main():
             "train": len(train_ids),
             "validation": len(val_ids),
             "test": len(test_ids),
+        },
+        "artifacts": {
+            "model_a": str(MODEL_A_PATH),
+            "model_b": str(MODEL_B_PATH),
+            "model_a_feature_importance": str(
+                model_a_importance_path
+            ),
+            "model_b_feature_importance": str(
+                model_b_importance_path
+            ),
+            "test_predictions": str(PREDICTIONS_TEST_PATH),
         },
         "model_A": {
             "scale_pos_weight": scale_pos_weight_a,
@@ -815,19 +967,16 @@ def main():
         },
     }
 
-    with open(MODEL_METRICS_PATH, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
-
-    # --------------------------------------------------------
-    # Save feature importance for Model B
-    # --------------------------------------------------------
-
-    importance_b = pd.DataFrame({
-        "feature": feature_cols_b,
-        "importance": model_b.feature_importances_,
-    }).sort_values("importance", ascending=False)
-
-    importance_b.to_csv(FEATURE_IMPORTANCE_PATH, index=False)
+    with open(
+        MODEL_METRICS_PATH,
+        "w",
+        encoding="utf-8",
+    ) as f:
+        json.dump(
+            summary,
+            f,
+            indent=2,
+        )
 
     # --------------------------------------------------------
     # Leakage report
@@ -874,7 +1023,11 @@ METRICS ONLY.
 LEAKAGE CHECK: PASSED
 """
 
-    with open(MODEL_LEAKAGE_REPORT_PATH, "w", encoding="utf-8") as f:
+    with open(
+        MODEL_LEAKAGE_REPORT_PATH,
+        "w",
+        encoding="utf-8",
+    ) as f:
         f.write(leakage_report)
 
     print("\n===================================")

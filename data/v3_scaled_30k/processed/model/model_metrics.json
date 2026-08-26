@@ -4,6 +4,13 @@
     "validation": 4537,
     "test": 4509
   },
+  "artifacts": {
+    "model_a": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_lgbm_A.pkl",
+    "model_b": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_lgbm_B.pkl",
+    "model_a_feature_importance": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_a_feature_importance.csv",
+    "model_b_feature_importance": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_b_feature_importance.csv",
+    "test_predictions": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_predictions_test.csv"
+  },
   "model_A": {
     "scale_pos_weight": 19.87051792828685,
     "threshold": 0.01,
