@@ -5,47 +5,43 @@ import {
   investigateAccount,
   getAccountTimeline,
 } from "../api/account";
+import { Link } from "react-router-dom";
 import Badge from "../components/Badge";
 import Card from "../components/Card";
 import GraphView from "../components/GraphView";
 
 
-function ActionPanel({ tier }) {
+function ActionPanel({ tier, accountId }) {
   switch (tier) {
     case "CRITICAL":
       return (
         <div className="flex gap-2 mt-2">
-          <button className="bg-black text-white px-4 py-2 rounded-md text-sm">
+          <Link to={`/verification/${accountId}`} className="bg-black text-white px-4 py-2 rounded-md text-sm">
             Place Soft Hold
-          </button>
-
-          <button className="border border-black px-4 py-2 rounded-md text-sm">
+          </Link>
+          <Link to={`/human-review/${accountId}`} className="border border-black px-4 py-2 rounded-md text-sm">
             Open Human Review
-          </button>
+          </Link>
         </div>
       );
-
     case "HIGH":
       return (
-        <button className="bg-black text-white px-4 py-2 rounded-md text-sm">
+        <Link to={`/human-review/${accountId}`} className="bg-black text-white px-4 py-2 rounded-md text-sm inline-block">
           Start Review
-        </button>
+        </Link>
       );
-
     case "MEDIUM":
       return (
-        <button className="border border-black px-4 py-2 rounded-md text-sm">
+        <Link to={`/verification/${accountId}`} className="border border-black px-4 py-2 rounded-md text-sm inline-block">
           Start Step-Up Verification
-        </button>
+        </Link>
       );
-
     case "LOW":
       return (
-        <button className="border border-black px-4 py-2 rounded-md text-sm">
+        <span className="border border-black px-4 py-2 rounded-md text-sm inline-block">
           Continue Refund
-        </button>
+        </span>
       );
-
     default:
       return null;
   }
@@ -72,6 +68,7 @@ export default function AccountInvestigation() {
   const [investigationStep, setInvestigationStep] = useState(-1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedTool, setExpandedTool] = useState(null);
 
 
   useEffect(() => {
@@ -524,15 +521,111 @@ export default function AccountInvestigation() {
             {investigation.tool_calls?.length > 0 && (
               <div>
                 <h4 className="text-sm font-semibold mb-2">Tool Trace</h4>
+
                 <ul className="space-y-2 text-sm">
                   {investigation.tool_calls.map((call, idx) => (
-                    <li key={idx} className="text-muted-foreground">
-                      <span className="font-mono">{call.tool}</span> →{" "}
-                      {call.result_summary}
+                    <li key={idx}>
+                      <button
+                        onClick={() =>
+                          setExpandedTool(
+                            expandedTool === idx ? null : idx
+                          )
+                        }
+                        className="w-full flex items-center justify-between text-left text-muted-foreground hover:text-foreground"
+                      >
+                        <span className="font-mono">{call.tool}</span>
+
+                        <span>
+                          {expandedTool === idx ? "−" : "+"}
+                        </span>
+                      </button>
+
+                      <p className="text-xs">
+                        {call.result_summary}
+                      </p>
+
+                      {expandedTool === idx && (
+                        <pre className="mt-2 whitespace-pre-wrap text-xs bg-muted p-2 rounded">
+                          {JSON.stringify(call, null, 2)}
+                        </pre>
+                      )}
                     </li>
                   ))}
                 </ul>
               </div>
+            )}
+
+            {/* Completion Summary */}
+            {investigation.completion_summary && (
+              <div className="rounded-lg border border-border p-4">
+                <h4 className="text-sm font-semibold mb-3">
+                  Investigation Complete
+                </h4>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Tools Executed
+                    </dt>
+                    <dd className="font-medium">
+                      {investigation.completion_summary.tools_executed}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Graph Links Found
+                    </dt>
+                    <dd className="font-medium">
+                      {investigation.completion_summary.graph_links_found}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Financial Exposure
+                    </dt>
+                    <dd className="font-medium">
+                      ₹{investigation.completion_summary.financial_exposure}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Evidence Fields Checked
+                    </dt>
+                    <dd className="font-medium">
+                      {investigation.completion_summary.evidence_fields_checked}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      LLM Confidence
+                    </dt>
+                    <dd className="font-medium">
+                      {investigation.completion_summary.llm_confidence}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Duration
+                    </dt>
+                    <dd className="font-medium">
+                      {investigation.completion_summary.duration_seconds}s
+                    </dd>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Investigation Duration */}
+            {investigation.duration_seconds != null && (
+              <p className="text-xs text-muted-foreground">
+                Investigation duration:{" "}
+                {investigation.duration_seconds}s
+              </p>
             )}
 
             {/* Recommended Action */}
@@ -541,6 +634,7 @@ export default function AccountInvestigation() {
               <span className="font-medium text-black dark:text-white">
                 {investigation.recommended_action}
               </span>
+
               <p className="text-xs mt-1">
                 Action source: {investigation.action_source}
               </p>

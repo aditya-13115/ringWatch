@@ -10,6 +10,8 @@ import Metrics from "./pages/Metrics";
 import FailureDemo from "./pages/FailureDemo";
 import AddressNormalization from "./pages/AddressNormalization";
 import ErrorBoundary from "./components/ErrorBoundary";
+import VerificationWorkflow from "./pages/VerificationWorkflow";
+import HumanReviewQueue from "./pages/HumanReviewQueue";
 
 export default function App() {
   return (
@@ -27,6 +29,8 @@ export default function App() {
             <Route path="/metrics" element={<Metrics />} />
             <Route path="/failure-demo" element={<FailureDemo />} />
             <Route path="/address-normalization" element={<AddressNormalization />} />
+            <Route path="/verification/:accountId" element={<VerificationWorkflow />} />
+            <Route path="/human-review/:accountId" element={<HumanReviewQueue />} />
           </Route>
         </Routes>
       </ErrorBoundary>

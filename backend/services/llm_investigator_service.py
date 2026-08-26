@@ -2,7 +2,7 @@ import json
 import re
 from datetime import datetime, timezone
 from typing import Any
-
+import time
 import pandas as pd
 from groq import AsyncGroq
 
@@ -28,16 +28,20 @@ class LLMInvestigatorService:
         self.action_service = action_service
         self.settings = get_settings()
         self.client = AsyncGroq(api_key=self.settings.groq_api_key)
+        self.executed_tools: set[str] = set()
 
     async def investigate(self, account_id: str) -> dict:
         async with LLM_SEMAPHORE:
+            self.executed_tools.clear()
+            start_time = time.perf_counter()
             try:
-                return await self._run_investigation(account_id)
+                return await self._run_investigation(account_id, start_time)
             except Exception as exc:
                 try:
                     return await self._fallback_deterministic(
                         account_id,
                         error=str(exc),
+                        start_time=start_time,
                     )
                 except Exception as fallback_exc:
                     return {
@@ -52,12 +56,16 @@ class LLMInvestigatorService:
                         "recommended_action": "Monitor",
                         "action_source": "deterministic_policy",
                         "error": str(fallback_exc),
+                        "duration_seconds": round(time.perf_counter() - start_time, 2),
+                        "completion_summary": None,
                     }
 
-    async def _run_investigation(self, account_id: str) -> dict:
+    async def _run_investigation(self, account_id: str, start_time: float) -> dict:
         if not self.settings.groq_api_key:
             return await self._fallback_deterministic(
-                account_id, error="Groq API key not configured"
+                account_id, 
+                error="Groq API key not configured",
+                start_time=start_time,
             )
 
         # ----------------------------------------------------------------
@@ -162,6 +170,7 @@ class LLMInvestigatorService:
                 ),
             }
         )
+        self.executed_tools.add("get_related_accounts")
 
         # 2. Shared attributes for related accounts
         related_ids = related_result.get("linked_accounts", [])
@@ -179,6 +188,7 @@ class LLMInvestigatorService:
                 ),
             }
         )
+        self.executed_tools.add("get_shared_attributes")
 
         # 3. Evidence availability
         evidence_result = await self._execute_tool(
@@ -195,6 +205,7 @@ class LLMInvestigatorService:
                 ),
             }
         )
+        self.executed_tools.add("check_evidence_availability")
 
         # 4. Financial exposure
         exposure_result = await self._execute_tool(
@@ -211,6 +222,7 @@ class LLMInvestigatorService:
                 ),
             }
         )
+        self.executed_tools.add("calculate_financial_exposure")
 
         # 5. Account timeline
         timeline_result = await self._execute_tool(
@@ -227,6 +239,7 @@ class LLMInvestigatorService:
                 ),
             }
         )
+        self.executed_tools.add("get_account_timeline")
 
         # 6. Merchant policy
         policy_result = await self._execute_tool(
@@ -243,6 +256,7 @@ class LLMInvestigatorService:
                 ),
             }
         )
+        self.executed_tools.add("get_merchant_policy")
 
         # ----------------------------------------------------------------
         # Step 2: Build evidence packet and prompt
@@ -312,6 +326,12 @@ class LLMInvestigatorService:
                         function_name = tool_call.function.name
                         arguments = json.loads(tool_call.function.arguments)
 
+                        if function_name in self.executed_tools:
+                            # Skip duplicate optional tool call
+                            continue
+
+                        self.executed_tools.add(function_name)
+
                         tool_result = await self._execute_tool(function_name, arguments)
                         tool_calls_log.append(
                             {
@@ -352,13 +372,17 @@ class LLMInvestigatorService:
             except Exception as exc:
                 if attempt == self.settings.llm_max_retries:
                     return await self._fallback_deterministic(
-                        account_id, error=f"LLM error: {exc}"
+                        account_id, 
+                        error=f"LLM error: {exc}",
+                        start_time=start_time,
                     )
                 continue
 
         if final_content is None:
             return await self._fallback_deterministic(
-                account_id, error="No LLM response"
+                account_id, 
+                error="No LLM response",
+                start_time=start_time,
             )
 
         # ----------------------------------------------------------------
@@ -396,6 +420,28 @@ class LLMInvestigatorService:
         # ----------------------------------------------------------------
         action = await self.action_service.get_action(account_id)
 
+        # ----------------------------------------------------------------
+        # Step 6: Investigation duration + completion summary
+        # ----------------------------------------------------------------
+        end_time = time.perf_counter()
+        duration_seconds = end_time - start_time
+
+        completion_summary = {
+            "tools_executed": len(tool_calls_log),
+            "graph_links_found": len(
+                related_result.get("linked_accounts", [])
+            ),
+            "financial_exposure": exposure_result.get(
+                "potential_exposure", 0
+            ),
+            "evidence_fields_checked": len(
+                evidence_result.get("fields", {})
+            ),
+            "llm_confidence": confidence,
+            "duration_seconds": round(duration_seconds, 2),
+        }
+
+
         result = {
             "account_id": account_id,
             "source": "llm",
@@ -407,6 +453,8 @@ class LLMInvestigatorService:
             "tool_calls": tool_calls_log,
             "recommended_action": action.action_description,
             "action_source": "deterministic_policy",
+            "duration_seconds": completion_summary["duration_seconds"],
+            "completion_summary": completion_summary,
         }
 
         await self._save_investigation_audit(result, success=True)
@@ -655,12 +703,35 @@ class LLMInvestigatorService:
         df = pd.concat([df, pd.DataFrame([entry])], ignore_index=True)
         df.to_csv(audit_path, index=False)
 
-    async def _fallback_deterministic(self, account_id: str, error: str = "") -> dict:
+    async def _fallback_deterministic(self,account_id: str,error: str = "",start_time: float | None = None,) -> dict:
         report = self.explainability_repo.get_reports()
         row = report[report["account_id"] == account_id]
-        case_report = str(row.iloc[0]["case_report_text"]) if not row.empty else ""
+
+        case_report = (
+            str(row.iloc[0]["case_report_text"])
+            if not row.empty
+            else ""
+        )
 
         action = await self.action_service.get_action(account_id)
+
+        # Calculate investigation duration
+        if start_time is not None:
+            duration_seconds = round(
+                time.perf_counter() - start_time,
+                2,
+            )
+        else:
+            duration_seconds = 0.0
+
+        completion_summary = {
+            "tools_executed": 0,
+            "graph_links_found": 0,
+            "financial_exposure": 0,
+            "evidence_fields_checked": 0,
+            "llm_confidence": "LOW",
+            "duration_seconds": duration_seconds,
+        }
 
         result = {
             "account_id": account_id,
@@ -674,6 +745,13 @@ class LLMInvestigatorService:
             "recommended_action": action.action_description,
             "action_source": "deterministic_policy",
             "error": error,
+            "duration_seconds": duration_seconds,
+            "completion_summary": completion_summary,
         }
-        await self._save_investigation_audit(result, success=False)
+
+        await self._save_investigation_audit(
+            result,
+            success=False,
+        )
+
         return result
