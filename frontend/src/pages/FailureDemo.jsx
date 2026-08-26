@@ -81,10 +81,16 @@ export default function FailureDemo() {
             </ul>
           </Card>
 
-          <p className="text-sm text-muted-foreground">
-            <strong>Result:</strong> No malformed records entered the risk-model pipeline.
-            The system continued safely without data corruption or silent failure.
-          </p>
+          {/* Explicit safety guarantee callout */}
+          <div className="rounded-md border border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 p-4">
+            <p className="font-medium text-emerald-700 dark:text-emerald-300">
+              Safety Guarantee
+            </p>
+            <p className="text-sm text-emerald-700 dark:text-emerald-300">
+              No malformed records entered the investigation pipeline.
+              The system continued safely without data corruption or silent failure.
+            </p>
+          </div>
         </div>
       )}
     </div>
