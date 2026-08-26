@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ForceGraph2D from "react-force-graph-2d";
 import { getGraphOverview } from "../api/graph";
 
 const EDGE_COLORS = {
@@ -21,21 +22,26 @@ const EDGE_LABELS = {
 };
 
 export default function Rings() {
-  const [graph, setGraph] = useState({ nodes: [], edges: [] });
+  const [graph, setGraph] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [hoveredNode, setHoveredNode] = useState(null);
   const [edgeFilter, setEdgeFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
-  const [zoom, setZoom] = useState(1);
+  const [highlightId, setHighlightId] = useState(null);
+  const fgRef = useRef();
   const navigate = useNavigate();
 
+  // Fetch data
   useEffect(() => {
     getGraphOverview()
       .then((data) => {
         setGraph({
           nodes: data.nodes || [],
-          edges: data.edges || [],
+          links: (data.edges || []).map((e) => ({
+            source: e.source,
+            target: e.target,
+            edge_type: e.edge_type,
+          })),
         });
         setLoading(false);
       })
@@ -45,67 +51,73 @@ export default function Rings() {
       });
   }, []);
 
-  const filteredEdges = useMemo(() => {
-    if (edgeFilter === "ALL") return graph.edges;
-    return graph.edges.filter((e) => e.edge_type === edgeFilter);
-  }, [graph.edges, edgeFilter]);
+  // Apply edge filter
+  const filteredLinks = useMemo(() => {
+    if (edgeFilter === "ALL") return graph.links;
+    return graph.links.filter((l) => l.edge_type === edgeFilter);
+  }, [graph.links, edgeFilter]);
 
+  // Apply search filter
   const filteredNodes = useMemo(() => {
     if (!searchTerm.trim()) return graph.nodes;
     const term = searchTerm.toLowerCase();
     return graph.nodes.filter((n) => n.id.toLowerCase().includes(term));
   }, [graph.nodes, searchTerm]);
 
-  // Simple circular layout
-  const positions = useMemo(() => {
-    const width = 800;
-    const height = 600;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 2 - 100;
-    const posMap = {};
-
-    const focusNodes = graph.nodes.filter((n) => n.is_focus);
-    const otherNodes = graph.nodes.filter((n) => !n.is_focus);
-
-    focusNodes.forEach((node, i) => {
-      const angle = (i / Math.max(focusNodes.length, 1)) * 2 * Math.PI;
-      posMap[node.id] = {
-        x: centerX + radius * 0.3 * Math.cos(angle),
-        y: centerY + radius * 0.3 * Math.sin(angle),
-      };
+  // Compute node degrees for sizing
+  const degrees = useMemo(() => {
+    const deg = {};
+    filteredLinks.forEach((l) => {
+      deg[l.source] = (deg[l.source] || 0) + 1;
+      deg[l.target] = (deg[l.target] || 0) + 1;
     });
+    return deg;
+  }, [filteredLinks]);
 
-    otherNodes.forEach((node, i) => {
-      const angle = (i / Math.max(otherNodes.length, 1)) * 2 * Math.PI;
-      posMap[node.id] = {
-        x: centerX + radius * Math.cos(angle),
-        y: centerY + radius * Math.sin(angle),
-      };
-    });
+  const graphData = useMemo(() => {
+    return {
+      nodes: filteredNodes,
+      links: filteredLinks.filter(
+        (l) =>
+          !searchTerm ||
+          filteredNodes.some((n) => n.id === l.source || n.id === l.target)
+      ),
+    };
+  }, [filteredNodes, filteredLinks, searchTerm]);
 
-    return posMap;
-  }, [graph.nodes]);
+  // Tune force layout and automatically fit graph
+  useEffect(() => {
+    if (!fgRef.current || !graphData.nodes.length) return;
 
-  if (loading) return <div className="p-6">Loading graph…</div>;
-  if (error) return <div className="p-6 text-destructive">{error}</div>;
-  if (!graph.nodes.length) return <div className="p-6">No graph data available.</div>;
+    const fg = fgRef.current;
+
+    // Tune force layout
+    fg.d3Force("charge").strength(-80);
+    fg.d3Force("link").distance(30);
+    fg.d3Force("center").strength(0.1);
+    fg.d3ReheatSimulation();
+    fg.zoomToFit(400);
+  }, [graphData]);
+
+  // Theme helpers
+  const getCSSVar = (name) =>
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
   const handleNodeClick = (node) => {
     if (node.is_focus) {
       navigate(`/investigations/${node.id}`);
-    } else {
-      navigate(`/investigations/${node.id}`);
     }
   };
 
-  const visibleNodes = searchTerm ? filteredNodes : graph.nodes;
-  const visibleEdges = filteredEdges.filter(
-    (e) =>
-      (searchTerm
-        ? visibleNodes.some((n) => n.id === e.source || n.id === e.target)
-        : true)
-  );
+  const handleNodeHover = (node) => setHighlightId(node ? node.id : null);
+
+  const zoomIn = () => fgRef.current?.zoom(1.3);
+  const zoomOut = () => fgRef.current?.zoom(0.7);
+  const resetZoom = () => fgRef.current?.zoomToFit(400);
+
+  if (loading) return <div className="p-6">Loading graph…</div>;
+  if (error) return <div className="p-6 text-destructive">{error}</div>;
+  if (!graph.nodes.length) return <div className="p-6">No graph data.</div>;
 
   return (
     <div className="space-y-4">
@@ -118,6 +130,7 @@ export default function Rings() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="border border-border rounded-md px-3 py-2 text-sm bg-background flex-1"
         />
+
         <div className="flex gap-2 flex-wrap">
           {["ALL", ...Object.keys(EDGE_LABELS)].map((filter) => (
             <button
@@ -138,101 +151,110 @@ export default function Rings() {
       {/* Zoom controls */}
       <div className="flex gap-2">
         <button
-          onClick={() => setZoom((z) => Math.max(0.5, z - 0.2))}
+          onClick={zoomOut}
           className="border border-border rounded px-2 py-1 text-sm"
         >
           −
         </button>
+
         <button
-          onClick={() => setZoom((z) => Math.min(2, z + 0.2))}
+          onClick={zoomIn}
           className="border border-border rounded px-2 py-1 text-sm"
         >
           +
         </button>
+
         <button
-          onClick={() => setZoom(1)}
+          onClick={resetZoom}
           className="border border-border rounded px-2 py-1 text-sm"
         >
           Reset
         </button>
       </div>
 
-      {/* Graph SVG */}
-      <div className="border border-border rounded-lg bg-card p-2 overflow-auto">
-        <svg
-          viewBox={`0 0 ${800 * zoom} ${600 * zoom}`}
-          className="w-full min-w-[600px]"
-          style={{ height: "70vh" }}
-        >
-          {/* Edges */}
-          {visibleEdges.map((edge, i) => {
-            const source = positions[edge.source];
-            const target = positions[edge.target];
-            if (!source || !target) return null;
-            const color = EDGE_COLORS[edge.edge_type] || "var(--border)";
-            return (
-              <line
-                key={i}
-                x1={source.x * zoom}
-                y1={source.y * zoom}
-                x2={target.x * zoom}
-                y2={target.y * zoom}
-                stroke={color}
-                strokeWidth={1.5}
-                strokeOpacity={0.6}
-              />
-            );
-          })}
-
-          {/* Nodes */}
-          {visibleNodes.map((node) => {
-            const pos = positions[node.id];
-            if (!pos) return null;
-            const isHovered = hoveredNode === node.id;
-            return (
-              <g
-                key={node.id}
-                onMouseEnter={() => setHoveredNode(node.id)}
-                onMouseLeave={() => setHoveredNode(null)}
-                onClick={() => handleNodeClick(node)}
-                style={{ cursor: "pointer" }}
-              >
-                <circle
-                  cx={pos.x * zoom}
-                  cy={pos.y * zoom}
-                  r={node.is_focus ? 14 : 8}
-                  fill={node.is_focus ? "var(--primary)" : "var(--card)"}
-                  stroke={isHovered ? "var(--destructive)" : "var(--foreground)"}
-                  strokeWidth={isHovered ? 3 : 1.5}
-                />
-                <text
-                  x={pos.x * zoom}
-                  y={pos.y * zoom + 24}
-                  textAnchor="middle"
-                  fontSize={12 / zoom}
-                  fill="var(--foreground)"
-                >
-                  {node.id}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      {/* Tooltip */}
-      {hoveredNode && (
-        <div className="fixed top-20 right-4 bg-card border border-border rounded-md p-3 shadow-lg">
-          <p className="text-sm font-medium">
-            {graph.nodes.find((n) => n.id === hoveredNode)?.id}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {graph.nodes.find((n) => n.id === hoveredNode)?.is_focus
+      {/* Force graph */}
+      <div
+        className="border border-border rounded-lg bg-card overflow-hidden"
+        style={{ height: "70vh" }}
+      >
+        <ForceGraph2D
+          ref={fgRef}
+          graphData={graphData}
+          nodeLabel={(node) => {
+            const deg = degrees[node.id] || 0;
+            const focus = node.is_focus
               ? "Flagged Account"
-              : "Linked Account"}
-          </p>
-        </div>
-      )}
+              : "Linked Account";
+
+            return `${node.id}<br>${focus}<br>Connections: ${deg}`;
+          }}
+          nodeRelSize={4}
+          nodeVal={(node) => Math.max(1, degrees[node.id] || 1)}
+          nodeColor={(node) => (node.is_focus ? "#000000" : "#888888")}
+          nodeCanvasObject={(node, ctx, globalScale) => {
+            const isDark =
+              document.documentElement.classList.contains("dark");
+
+            const deg = degrees[node.id] || 1;
+
+            const primary =
+              getComputedStyle(document.documentElement)
+                .getPropertyValue("--primary")
+                .trim() || "#000000";
+
+            const muted =
+              getComputedStyle(document.documentElement)
+                .getPropertyValue("--muted-foreground")
+                .trim() || "#666666";
+
+            const radius = Math.max(5, deg * 1.5);
+
+            // Shadow
+            ctx.beginPath();
+            ctx.arc(
+              node.x,
+              node.y + 2,
+              radius,
+              0,
+              2 * Math.PI,
+              false
+            );
+            ctx.fillStyle = "rgba(0,0,0,0.15)";
+            ctx.fill();
+
+            // Main circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+            ctx.fillStyle = node.is_focus ? primary : muted;
+            ctx.fill();
+
+            ctx.strokeStyle = isDark ? "#ffffff" : "#000000";
+            ctx.lineWidth = 1.2 / globalScale;
+            ctx.stroke();
+
+            // Label
+            const fontSize = 11 / globalScale;
+            ctx.font = `${fontSize}px Inter, Sans-Serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillStyle = isDark ? "#ffffff" : "#000000";
+            ctx.fillText(node.id, node.x, node.y + radius + 3);
+          }}
+          linkColor={(link) =>
+            EDGE_COLORS[link.edge_type] || "#aaaaaa"
+          }
+          linkWidth={(link) =>
+            highlightId === link.source.id ||
+            highlightId === link.target.id
+              ? 2
+              : 1
+          }
+          linkDirectionalArrowLength={0}
+          onNodeClick={handleNodeClick}
+          onNodeHover={handleNodeHover}
+          cooldownTicks={100}
+        />
+      </div>
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3">
@@ -242,7 +264,9 @@ export default function Rings() {
               className="inline-block w-3 h-3 rounded-full"
               style={{ backgroundColor: EDGE_COLORS[key] }}
             />
-            <span className="text-xs text-muted-foreground">{label}</span>
+            <span className="text-xs text-muted-foreground">
+              {label}
+            </span>
           </div>
         ))}
       </div>
