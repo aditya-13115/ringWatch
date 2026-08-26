@@ -52,7 +52,7 @@ export default function GraphView({ accountId }) {
             y1={source.y}
             x2={target.x}
             y2={target.y}
-            stroke="black"
+            stroke="var(--foreground)"
             strokeWidth="1"
             strokeDasharray={edge.edge_type === "shares_coupon" ? "4" : "0"}
           />
@@ -67,15 +67,15 @@ export default function GraphView({ accountId }) {
               cx={pos.x}
               cy={pos.y}
               r={node.is_focus ? 18 : 12}
-              fill={node.is_focus ? "black" : "white"}
-              stroke="black"
+              fill={node.is_focus ? "var(--primary)" : "var(--card)"}
+              stroke="var(--foreground)"
               strokeWidth="2"
             />
-            <text x={pos.x} y={pos.y + 30} textAnchor="middle" fontSize="10" fill="black">
+            <text x={pos.x} y={pos.y + 30} textAnchor="middle" fontSize="10" fill="var(--foreground)">
               {node.id}
             </text>
             {node.is_focus && (
-              <text x={pos.x} y={pos.y + 5} textAnchor="middle" fontSize="8" fill="white">
+              <text x={pos.x} y={pos.y + 5} textAnchor="middle" fontSize="8" fill="var(--primary-foreground)">
                 FOCUS
               </text>
             )}
@@ -89,7 +89,7 @@ export default function GraphView({ accountId }) {
         const midX = (source.x + target.x) / 2;
         const midY = (source.y + target.y) / 2;
         return (
-          <text key={`label-${i}`} x={midX} y={midY} fontSize="8" textAnchor="middle" fill="gray">
+          <text key={`label-${i}`} x={midX} y={midY} fontSize="8" textAnchor="middle" fill="var(--muted-foreground)">
             {edge.edge_type.replace("shares_", "")}
           </text>
         );
