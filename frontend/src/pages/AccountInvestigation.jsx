@@ -159,7 +159,11 @@ export default function AccountInvestigation() {
             AI Investigator
           </h3>
           <p className="text-sm font-semibold">
-            {investigation?.source === "llm" ? "Groq / Llama" : "Deterministic Fallback"}
+            {!investigation
+              ? "Not yet run"
+              : investigation.source === "llm"
+                ? "Groq / Llama"
+                : "Deterministic Fallback"}
           </p>
           <p className="text-xs text-muted-foreground">
             {investigation ? "Investigation complete" : "Not yet run"}
@@ -248,7 +252,7 @@ export default function AccountInvestigation() {
           Action authority: deterministic policy
         </p>
 
-        <ActionPanel tier={detail.risk_tier} />
+        <ActionPanel tier={detail.risk_tier} accountId={accountId} />
       </Card>
 
 
