@@ -1,0 +1,51 @@
+{
+  "non_ring_test_accounts": 4275,
+  "model_A_false_positives": 2,
+  "model_B_false_positives": 4,
+  "ring_types": {
+    "wardrobing": {
+      "total_ring_members": 56,
+      "model_A": {
+        "tp": 56,
+        "recall": 1.0
+      },
+      "model_B": {
+        "tp": 56,
+        "recall": 1.0
+      }
+    },
+    "promo_refund_farming": {
+      "total_ring_members": 100,
+      "model_A": {
+        "tp": 100,
+        "recall": 1.0
+      },
+      "model_B": {
+        "tp": 100,
+        "recall": 1.0
+      }
+    },
+    "friendly_fraud": {
+      "total_ring_members": 18,
+      "model_A": {
+        "tp": 18,
+        "recall": 1.0
+      },
+      "model_B": {
+        "tp": 18,
+        "recall": 1.0
+      }
+    },
+    "subtle_distributed": {
+      "total_ring_members": 60,
+      "model_A": {
+        "tp": 60,
+        "recall": 1.0
+      },
+      "model_B": {
+        "tp": 59,
+        "recall": 0.9833333333333333
+      }
+    }
+  }
+}
