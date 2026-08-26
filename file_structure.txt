@@ -1,0 +1,263 @@
+RingWatch/
+├── backend
+│   ├── __pycache__
+│   │   ├── __init__.cpython-313.pyc
+│   │   ├── dependencies.cpython-313.pyc
+│   │   └── main.cpython-313.pyc
+│   ├── api
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── accounts.cpython-313.pyc
+│   │   │   ├── actions.cpython-313.pyc
+│   │   │   ├── address.cpython-313.pyc
+│   │   │   ├── audit.cpython-313.pyc
+│   │   │   ├── evidence.cpython-313.pyc
+│   │   │   ├── failure.cpython-313.pyc
+│   │   │   ├── graph_overview.cpython-313.pyc
+│   │   │   ├── graph.cpython-313.pyc
+│   │   │   ├── health.cpython-313.pyc
+│   │   │   ├── investigator.cpython-313.pyc
+│   │   │   ├── metrics.cpython-313.pyc
+│   │   │   ├── queue.cpython-313.pyc
+│   │   │   ├── reports.cpython-313.pyc
+│   │   │   └── timeline.cpython-313.pyc
+│   │   ├── __init__.py
+│   │   ├── accounts.py
+│   │   ├── actions.py
+│   │   ├── address.py
+│   │   ├── audit.py
+│   │   ├── evidence.py
+│   │   ├── failure.py
+│   │   ├── graph_overview.py
+│   │   ├── graph.py
+│   │   ├── health.py
+│   │   ├── investigator.py
+│   │   ├── metrics.py
+│   │   ├── queue.py
+│   │   ├── reports.py
+│   │   └── timeline.py
+│   ├── core
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── concurrency.cpython-313.pyc
+│   │   │   ├── config.cpython-313.pyc
+│   │   │   ├── exceptions.cpython-313.pyc
+│   │   │   ├── logging.cpython-313.pyc
+│   │   │   └── middleware.cpython-313.pyc
+│   │   ├── __init__.py
+│   │   ├── concurrency.py
+│   │   ├── config.py
+│   │   ├── exceptions.py
+│   │   ├── logging.py
+│   │   └── middleware.py
+│   ├── domain
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── account.cpython-313.pyc
+│   │   │   ├── action.cpython-313.pyc
+│   │   │   ├── evidence.cpython-313.pyc
+│   │   │   └── graph.cpython-313.pyc
+│   │   ├── __init__.py
+│   │   ├── account.py
+│   │   ├── action.py
+│   │   ├── audit.py
+│   │   ├── evidence.py
+│   │   └── graph.py
+│   ├── repositories
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── event_repository.cpython-313.pyc
+│   │   │   ├── explainability_repository.cpython-313.pyc
+│   │   │   └── feature_repository.cpython-313.pyc
+│   │   ├── __init__.py
+│   │   ├── event_repository.py
+│   │   ├── explainability_repository.py
+│   │   └── feature_repository.py
+│   ├── schemas
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── account.cpython-313.pyc
+│   │   │   ├── action.cpython-313.pyc
+│   │   │   ├── address.cpython-313.pyc
+│   │   │   ├── audit.cpython-313.pyc
+│   │   │   ├── evidence.cpython-313.pyc
+│   │   │   ├── graph.cpython-313.pyc
+│   │   │   ├── llm.cpython-313.pyc
+│   │   │   ├── queue.cpython-313.pyc
+│   │   │   └── report.cpython-313.pyc
+│   │   ├── __init__.py
+│   │   ├── account.py
+│   │   ├── action.py
+│   │   ├── address.py
+│   │   ├── audit.py
+│   │   ├── evidence.py
+│   │   ├── graph.py
+│   │   ├── llm.py
+│   │   ├── queue.py
+│   │   └── report.py
+│   ├── services
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── account_service.cpython-313.pyc
+│   │   │   ├── action_service.cpython-313.pyc
+│   │   │   ├── address_normalizer_service.cpython-313.pyc
+│   │   │   ├── audit_service.cpython-313.pyc
+│   │   │   ├── data_loader.cpython-313.pyc
+│   │   │   ├── evidence_service.cpython-313.pyc
+│   │   │   ├── failure_service.cpython-313.pyc
+│   │   │   ├── graph_service.cpython-313.pyc
+│   │   │   ├── llm_investigator_service.cpython-313.pyc
+│   │   │   ├── metrics_service.cpython-313.pyc
+│   │   │   ├── queue_service.cpython-313.pyc
+│   │   │   ├── report_service.cpython-313.pyc
+│   │   │   └── timeline_service.cpython-313.pyc
+│   │   ├── __init__.py
+│   │   ├── account_service.py
+│   │   ├── action_service.py
+│   │   ├── address_normalizer_service.py
+│   │   ├── audit_service.py
+│   │   ├── data_loader.py
+│   │   ├── evidence_service.py
+│   │   ├── failure_service.py
+│   │   ├── graph_service.py
+│   │   ├── llm_investigator_service.py
+│   │   ├── metrics_service.py
+│   │   ├── queue_service.py
+│   │   ├── report_service.py
+│   │   └── timeline_service.py
+│   ├── tests
+│   │   ├── __pycache__
+│   │   │   ├── test_address_normalization.cpython-313.pyc
+│   │   │   └── test_api.cpython-313-pytest-9.1.1.pyc
+│   │   ├── test_address_normalization.py
+│   │   └── test_api.py
+│   ├── __init__.py
+│   ├── dependencies.py
+│   └── main.py
+├── data
+│   ├── processed
+│   │   ├── explainability
+│   │   │   ├── bounded_actions_test.csv
+│   │   │   ├── case_reports_test.csv
+│   │   │   ├── evidence_gap_test.csv
+│   │   │   ├── graph_evidence_test.csv
+│   │   │   ├── investigation_audit_log.csv
+│   │   │   ├── shap_summary.png
+│   │   │   └── shap_values_test.csv
+│   │   ├── model
+│   │   │   ├── model_feature_importance.csv
+│   │   │   ├── model_leakage_report.txt
+│   │   │   ├── model_lgbm_A.pkl
+│   │   │   ├── model_lgbm_B.pkl
+│   │   │   ├── model_metrics.json
+│   │   │   └── model_predictions_test.csv
+│   │   ├── account_graph_edges.csv
+│   │   ├── baseline_metrics.json
+│   │   ├── communities.csv
+│   │   ├── features_accounts.csv
+│   │   ├── features_graph.csv
+│   │   ├── leakage_report_day5.txt
+│   │   └── leakage_report_features.txt
+│   ├── accounts.csv
+│   ├── addresses.csv
+│   ├── devices.csv
+│   ├── disputes.csv
+│   ├── orders.csv
+│   ├── payment_instruments.csv
+│   ├── phones.csv
+│   ├── refunds.csv
+│   └── ring_ground_truth.csv
+├── frontend
+│   ├── public
+│   │   ├── favicon.svg
+│   │   └── icons.svg
+│   ├── src
+│   │   ├── api
+│   │   │   ├── account.js
+│   │   │   ├── address.js
+│   │   │   ├── audit.js
+│   │   │   ├── client.js
+│   │   │   ├── failure.js
+│   │   │   ├── graph.js
+│   │   │   ├── metrics.js
+│   │   │   └── queue.js
+│   │   ├── assets
+│   │   │   ├── hero.png
+│   │   │   ├── react.svg
+│   │   │   └── vite.svg
+│   │   ├── components
+│   │   │   ├── ActionWorkflow.jsx
+│   │   │   ├── Badge.jsx
+│   │   │   ├── Card.jsx
+│   │   │   ├── ErrorBoundary.jsx
+│   │   │   ├── GraphView.jsx
+│   │   │   ├── Layout.jsx
+│   │   │   └── LineChart.jsx
+│   │   ├── hooks
+│   │   ├── pages
+│   │   │   ├── About.jsx
+│   │   │   ├── AccountInvestigation.jsx
+│   │   │   ├── AddressNormalization.jsx
+│   │   │   ├── AuditLog.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── FailureDemo.jsx
+│   │   │   ├── HumanReviewQueue.jsx
+│   │   │   ├── Landing.jsx
+│   │   │   ├── Metrics.jsx
+│   │   │   ├── Rings.jsx
+│   │   │   └── VerificationWorkflow.jsx
+│   │   ├── utils
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── README.md
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── generator
+│   ├── __pycache__
+│   │   ├── __init__.cpython-313.pyc
+│   │   ├── config.cpython-313.pyc
+│   │   ├── entities.cpython-313.pyc
+│   │   ├── features_config.cpython-313.pyc
+│   │   ├── features.cpython-313.pyc
+│   │   ├── generate_dataset.cpython-313.pyc
+│   │   ├── graph_features.cpython-313.pyc
+│   │   ├── ground_truth.cpython-313.pyc
+│   │   ├── hard_negatives.cpython-313.pyc
+│   │   ├── ids.cpython-313.pyc
+│   │   ├── normal_orders.cpython-313.pyc
+│   │   ├── refunds_disputes.cpython-313.pyc
+│   │   ├── rings.cpython-313.pyc
+│   │   └── validate.cpython-313.pyc
+│   ├── __init__.py
+│   ├── config.py
+│   ├── entities.py
+│   ├── features_config.py
+│   ├── features.py
+│   ├── generate_dataset.py
+│   ├── graph_features.py
+│   ├── ground_truth.py
+│   ├── hard_negatives.py
+│   ├── ids.py
+│   ├── normal_orders.py
+│   ├── refunds_disputes.py
+│   ├── rings.py
+│   └── validate.py
+├── notebooks
+│   ├── day6_7_lightgbm_evaluation.ipynb
+│   └── day8_9_explainability.ipynb
+├── .env
+├── .gitignore
+├── .python-version
+├── file_structure.txt
+├── main.py
+├── pyproject.toml
+├── README.md
+└── uv.lock
