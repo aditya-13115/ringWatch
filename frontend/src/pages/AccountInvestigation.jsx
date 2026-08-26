@@ -358,23 +358,12 @@ export default function AccountInvestigation() {
             </h3>
 
             {detail.risk_tier === "CRITICAL" ||
-            detail.risk_tier === "HIGH" ? (
+            detail.risk_tier === "HIGH" ||
+            detail.risk_tier === "MEDIUM" ? (
               <GraphView accountId={accountId} />
-            ) : detail.risk_tier === "MEDIUM" ? (
-              <div className="text-sm text-muted-foreground">
-                <p>
-                  {detail.graph_evidence?.total_graph_links || 0} graph
-                  links found.
-                </p>
-
-                <p>
-                  No significant network evidence to display.
-                </p>
-              </div>
             ) : (
               <div className="text-sm text-muted-foreground">
                 <p>No significant graph evidence.</p>
-
                 <p>
                   Shared entities:{" "}
                   {detail.graph_evidence?.total_graph_links || 0} links.
