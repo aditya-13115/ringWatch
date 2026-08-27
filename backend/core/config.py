@@ -27,34 +27,38 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_model: str = "llama-3.3-70b-versatile"
 
-    data_dir: Path = PROJECT_ROOT / "data"
-    processed_dir: Path = PROJECT_ROOT / "data" / "processed"
+    data_dir: Path = PROJECT_ROOT / "data" / "v3_scaled_30k"
+    processed_dir: Path = PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed"
 
-    explainability_dir: Path = PROJECT_ROOT / "data" / "processed" / "explainability"
+    explainability_dir: Path = (
+        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "explainability"
+    )
 
-    model_dir: Path = PROJECT_ROOT / "data" / "processed" / "model"
+    model_dir: Path = (
+        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "model"
+    )
 
     model_predictions_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "model" / "model_predictions_test.csv"
+        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "model" / "model_predictions_test.csv"
     )
 
     model_metrics_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "model" / "model_metrics.json"
+        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "model" / "model_metrics.json"
     )
 
     features_accounts_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "features_accounts.csv"
+        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "features_accounts.csv"
     )
 
     features_graph_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "features_graph.csv"
+        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "features_graph.csv"
     )
 
     account_graph_edges_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "account_graph_edges.csv"
+        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "account_graph_edges.csv"
     )
 
-    addresses_path: Path = PROJECT_ROOT / "data" / "addresses.csv"
+    addresses_path: Path = PROJECT_ROOT / "data" / "v3_scaled_30k" / "addresses.csv"
 
     model_config = SettingsConfigDict(
         env_file=".env",
