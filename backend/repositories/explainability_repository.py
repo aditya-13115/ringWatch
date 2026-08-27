@@ -7,7 +7,7 @@ class ExplainabilityRepository:
 
     def __init__(self, explainability_dir: Path):
         self.explainability_dir = explainability_dir
-
+        self.audit_path = explainability_dir / "investigation_audit_log.csv"
         self.actions = pd.read_csv(explainability_dir / "bounded_actions_test.csv")
 
         self.reports = pd.read_csv(explainability_dir / "case_reports_test.csv")

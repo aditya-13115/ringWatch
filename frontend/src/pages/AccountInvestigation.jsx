@@ -52,10 +52,13 @@ const INVESTIGATION_STEPS = [
   "Gathering graph evidence",
   "Checking evidence availability",
   "Calculating financial exposure",
-  "Analyzing with Groq",
+  "Analyzing with AI",
   "Applying deterministic policy",
   "Complete",
 ];
+
+// Current operating model — change only when backend model changes.
+const OPERATING_MODEL = "LightGBM Model A";
 
 
 export default function AccountInvestigation() {
@@ -79,6 +82,19 @@ export default function AccountInvestigation() {
       .then(([accountData, timelineData]) => {
         setDetail(accountData);
         setTimeline(timelineData.events);
+
+        // Restore persisted investigation for this account if available
+        const stored = localStorage.getItem(
+          `ringwatch_investigation_${accountId}`
+        );
+
+        if (stored) {
+          try {
+            setInvestigation(JSON.parse(stored));
+          } catch (err) {
+            console.warn("Could not restore investigation:", err);
+          }
+        }
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -100,6 +116,13 @@ export default function AccountInvestigation() {
     try {
       const result = await investigateAccount(accountId);
       setInvestigation(result);
+
+      // Persist result for this account
+      localStorage.setItem(
+        `ringwatch_investigation_${accountId}`,
+        JSON.stringify(result)
+      );
+
       setInvestigationStep(INVESTIGATION_STEPS.length - 1);
     } catch (e) {
       setError(e.message);
@@ -141,14 +164,21 @@ export default function AccountInvestigation() {
       </div>
 
 
-      {/* Model / LLM / Policy Separation */}
+      {/* Model / AI / Policy Separation */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Risk Model</h3>
-          <p className="text-sm font-semibold">LightGBM Model B</p>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            Risk Model
+          </h3>
+
+          <p className="text-sm font-semibold">
+            {OPERATING_MODEL}
+          </p>
+
           <p className="text-xs text-muted-foreground">
             Score: {detail.proba.toFixed(6)}
           </p>
+
           <p className="text-xs text-muted-foreground">
             Rank: #{detail.rank}
           </p>
@@ -158,16 +188,15 @@ export default function AccountInvestigation() {
           <h3 className="text-sm font-medium text-muted-foreground mb-2">
             AI Investigator
           </h3>
+
           <p className="text-sm font-semibold">
-            {!investigation
-              ? "Not yet run"
-              : investigation.source === "llm"
-                ? "Groq / Llama"
-                : "Deterministic Fallback"}
+            {!investigation ? "Not yet run" : "Investigation complete"}
           </p>
+
           <p className="text-xs text-muted-foreground">
-            {investigation ? "Investigation complete" : "Not yet run"}
+            {investigation ? "AI analysis available" : "Run to generate AI analysis"}
           </p>
+
           {investigation?.confidence && (
             <p className="text-xs text-muted-foreground">
               Confidence: {investigation.confidence}
@@ -179,9 +208,13 @@ export default function AccountInvestigation() {
           <h3 className="text-sm font-medium text-muted-foreground mb-2">
             Policy Authority
           </h3>
-          <p className="text-sm font-semibold">Deterministic Policy Engine</p>
+
+          <p className="text-sm font-semibold">
+            Deterministic Policy Engine
+          </p>
+
           <p className="text-xs text-muted-foreground">
-            Final action is determined by policy, not LLM.
+            Final action is determined by policy, not AI.
           </p>
         </Card>
       </div>
@@ -438,7 +471,9 @@ export default function AccountInvestigation() {
           >
             {isInvestigating
               ? "Investigating…"
-              : "Run Investigation"}
+              : investigation
+                ? "Run Again"
+                : "Run Investigation"}
           </button>
         </div>
 
@@ -462,8 +497,14 @@ export default function AccountInvestigation() {
           <div className="space-y-6">
             {/* Summary */}
             <div className="rounded-lg bg-muted p-4">
-              <h4 className="text-sm font-semibold mb-2">Investigation Summary</h4>
-              <p className="text-sm leading-relaxed">{investigation.summary}</p>
+              <h4 className="text-sm font-semibold mb-2">
+                Investigation Summary
+              </h4>
+
+              <p className="text-sm leading-relaxed">
+                {investigation.summary}
+              </p>
+
               {investigation.confidence && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   Confidence:{" "}
@@ -477,7 +518,10 @@ export default function AccountInvestigation() {
             {/* Key Findings */}
             {investigation.key_findings?.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">Key Findings</h4>
+                <h4 className="text-sm font-semibold mb-2">
+                  Key Findings
+                </h4>
+
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {investigation.key_findings.map((finding, idx) => (
                     <li key={idx}>{finding}</li>
@@ -489,7 +533,10 @@ export default function AccountInvestigation() {
             {/* Evidence Gaps */}
             {investigation.evidence_gaps?.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">Evidence Gaps</h4>
+                <h4 className="text-sm font-semibold mb-2">
+                  Evidence Gaps
+                </h4>
+
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {investigation.evidence_gaps.map((gap, idx) => (
                     <li key={idx}>{gap}</li>
@@ -501,7 +548,10 @@ export default function AccountInvestigation() {
             {/* Uncertainties */}
             {investigation.uncertainties?.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">Uncertainties</h4>
+                <h4 className="text-sm font-semibold mb-2">
+                  Uncertainties
+                </h4>
+
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {investigation.uncertainties.map((u, idx) => (
                     <li key={idx}>{u}</li>
@@ -513,7 +563,9 @@ export default function AccountInvestigation() {
             {/* Tool Trace */}
             {investigation.tool_calls?.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">Tool Trace</h4>
+                <h4 className="text-sm font-semibold mb-2">
+                  Tool Trace
+                </h4>
 
                 <ul className="space-y-2 text-sm">
                   {investigation.tool_calls.map((call, idx) => (
@@ -526,7 +578,9 @@ export default function AccountInvestigation() {
                         }
                         className="w-full flex items-center justify-between text-left text-muted-foreground hover:text-foreground"
                       >
-                        <span className="font-mono">{call.tool}</span>
+                        <span className="font-mono">
+                          {call.tool}
+                        </span>
 
                         <span>
                           {expandedTool === idx ? "−" : "+"}
@@ -594,7 +648,7 @@ export default function AccountInvestigation() {
 
                   <div>
                     <dt className="text-xs text-muted-foreground">
-                      LLM Confidence
+                      AI Confidence
                     </dt>
                     <dd className="font-medium">
                       {investigation.completion_summary.llm_confidence}

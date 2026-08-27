@@ -7,6 +7,21 @@ class AuditService:
     def __init__(self, explainability_repo: ExplainabilityRepository):
         self.explainability_repo = explainability_repo
 
+    async def clear_audit_log(self):
+        audit_path = self.explainability_repo.audit_path
+        # Create empty DataFrame with same schema? Or just write empty file.
+        # Simplest: delete the file or write an empty CSV.
+        try:
+            # Use the path stored in the repository
+            audit_path = self.explainability_repo.audit_path
+            # Create an empty DataFrame with no rows.
+            # You can optionally preserve the same columns.
+            # For simplicity, we write an empty file.
+            pd.DataFrame().to_csv(audit_path, index=False)
+        except Exception as e:
+            raise e
+            
+
     async def get_audit_log(self) -> list[dict]:
         audit_df = self.explainability_repo.get_audit()
         records = []

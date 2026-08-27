@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from backend.schemas.audit import AuditResponse, AuditRecordResponse
 from backend.services.audit_service import AuditService
@@ -13,3 +13,14 @@ async def get_audit(
 ):
     records = await audit_service.get_audit_log()
     return AuditResponse(records=[AuditRecordResponse(**r) for r in records])
+
+@router.delete("")
+async def delete_audit(
+    audit_service: AuditService = Depends(get_audit_service),
+):
+    """Clear the investigation audit log."""
+    try:
+        await audit_service.clear_audit_log()
+        return {"status": "cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
