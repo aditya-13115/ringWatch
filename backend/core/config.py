@@ -3,6 +3,7 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -28,51 +29,106 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
 
     # Primary operational fraud model
-    primary_model: str = "LightGBM_Model_A"
+    primary_model: str = "LightGBM_Model_A_Tuned"
 
+    # V4 tuned Model A
     primary_model_path: Path = (
         PROJECT_ROOT
         / "data"
-        / "v3_scaled_30k"
+        / "v4_realistic_30k"
         / "processed"
         / "model"
-        / "model_lgbm_A.pkl"
+        / "model_lgbm_A_tuned.pkl"
     )
 
+    # Existing operational threshold
     primary_model_threshold: float = 0.01
 
-    data_dir: Path = PROJECT_ROOT / "data" / "v3_scaled_30k"
-    processed_dir: Path = PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed"
+    # V4 dataset
+    data_dir: Path = (
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+    )
 
+    processed_dir: Path = (
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+    )
+
+    # V4 explainability artifacts
     explainability_dir: Path = (
-        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "explainability"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "explainability"
     )
 
+    # V4 model artifacts
     model_dir: Path = (
-        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "model"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "model"
     )
 
+    # V4 test predictions
     model_predictions_path: Path = (
-        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "model" / "model_predictions_test.csv"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "model"
+        / "model_predictions_test.csv"
     )
 
+    # V4 tuned benchmark metrics
     model_metrics_path: Path = (
-        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "model" / "model_metrics.json"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "model"
+        / "model_metrics_tuned.json"
     )
 
+    # V4 feature matrices
     features_accounts_path: Path = (
-        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "features_accounts.csv"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "features_accounts.csv"
     )
 
     features_graph_path: Path = (
-        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "features_graph.csv"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "features_graph.csv"
     )
 
+    # V4 graph
     account_graph_edges_path: Path = (
-        PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed" / "account_graph_edges.csv"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "account_graph_edges.csv"
     )
 
-    addresses_path: Path = PROJECT_ROOT / "data" / "v3_scaled_30k" / "addresses.csv"
+    # V4 addresses
+    addresses_path: Path = (
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "addresses.csv"
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
