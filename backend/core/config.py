@@ -27,6 +27,20 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_model: str = "llama-3.3-70b-versatile"
 
+    # Primary operational fraud model
+    primary_model: str = "LightGBM_Model_A"
+
+    primary_model_path: Path = (
+        PROJECT_ROOT
+        / "data"
+        / "v3_scaled_30k"
+        / "processed"
+        / "model"
+        / "model_lgbm_A.pkl"
+    )
+
+    primary_model_threshold: float = 0.01
+
     data_dir: Path = PROJECT_ROOT / "data" / "v3_scaled_30k"
     processed_dir: Path = PROJECT_ROOT / "data" / "v3_scaled_30k" / "processed"
 

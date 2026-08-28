@@ -108,7 +108,7 @@ export default function AuditLog() {
                   <td className="px-4 py-3 text-sm">
                     {record.model_version || OPERATING_MODEL}
                   </td>
-                  <td className="px-4 py-3 text-sm">{record.proba ?? "-"}</td>
+                  <td className="px-4 py-3 text-sm">{record.proba != null ? `${(Number(record.proba) * 100).toFixed(2)}%` : "-"}</td>
                   <td className="px-4 py-3 text-sm">{record.risk_tier || "-"}</td>
                   <td className="px-4 py-3 text-sm">{record.action_recommended}</td>
                   <td className="px-4 py-3 text-sm">
@@ -120,7 +120,7 @@ export default function AuditLog() {
                     <td colSpan="7" className="px-6 py-4">
                       <div className="space-y-1 text-sm">
                         <p><strong>Model:</strong> {record.model_version}</p>
-                        <p><strong>Score:</strong> {record.proba}</p>
+                        <p><strong>Score:</strong> {(Number(record.proba) * 100).toFixed(2)}%</p>
                         <p><strong>Tier:</strong> {record.risk_tier}</p>
                         {record.case_report_generated && (
                           <p><strong>Case Report:</strong> Generated</p>

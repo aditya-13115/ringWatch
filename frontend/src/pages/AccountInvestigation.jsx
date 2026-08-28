@@ -176,7 +176,7 @@ export default function AccountInvestigation() {
           </p>
 
           <p className="text-xs text-muted-foreground">
-            Score: {detail.proba.toFixed(6)}
+            Score: {(Number(account.proba) * 100).toFixed(2)}%
           </p>
 
           <p className="text-xs text-muted-foreground">

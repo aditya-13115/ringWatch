@@ -684,7 +684,7 @@ class LLMInvestigatorService:
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "account_id": result["account_id"],
-            "model_version": "LightGBM_Model_B",
+            "model_version": self.settings.primary_model,
             "proba": None,
             "rank": None,
             "risk_tier": None,
