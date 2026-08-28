@@ -354,6 +354,26 @@ def build_behavioral_features(
         how="left",
     )
 
+    # Number of distinct coupon codes used
+    distinct_coupons = orders[orders["coupon_code"].notna()].groupby("account_id")["coupon_code"].nunique().rename("distinct_coupon_count")
+    features = features.merge(distinct_coupons, on="account_id", how="left")
+
+    # Maximum discount ratio
+    max_discount = orders.groupby("account_id")["discount_ratio"].max().rename("max_discount_ratio")
+    features = features.merge(max_discount, on="account_id", how="left")
+
+    # Rare coupon count (coupons used by <10 accounts overall)
+    coupon_counts = orders[orders["coupon_code"].notna()]["coupon_code"].value_counts()
+    rare_coupons = set(coupon_counts[coupon_counts < 10].index)
+    orders["is_rare_coupon"] = orders["coupon_code"].isin(rare_coupons)
+    rare_coupon_count = orders.groupby("account_id")["is_rare_coupon"].sum().rename("rare_coupon_count")
+    features = features.merge(rare_coupon_count, on="account_id", how="left")
+
+    # Fill NaN
+    features[["distinct_coupon_count", "max_discount_ratio", "rare_coupon_count"]] = features[
+        ["distinct_coupon_count", "max_discount_ratio", "rare_coupon_count"]
+    ].fillna(0)
+
     # --------------------------------------------------------
     # RETURNS
     # --------------------------------------------------------
@@ -633,6 +653,34 @@ def build_temporal_features(
 
         features[column] = features[column].fillna(0)
 
+    # ---- New temporal interaction features ----
+    # Time between first and last order
+    order_times = orders.groupby("account_id")["order_timestamp"].agg(["min", "max"]).reset_index()
+    order_times.columns = ["account_id", "first_order_time", "last_order_time"]
+    features = features.merge(order_times, on="account_id", how="left")
+    features["account_lifetime_days"] = (features["last_order_time"] - features["first_order_time"]).dt.total_seconds() / 86400
+    features.drop(columns=["first_order_time", "last_order_time"], inplace=True)
+
+    # Average time between orders (for accounts with >1 order)
+    orders_sorted = orders.sort_values(["account_id", "order_timestamp"])
+    orders_sorted["order_diff"] = orders_sorted.groupby("account_id")["order_timestamp"].diff()
+    avg_order_gap = orders_sorted.groupby("account_id")["order_diff"].mean().rename("avg_order_gap_days").reset_index()
+    avg_order_gap["avg_order_gap_days"] = avg_order_gap["avg_order_gap_days"] / pd.Timedelta(days=1)
+    features = features.merge(avg_order_gap, on="account_id", how="left")
+
+    # Ratio of orders in last 7 days vs total orders
+    features["recent_activity_ratio"] = features["orders_last_7d"] / features["total_orders"].clip(lower=1)
+
+    # Hour-of-day distribution: fraction of orders in evening (18-22)
+    orders["hour"] = orders["order_timestamp"].dt.hour
+    evening_ratio = orders.groupby("account_id")["hour"].apply(lambda x: (x.between(18, 22)).mean()).rename("evening_order_ratio").reset_index()
+    features = features.merge(evening_ratio, on="account_id", how="left")
+
+    # Fill NaNs with 0
+    features[["account_lifetime_days", "avg_order_gap_days", "recent_activity_ratio", "evening_order_ratio"]] = features[
+        ["account_lifetime_days", "avg_order_gap_days", "recent_activity_ratio", "evening_order_ratio"]
+    ].fillna(0)    
+
     # --------------------------------------------------------
     # BURST SCORE
     # --------------------------------------------------------
@@ -750,6 +798,9 @@ def build_identity_features(
 
         record = {"account_id": account_id}
 
+        # Store the accounts sharing each entity type
+        entity_sets = {}
+
         for entity_column, prefix in entity_columns.items():
 
             entities = account_orders[entity_column].dropna().unique()
@@ -774,6 +825,35 @@ def build_identity_features(
             record[f"accounts_per_{prefix}"] = average_reuse
 
             record[f"shared_{prefix}_count"] = len(shared_accounts)
+
+            # Keep the actual shared-account set for enhanced features
+            entity_sets[prefix] = shared_accounts
+
+        # --------------------------------------------------------
+        # ENHANCED SHARING FEATURES
+        # --------------------------------------------------------
+
+        # Accounts sharing both a device AND an address
+        record["has_shared_device_and_address"] = int(
+            bool(
+                entity_sets["device"]
+                & entity_sets["address"]
+            )
+        )
+
+        # Accounts sharing both a payment instrument AND a phone
+        record["has_shared_payment_and_phone"] = int(
+            bool(
+                entity_sets["instrument"]
+                & entity_sets["phone"]
+            )
+        )
+
+        # Number of entity types that have at least one shared account
+        record["shared_entity_types_count"] = sum(
+            len(shared_set) > 0
+            for shared_set in entity_sets.values()
+        )
 
         account_records.append(record)
 

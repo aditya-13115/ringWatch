@@ -5,12 +5,12 @@ SEED = 42
 START_DATE = "2026-01-01"
 END_DATE = "2026-03-01"
 
-DATASET_VERSION = "v3_scaled_30k"
+DATASET_VERSION = "v4_realistic_30k"
 DATA_VERSION = os.getenv("RINGWATCH_DATASET_VERSION", DATASET_VERSION)
 
 N_ACCOUNTS = 30_000
 
-# Exact ring configuration
+# Exact ring configuration retained for downstream evaluation compatibility
 N_RING_TYPES = {
     "wardrobing": 40,
     "promo_refund_farming": 30,

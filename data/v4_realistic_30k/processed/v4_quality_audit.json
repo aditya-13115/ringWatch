@@ -1,0 +1,65 @@
+{
+  "cutoff": "2026-02-20 00:00:00",
+  "accounts": 30000,
+  "ring_members": 1500,
+  "hard_negatives": 4500,
+  "single_feature_auc": [
+    {
+      "feature": "distinct_devices",
+      "single_feature_auc": 0.6434636374269006,
+      "unique_values": 4
+    },
+    {
+      "feature": "total_orders",
+      "single_feature_auc": 0.6300350877192982,
+      "unique_values": 18
+    },
+    {
+      "feature": "distinct_instruments",
+      "single_feature_auc": 0.6197294035087719,
+      "unique_values": 4
+    },
+    {
+      "feature": "distinct_addresses",
+      "single_feature_auc": 0.619053730994152,
+      "unique_values": 4
+    },
+    {
+      "feature": "total_amount",
+      "single_feature_auc": 0.6124451695906432,
+      "unique_values": 5415
+    },
+    {
+      "feature": "distinct_phones",
+      "single_feature_auc": 0.5719277192982456,
+      "unique_values": 3
+    },
+    {
+      "feature": "return_rate",
+      "single_feature_auc": 0.5698748654970761,
+      "unique_values": 55
+    },
+    {
+      "feature": "avg_order_value",
+      "single_feature_auc": 0.5626573099415205,
+      "unique_values": 8066
+    },
+    {
+      "feature": "refund_rate",
+      "single_feature_auc": 0.5591890643274854,
+      "unique_values": 55
+    },
+    {
+      "feature": "coupon_usage_rate",
+      "single_feature_auc": 0.5358051461988305,
+      "unique_values": 55
+    },
+    {
+      "feature": "dispute_rate",
+      "single_feature_auc": 0.5069273918128655,
+      "unique_values": 21
+    }
+  ],
+  "max_single_feature_auc": 0.6434636374269006,
+  "anti_shortcut_passed": true
+}
