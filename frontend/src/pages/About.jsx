@@ -1,7 +1,20 @@
+import Logo from "../components/Logo";
 export default function About() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      <h1 className="text-3xl font-bold">About RingWatch</h1>
+      <div className="flex items-center gap-4">
+        <Logo size="lg" showName={false} />
+
+        <div>
+          <h1 className="text-3xl font-bold">
+            About RingWatch
+          </h1>
+
+          <p className="mt-1 text-sm text-muted-foreground">
+            Fraud investigation and risk intelligence
+          </p>
+        </div>
+      </div>
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Problem</h2>

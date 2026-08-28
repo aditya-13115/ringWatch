@@ -1,3 +1,4 @@
+import Logo from "../components/Logo";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
@@ -32,8 +33,8 @@ export default function Layout() {
   return (
     <div className="flex h-screen bg-background text-foreground">
       <aside className="w-56 border-r border-border bg-card flex flex-col">
-        <div className="h-16 flex items-center px-4 border-b border-border font-semibold text-lg">
-          RingWatch
+        <div className="h-16 flex items-center px-4 border-b border-border">
+          <Logo size="md" />
         </div>
         <nav className="p-2 space-y-1 flex-1">
           {navItems.map((item) => (
