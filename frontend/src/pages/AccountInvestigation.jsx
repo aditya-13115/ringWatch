@@ -58,7 +58,7 @@ const INVESTIGATION_STEPS = [
 ];
 
 // Current operating model — change only when backend model changes.
-const OPERATING_MODEL = "LightGBM Model A";
+const OPERATING_MODEL = "Ensemble_LGBM_B_GNN";
 
 
 export default function AccountInvestigation() {

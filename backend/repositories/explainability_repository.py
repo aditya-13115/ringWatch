@@ -4,23 +4,33 @@ import pandas as pd
 
 
 class ExplainabilityRepository:
-
     def __init__(self, explainability_dir: Path):
         self.explainability_dir = explainability_dir
+
         self.audit_path = explainability_dir / "investigation_audit_log.csv"
-        self.actions = pd.read_csv(explainability_dir / "bounded_actions_test.csv")
 
-        self.reports = pd.read_csv(explainability_dir / "case_reports_test.csv")
+        self.actions_path = explainability_dir / "bounded_actions_test.csv"
+        self.reports_path = explainability_dir / "case_reports_test.csv"
+        self.evidence_path = explainability_dir / "evidence_gap_test.csv"
+        self.graph_evidence_path = explainability_dir / "graph_evidence_test.csv"
+        self.shap_path = explainability_dir / "shap_values_test.csv"
 
-        self.evidence = pd.read_csv(explainability_dir / "evidence_gap_test.csv")
+        # These are relatively static explainability artifacts.
+        self.actions = self._read_csv(self.actions_path)
+        self.reports = self._read_csv(self.reports_path)
+        self.evidence = self._read_csv(self.evidence_path)
+        self.graph_evidence = self._read_csv(self.graph_evidence_path)
+        self.shap = self._read_csv(self.shap_path)
 
-        self.graph_evidence = pd.read_csv(
-            explainability_dir / "graph_evidence_test.csv"
-        )
+    @staticmethod
+    def _read_csv(path: Path) -> pd.DataFrame:
+        if not path.exists():
+            return pd.DataFrame()
 
-        self.audit = pd.read_csv(explainability_dir / "investigation_audit_log.csv")
-
-        self.shap = pd.read_csv(explainability_dir / "shap_values_test.csv")
+        try:
+            return pd.read_csv(path)
+        except Exception:
+            return pd.DataFrame()
 
     def get_actions(self) -> pd.DataFrame:
         return self.actions.copy()
@@ -34,8 +44,46 @@ class ExplainabilityRepository:
     def get_graph_evidence(self) -> pd.DataFrame:
         return self.graph_evidence.copy()
 
-    def get_audit(self) -> pd.DataFrame:
-        return self.audit.copy()
-
     def get_shap(self) -> pd.DataFrame:
         return self.shap.copy()
+
+    def get_audit(self) -> pd.DataFrame:
+        """
+        IMPORTANT:
+        Audit log is dynamic because LLM investigations append new rows
+        while the backend is already running.
+
+        Therefore DO NOT return a DataFrame cached during __init__.
+        Always reread the CSV.
+        """
+        return self._read_csv(self.audit_path)
+
+    def append_audit_record(self, record: dict) -> None:
+        """
+        Append one audit record while preserving the existing CSV schema.
+        """
+
+        existing = self._read_csv(self.audit_path)
+
+        new_row = pd.DataFrame([record])
+
+        if existing.empty:
+            new_row.to_csv(self.audit_path, index=False)
+            return
+
+        # Make sure both DataFrames have the same columns.
+        all_columns = list(existing.columns)
+
+        for column in new_row.columns:
+            if column not in all_columns:
+                all_columns.append(column)
+
+        existing = existing.reindex(columns=all_columns)
+        new_row = new_row.reindex(columns=all_columns)
+
+        combined = pd.concat(
+            [existing, new_row],
+            ignore_index=True,
+        )
+
+        combined.to_csv(self.audit_path, index=False)

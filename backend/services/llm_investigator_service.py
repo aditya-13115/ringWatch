@@ -670,38 +670,83 @@ class LLMInvestigatorService:
         result: dict,
         success: bool = True,
     ):
-        """Append a detailed investigation record."""
-        audit_dir = self.explainability_repo.explainability_dir
-        audit_path = audit_dir / "investigation_audit_log.csv"
+        """
+        Persist every LLM investigation into the live audit log.
 
-        try:
-            df = pd.read_csv(audit_path)
-        except FileNotFoundError:
-            df = pd.DataFrame()
-        except Exception:
-            df = pd.DataFrame()
+        This is separate from the model prediction audit rows.
+
+        A prediction row tells us:
+            model -> score -> risk tier -> action
+
+        An investigation row tells us:
+            LLM -> tools -> findings -> confidence -> action
+        """
 
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "account_id": result["account_id"],
-            "model_version": self.settings.primary_model,
+
+            "account_id": result.get(
+                "account_id",
+                "",
+            ),
+
+            # The investigation is performed AFTER the ensemble score.
+            # Keep the model identity explicit.
+            "model_version": "Ensemble_LGBM_B_GNN",
+
+            # Investigation rows do not generate a new prediction.
             "proba": None,
             "rank": None,
+
+            # Risk tier comes from the prediction/action system.
             "risk_tier": None,
-            "top_k_flag": True,
-            "action_recommended": result["recommended_action"],
+
+            "recommended_action": None,
+
+            # This is the field consumed by the API/frontend.
+            "action_recommended": result.get(
+                "recommended_action",
+                "",
+            ),
+
+            "top_k_flag": False,
+
             "case_report_generated": True,
-            "investigation_source": result["source"],
-            "tool_calls": json.dumps(result.get("tool_calls", [])),
-            "summary": result.get("summary", ""),
+
+            # ---------------------------------------------------------
+            # LLM investigation information
+            # ---------------------------------------------------------
+
+            "investigation_source": result.get(
+                "source",
+                "llm",
+            ),
+
+            "tool_calls": json.dumps(
+                result.get("tool_calls", []),
+                default=str,
+            ),
+
+            "summary": result.get(
+                "summary",
+                "",
+            ),
+
             "action_source": result.get(
                 "action_source",
                 "deterministic_policy",
             ),
+
+            "error": (
+                result.get("error", "")
+                if not success
+                else ""
+            ),
         }
 
-        df = pd.concat([df, pd.DataFrame([entry])], ignore_index=True)
-        df.to_csv(audit_path, index=False)
+        # Use the repository's append method so the existing prediction
+        # rows and newly generated investigation rows coexist safely.
+        self.explainability_repo.append_audit_record(entry)
 
     async def _fallback_deterministic(self,account_id: str,error: str = "",start_time: float | None = None,) -> dict:
         report = self.explainability_repo.get_reports()
