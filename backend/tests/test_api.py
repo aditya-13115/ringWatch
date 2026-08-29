@@ -136,3 +136,37 @@ def test_investigate_valid():
         assert "summary" in data
         assert "recommended_action" in data
         assert data["source"] in ["llm", "deterministic"]
+
+def test_failure_demo_razorpay():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/failure-demo/razorpay-synthetic"
+        )
+
+        assert response.status_code == 200
+
+        data = response.json()
+
+        assert data["status"] == "GRACEFUL_FAILURE_HANDLED"
+        assert data["source"] == "razorpay_style_synthetic"
+
+        assert data["batch_size"] == 100
+        assert data["malformed_rows"] == 10
+        assert data["quarantined"] == 10
+        assert data["valid_processed"] == 90
+        assert data["human_review_routed"] == 10
+
+        assert (
+            data["safety"]["malformed_entered_investigation_pipeline"]
+            is False
+        )
+
+        assert (
+            data["safety"]["quarantined_before_model_inference"]
+            is True
+        )
+
+        assert (
+            data["safety"]["human_review_required"]
+            is True
+        )
