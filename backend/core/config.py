@@ -45,20 +45,12 @@ class Settings(BaseSettings):
     primary_model_threshold: float = 0.01
 
     # V4 dataset
-    data_dir: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "v4_realistic_30k"
-    )
+    data_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k"
 
     processed_dir: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "v4_realistic_30k"
-        / "processed"
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed"
     )
 
-    # V4 explainability artifacts
     explainability_dir: Path = (
         PROJECT_ROOT
         / "data"
@@ -67,7 +59,6 @@ class Settings(BaseSettings):
         / "explainability"
     )
 
-    # V4 model artifacts
     model_dir: Path = (
         PROJECT_ROOT
         / "data"
@@ -76,7 +67,6 @@ class Settings(BaseSettings):
         / "model"
     )
 
-    # V4 test predictions
     model_predictions_path: Path = (
         PROJECT_ROOT
         / "data"
