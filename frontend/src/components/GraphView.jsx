@@ -212,6 +212,12 @@ export default function GraphView({ accountId }) {
           <p className="text-muted-foreground">
             Type: {EDGE_LABELS[selectedEdge.edge_type] || selectedEdge.edge_type}
           </p>
+          <p className="text-muted-foreground">
+            Relationship weight: {selectedEdge.weight != null ? Number(selectedEdge.weight).toFixed(2) : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Weight is an initial relationship heuristic, not proof of abuse.
+          </p>
           <button
             onClick={() => setSelectedEdge(null)}
             className="mt-2 text-xs underline"

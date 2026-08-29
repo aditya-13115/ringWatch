@@ -10,6 +10,7 @@ from backend.services.graph_service import GraphService
 from backend.services.evidence_service import EvidenceService
 from backend.services.action_service import ActionService
 from backend.services.report_service import ReportService
+from backend.services.action_service import ACTION_MAP, risk_tier_for_rank
 
 EVIDENCE_FIELDS = [
     "proof_of_service",
@@ -82,8 +83,8 @@ class AccountService:
             "rank_total": rank_total,
             "model_version": model_version,
             "proba": float(row["proba"]),
-            "risk_tier": str(row["risk_tier"]),
-            "recommended_action": str(row["recommended_action"]),
+            "risk_tier": risk_tier_for_rank(rank),
+            "recommended_action": ACTION_MAP[risk_tier_for_rank(rank)]["action_description"],
             "observed_facts": {},
             "top_shap_features": [],
             "graph_evidence": {

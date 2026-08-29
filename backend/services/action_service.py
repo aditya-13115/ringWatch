@@ -25,6 +25,11 @@ ACTION_MAP = {
 }
 
 
+def risk_tier_for_rank(rank: int) -> str:
+    """Apply the dashboard investigation-priority policy by rank."""
+    return "CRITICAL" if int(rank) <= 5 else "HIGH"
+
+
 class ActionService:
     def __init__(self, explainability_repo: ExplainabilityRepository):
         self.explainability_repo = explainability_repo
@@ -37,8 +42,8 @@ class ActionService:
             raise ValueError(f"Account {account_id} not found")
 
         row = row.iloc[0]
-        tier = row["risk_tier"]
-        map_entry = ACTION_MAP.get(tier, ACTION_MAP["LOW"])
+        tier = risk_tier_for_rank(int(row["rank"]))
+        map_entry = ACTION_MAP[tier]
 
         return BoundedAction(
             account_id=account_id,

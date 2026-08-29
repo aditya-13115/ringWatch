@@ -3,6 +3,7 @@ from typing import List
 
 from backend.domain.account import AccountRisk
 from backend.repositories.explainability_repository import ExplainabilityRepository
+from backend.services.action_service import ACTION_MAP, risk_tier_for_rank
 
 
 class QueueService:
@@ -22,8 +23,8 @@ class QueueService:
                 account_id=row["account_id"],
                 rank=int(row["rank"]),
                 proba=float(row["proba"]),
-                risk_tier=row["risk_tier"],
-                recommended_action=row["recommended_action"],
+                risk_tier=risk_tier_for_rank(int(row["rank"])),
+                recommended_action=ACTION_MAP[risk_tier_for_rank(int(row["rank"]))]["action_description"],
             )
             for _, row in actions_df.head(limit).iterrows()
         ]

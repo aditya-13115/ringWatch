@@ -272,7 +272,30 @@ export default function AccountInvestigation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedTool, setExpandedTool] = useState(null);
-  const displayedFacts = deriveTimelineFacts(timeline,detail?.observed_facts || {});
+  const displayedFacts = detail?.observed_facts || {};
+
+  const graphEvidence = detail?.graph_evidence || {};
+  const relationshipLabels = {
+    shares_device: "Device",
+    shares_address: "Address",
+    shares_phone: "Phone",
+    shares_payment_instrument: "Payment instrument",
+    shares_ip_prefix: "IP prefix",
+    shares_coupon: "Coupon",
+  };
+
+  const evidenceLabel = (status) => {
+    if (status === "MISSING") return "Missing";
+    if (status === "NO_DISPUTE_YET") return "Not applicable";
+    if (status === "AVAILABLE") return "Available";
+    return status || "Unknown";
+  };
+
+  const evidenceClass = (status) => {
+    if (status === "MISSING") return "text-destructive";
+    if (status === "AVAILABLE") return "text-foreground";
+    return "text-muted-foreground";
+  };
 
   useEffect(() => {
     Promise.all([
@@ -388,6 +411,55 @@ export default function AccountInvestigation() {
 
         <Badge tier={detail.risk_tier} />
       </div>
+
+      {/* Community / Ring Context */}
+      <Card className="p-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Abuse Ring / Community Context
+            </p>
+            <h3 className="text-lg font-semibold mt-1">
+              {detail.observed_facts?.community_size
+                ? `Community of ${Number(detail.observed_facts.community_size).toLocaleString("en-IN")} accounts`
+                : "Linked-account community"}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              The account is investigated individually, while its shared-attribute relationships provide the surrounding community context.
+            </p>
+          </div>
+          <Link
+            to="/rings"
+            className="border border-border rounded-md px-3 py-2 text-sm hover:bg-accent whitespace-nowrap"
+          >
+            View Ring Graph
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5">
+          <div>
+            <p className="text-xs text-muted-foreground">Linked accounts</p>
+            <p className="text-lg font-semibold">{graphEvidence.total_graph_links ?? 0}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Strongest relationship</p>
+            <p className="text-sm font-semibold">
+              {relationshipLabels[graphEvidence.strongest_edge_type] || graphEvidence.strongest_edge_type || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Relationship weight</p>
+            <p className="text-lg font-semibold">
+              {graphEvidence.strongest_edge_weight != null ? Number(graphEvidence.strongest_edge_weight).toFixed(2) : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Peak member risk</p>
+            <p className="text-lg font-semibold">{formatScore(detail.proba)}</p>
+            <p className="text-[11px] text-muted-foreground">Current account score</p>
+          </div>
+        </div>
+      </Card>
 
 
       {/* Model / AI / Policy Separation */}
@@ -564,7 +636,7 @@ export default function AccountInvestigation() {
             </h3>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Feature contributions from the LightGBM A/B explainability
+              Model-faithful feature contributions from the LightGBM A/B explainability
               models used by the Ensemble_LGBM_B_GNN risk model.
             </p>
 
@@ -593,39 +665,42 @@ export default function AccountInvestigation() {
 
           {/* Evidence Status */}
           <Card className="p-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              Evidence Status
-            </h3>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Evidence Readiness
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Evidence availability for a potential future dispute.
+                </p>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {detail.evidence_status?.has_dispute_at_cutoff ? "Dispute observed" : "Pre-dispute"}
+              </span>
+            </div>
 
-            <div className="space-y-1">
-              {Object.entries(detail.evidence_status.fields).map(
+            <div className="space-y-2">
+              {Object.entries(detail.evidence_status?.fields || {}).map(
                 ([field, status]) => (
                   <div
                     key={field}
-                    className="flex justify-between text-sm"
+                    className="flex items-center justify-between gap-4 rounded-md border border-border px-3 py-2 text-sm"
                   >
-                    <span>{field}</span>
-
-                    <span
-                      className={
-                        status === "MISSING"
-                          ? "text-destructive"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      {status}
+                    <span className="font-mono text-xs">{field}</span>
+                    <span className={`font-medium ${evidenceClass(status)}`}>
+                      {evidenceLabel(status)}
                     </span>
                   </div>
                 )
               )}
             </div>
+
+            {!detail.evidence_status?.has_dispute_at_cutoff && (
+              <p className="text-xs text-muted-foreground mt-3">
+                No dispute existed at the prediction cutoff; missing evidence is therefore not yet actionable.
+              </p>
+            )}
           </Card>
-
-        </div>
-
-
-        {/* Right column */}
-        <div className="space-y-6">
 
           {/* Adaptive Graph Relationships */}
           <Card className="p-4">
@@ -633,10 +708,59 @@ export default function AccountInvestigation() {
               Graph Relationships
             </h3>
 
+            <div className="mb-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="rounded-md border border-border p-2">
+                <span className="text-muted-foreground block">Device</span>
+                <span className="font-semibold">{graphEvidence.number_of_device_links ?? 0}</span>
+              </div>
+              <div className="rounded-md border border-border p-2">
+                <span className="text-muted-foreground block">IP</span>
+                <span className="font-semibold">{graphEvidence.number_of_ip_links ?? 0}</span>
+              </div>
+              <div className="rounded-md border border-border p-2">
+                <span className="text-muted-foreground block">Coupon</span>
+                <span className="font-semibold">{graphEvidence.number_of_coupon_links ?? 0}</span>
+              </div>
+              <div className="rounded-md border border-border p-2">
+                <span className="text-muted-foreground block">Strongest</span>
+                <span className="font-semibold">{relationshipLabels[graphEvidence.strongest_edge_type] || "—"}</span>
+              </div>
+            </div>
+
             {detail.risk_tier === "CRITICAL" ||
             detail.risk_tier === "HIGH" ||
             detail.risk_tier === "MEDIUM" ? (
-              <GraphView accountId={accountId} />
+              <>
+                <GraphView accountId={accountId} />
+
+                {graphEvidence.linked_accounts?.length > 0 && (
+                <div className="mt-4 rounded-md border border-border p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold">Strongest Relationships</h4>
+                    {graphEvidence.strongest_edge_type && (
+                      <span className="text-xs text-muted-foreground">
+                        Strongest: {relationshipLabels[graphEvidence.strongest_edge_type] || graphEvidence.strongest_edge_type}
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {graphEvidence.linked_accounts.slice(0, 6).map((link, idx) => (
+                      <div key={`${link.linked_account}-${idx}`} className="flex items-center justify-between gap-3 text-xs">
+                        <span className="truncate">{relationshipLabels[link.edge_type] || link.edge_type} · {link.linked_account}</span>
+                        <span className="text-muted-foreground">
+                          {link.edge_type === graphEvidence.strongest_edge_type && graphEvidence.strongest_edge_weight != null
+                            ? Number(graphEvidence.strongest_edge_weight).toFixed(2)
+                            : "linked"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    Relationship weights are heuristic evidence strength, not proof of coordinated abuse.
+                  </p>
+                </div>
+                )}
+              </>
             ) : (
               <div className="text-sm text-muted-foreground">
                 <p>No significant graph evidence.</p>
@@ -859,6 +983,27 @@ export default function AccountInvestigation() {
                 </ul>
               </div>
             )}
+
+            {/* Investigation Chain */}
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Investigation Chain</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                {[
+                  ["Risk model", "Deterministic score"],
+                  ["Graph evidence", `${graphEvidence.total_graph_links ?? 0} links`],
+                  ["Evidence", `${Object.keys(detail.evidence_status?.fields || {}).length} fields checked`],
+                  ["Policy", detail.recommended_action || "No action"],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-md border border-border p-3">
+                    <p className="text-muted-foreground">{label}</p>
+                    <p className="font-medium mt-1 line-clamp-2">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                AI analysis is advisory; deterministic financial values and policy remain authoritative.
+              </p>
+            </div>
 
             {/* Tool Trace */}
             {investigation.tool_calls?.length > 0 && (

@@ -5,7 +5,7 @@ import Badge from "../components/Badge";
 import Card from "../components/Card";
 
 const LIMITS = [10, 25, 50, 100];
-const TIERS = ["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"];
+const TIERS = ["ALL", "CRITICAL", "HIGH"];
 
 export default function Dashboard() {
   const [queue, setQueue] = useState([]);
