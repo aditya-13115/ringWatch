@@ -111,9 +111,5 @@ def get_address_normalizer_service() -> AddressNormalizerService:
     return AddressNormalizerService(settings.addresses_path)
 
 
-def get_event_repo() -> EventRepository:
-    return EventRepository(settings.data_dir)
-
-
 def get_timeline_service() -> TimelineService:
     return TimelineService(get_event_repo())

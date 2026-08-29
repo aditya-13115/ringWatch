@@ -1,5 +1,7 @@
 import { apiFetch } from "./client";
 
-export function simulateFailure() {
-  return apiFetch("/api/failure-demo", { method: "POST" });
+export function ingestRazorpayBatch() {
+  return apiFetch("/api/failure-demo/razorpay", {
+    method: "POST",
+  });
 }

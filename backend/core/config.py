@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 30.0
     llm_max_retries: int = 2
 
+    # Razorpay
+    razorpay_key_id: str | None = None
+    razorpay_key_secret: str | None = None
+
     # Anthropic
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-5"
