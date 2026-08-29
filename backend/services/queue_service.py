@@ -9,7 +9,7 @@ class QueueService:
     def __init__(self, repository: ExplainabilityRepository):
         self.repository = repository
 
-    async def get_queue(self, limit: int = 7) -> List[AccountRisk]:
+    async def get_queue(self, limit: int = 10) -> List[AccountRisk]:
         actions_df = self.repository.get_actions()
 
         # Single source of truth:

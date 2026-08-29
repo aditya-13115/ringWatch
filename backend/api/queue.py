@@ -8,7 +8,7 @@ router = APIRouter(prefix="/queue", tags=["queue"])
 
 @router.get("", response_model=QueueResponse)
 async def get_queue(
-    limit: int = 7,
+    limit: int = 10,
     queue_service: QueueService = Depends(get_queue_service),
 ):
     accounts = await queue_service.get_queue(limit=limit)

@@ -4,13 +4,13 @@ import { getQueue } from "../api/queue";
 import Badge from "../components/Badge";
 import Card from "../components/Card";
 
-const LIMITS = [7, 10, 25, 50, 100];
+const LIMITS = [10, 25, 50, 100];
 const TIERS = ["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
 export default function Dashboard() {
   const [queue, setQueue] = useState([]);
   const [totalFlagged, setTotalFlagged] = useState(0);
-  const [limit, setLimit] = useState(7);
+  const [limit, setLimit] = useState(10);
   const [tierFilter, setTierFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
