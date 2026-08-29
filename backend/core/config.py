@@ -3,7 +3,6 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -47,25 +46,13 @@ class Settings(BaseSettings):
     # V4 dataset
     data_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k"
 
-    processed_dir: Path = (
-        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed"
-    )
+    processed_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed"
 
     explainability_dir: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "v4_realistic_30k"
-        / "processed"
-        / "explainability"
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "explainability"
     )
 
-    model_dir: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "v4_realistic_30k"
-        / "processed"
-        / "model"
-    )
+    model_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "model"
 
     model_predictions_path: Path = (
         PROJECT_ROOT
@@ -96,11 +83,7 @@ class Settings(BaseSettings):
     )
 
     features_graph_path: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "v4_realistic_30k"
-        / "processed"
-        / "features_graph.csv"
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "features_graph.csv"
     )
 
     # V4 graph
@@ -113,12 +96,7 @@ class Settings(BaseSettings):
     )
 
     # V4 addresses
-    addresses_path: Path = (
-        PROJECT_ROOT
-        / "data"
-        / "v4_realistic_30k"
-        / "addresses.csv"
-    )
+    addresses_path: Path = PROJECT_ROOT / "data" / "v4_realistic_30k" / "addresses.csv"
 
     model_config = SettingsConfigDict(
         env_file=".env",

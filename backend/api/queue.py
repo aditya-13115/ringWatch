@@ -3,7 +3,6 @@ from backend.schemas.queue import QueueAccount, QueueResponse
 from backend.services.queue_service import QueueService
 from backend.dependencies import get_queue_service
 
-
 router = APIRouter(prefix="/queue", tags=["queue"])
 
 

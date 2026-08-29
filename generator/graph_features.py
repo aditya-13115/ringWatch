@@ -25,7 +25,6 @@ from .features_config import (
 T = pd.Timestamp(PREDICTION_CUTOFF)
 
 
-
 FORBIDDEN_COLUMNS = [
     "population_type",
     "abuse_ring_id",
@@ -178,9 +177,9 @@ def validate_day4_features(features):
     Validate the Day 4 feature matrix before using it.
     """
 
-    assert features["account_id"].nunique() == len(features), (
-        "Day 4 feature matrix must contain exactly one row per account."
-    )
+    assert features["account_id"].nunique() == len(
+        features
+    ), "Day 4 feature matrix must contain exactly one row per account."
 
     assert features[
         "account_id"
@@ -246,14 +245,11 @@ def filter_to_cutoff(
 
         for column in columns:
             if column not in df.columns:
-                raise KeyError(
-                    f"{name} is missing required datetime column: {column}"
-                )
+                raise KeyError(f"{name} is missing required datetime column: {column}")
 
             if not pd.api.types.is_datetime64_any_dtype(df[column]):
                 raise TypeError(
-                    f"{name}[{column}] is not datetime dtype: "
-                    f"{df[column].dtype}"
+                    f"{name}[{column}] is not datetime dtype: " f"{df[column].dtype}"
                 )
 
     filtered_orders = orders[orders["order_timestamp"] <= T].copy()
@@ -364,7 +360,7 @@ def add_edge_candidate(
 # ============================================================
 
 
-def build_strong_edges(filtered_orders, edge_map, max_hours=24*7):
+def build_strong_edges(filtered_orders, edge_map, max_hours=24 * 7):
     """
     Build edges from shared device, payment instrument, phone, and address.
     Only connect accounts if they used the same entity within max_hours of each other.
@@ -391,10 +387,13 @@ def build_strong_edges(filtered_orders, edge_map, max_hours=24*7):
                 continue
             # For each pair of accounts in group, check if any order timestamps are within max_hours
             accounts = group["account_id"].unique()
-            account_times = {acc: group[group["account_id"] == acc]["order_timestamp"].tolist() for acc in accounts}
+            account_times = {
+                acc: group[group["account_id"] == acc]["order_timestamp"].tolist()
+                for acc in accounts
+            }
             account_list = sorted(accounts)
             for i in range(len(account_list)):
-                for j in range(i+1, len(account_list)):
+                for j in range(i + 1, len(account_list)):
                     a, b = account_list[i], account_list[j]
                     # Check temporal proximity
                     close = False
@@ -952,24 +951,27 @@ def compute_node_graph_features(graph):
             if edge_type in edge_type_counts:
                 edge_type_counts[edge_type] += 1
 
-        records.append({
-            "account_id": account_id,
-            "degree_centrality": float(degree_centrality[account_id]),
-            "eigenvector_centrality": float(eigenvector_centrality[account_id]),
-            "pagerank": float(pagerank[account_id]),
-            "triangle_count": int(triangle_counts[account_id]),
-            "clustering_coefficient": float(clustering[account_id]),
-            "connected_component_size": int(component_sizes[account_id]),
-            "shared_edge_count": int(shared_edge_count),
-            "shared_edge_weight_sum": float(shared_edge_weight_sum),
-            
-            "edge_shares_device": int(edge_type_counts["shares_device"]),
-            "edge_shares_payment": int(edge_type_counts["shares_payment_instrument"]),
-            "edge_shares_phone": int(edge_type_counts["shares_phone"]),
-            "edge_shares_address": int(edge_type_counts["shares_address"]),
-            "edge_shares_ip": int(edge_type_counts["shares_ip_prefix"]),
-            "edge_shares_coupon": int(edge_type_counts["shares_coupon"]),
-        })
+        records.append(
+            {
+                "account_id": account_id,
+                "degree_centrality": float(degree_centrality[account_id]),
+                "eigenvector_centrality": float(eigenvector_centrality[account_id]),
+                "pagerank": float(pagerank[account_id]),
+                "triangle_count": int(triangle_counts[account_id]),
+                "clustering_coefficient": float(clustering[account_id]),
+                "connected_component_size": int(component_sizes[account_id]),
+                "shared_edge_count": int(shared_edge_count),
+                "shared_edge_weight_sum": float(shared_edge_weight_sum),
+                "edge_shares_device": int(edge_type_counts["shares_device"]),
+                "edge_shares_payment": int(
+                    edge_type_counts["shares_payment_instrument"]
+                ),
+                "edge_shares_phone": int(edge_type_counts["shares_phone"]),
+                "edge_shares_address": int(edge_type_counts["shares_address"]),
+                "edge_shares_ip": int(edge_type_counts["shares_ip_prefix"]),
+                "edge_shares_coupon": int(edge_type_counts["shares_coupon"]),
+            }
+        )
 
     graph_features = pd.DataFrame(records)
 
@@ -1136,9 +1138,7 @@ def build_final_features(
 
     neighbor_avg_return = {}
 
-    return_rate_by_account = (
-        features.set_index("account_id")["return_rate"]
-    )
+    return_rate_by_account = features.set_index("account_id")["return_rate"]
 
     for node in graph.nodes():
 
@@ -1146,16 +1146,12 @@ def build_final_features(
 
         if neighbors:
             neighbor_rates = return_rate_by_account.reindex(neighbors)
-            neighbor_avg_return[node] = float(
-                neighbor_rates.mean()
-            )
+            neighbor_avg_return[node] = float(neighbor_rates.mean())
         else:
             neighbor_avg_return[node] = 0.0
 
     final_features["neighbor_avg_return_rate"] = (
-        final_features["account_id"]
-        .map(neighbor_avg_return)
-        .fillna(0.0)
+        final_features["account_id"].map(neighbor_avg_return).fillna(0.0)
     )
 
     # --------------------------------------------------------
@@ -1171,7 +1167,7 @@ def build_final_features(
         (final_features["shared_address_count"] > 0)
         & (final_features["return_rate"] < 0.1)
     ).astype(int)
-    
+
     # --------------------------------------------------------
     # Validation
     # --------------------------------------------------------
@@ -1356,11 +1352,15 @@ def evaluate_baseline(
     # reporting, never as a model feature.
     # --------------------------------------------------------
 
-    private_accounts = pd.read_csv(PATHS["accounts"].parent / "account_population_labels_private.csv")
+    private_accounts = pd.read_csv(
+        PATHS["accounts"].parent / "account_population_labels_private.csv"
+    )
     required_private_columns = {"account_id", "population_type"}
     missing_private = required_private_columns - set(private_accounts.columns)
     if missing_private:
-        raise KeyError(f"private labels file missing columns: {sorted(missing_private)}")
+        raise KeyError(
+            f"private labels file missing columns: {sorted(missing_private)}"
+        )
 
     hard_negative_ids = set(
         private_accounts.loc[
@@ -1800,7 +1800,7 @@ def main():
         graph_features,
         community_features,
         graph,
-)
+    )
 
     final_features.to_csv(
         FEATURES_GRAPH_PATH,

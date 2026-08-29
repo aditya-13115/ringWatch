@@ -45,6 +45,7 @@ COST_FALSE_NEGATIVE = 15_000.0
 # DATA LOADING (with undirected edges and scaling)
 # ============================================================
 
+
 def load_graph_data():
     features = pd.read_csv(FEATURES_PATH)
     account_ids = features[ID_COL].astype(str).tolist()
@@ -104,6 +105,7 @@ def load_graph_data():
 # RING-AWARE SPLIT (same as before)
 # ============================================================
 
+
 def ring_aware_split(ground_truth, random_state=RANDOM_STATE):
     rng = np.random.default_rng(random_state)
     ring_members = ground_truth[ground_truth[TARGET_COL] == True].copy()
@@ -117,8 +119,8 @@ def ring_aware_split(ground_truth, random_state=RANDOM_STATE):
     n_val = int(n_rings * 0.15)
 
     train_rings = set(ring_ids[:n_train])
-    val_rings = set(ring_ids[n_train:n_train + n_val])
-    test_rings = set(ring_ids[n_train + n_val:])
+    val_rings = set(ring_ids[n_train : n_train + n_val])
+    test_rings = set(ring_ids[n_train + n_val :])
 
     train_ring_ids = ring_members[ring_members[RING_ID_COL].isin(train_rings)][ID_COL]
     val_ring_ids = ring_members[ring_members[RING_ID_COL].isin(val_rings)][ID_COL]
@@ -129,10 +131,15 @@ def ring_aware_split(ground_truth, random_state=RANDOM_STATE):
         non_ring_ids, test_size=(0.15 + 0.15), random_state=random_state, shuffle=True
     )
     normal_val, normal_test = train_test_split(
-        normal_remain, test_size=0.15 / (0.15 + 0.15), random_state=random_state, shuffle=True
+        normal_remain,
+        test_size=0.15 / (0.15 + 0.15),
+        random_state=random_state,
+        shuffle=True,
     )
 
-    train_ids = pd.concat([train_ring_ids, pd.Series(normal_train)]).astype(str).tolist()
+    train_ids = (
+        pd.concat([train_ring_ids, pd.Series(normal_train)]).astype(str).tolist()
+    )
     val_ids = pd.concat([val_ring_ids, pd.Series(normal_val)]).astype(str).tolist()
     test_ids = pd.concat([test_ring_ids, pd.Series(normal_test)]).astype(str).tolist()
     return train_ids, val_ids, test_ids
@@ -158,6 +165,7 @@ def create_masks(data, ground_truth):
 # GNN MODEL (GraphSAGE)
 # ============================================================
 
+
 class FraudSAGE(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels=64, num_layers=2, dropout=0.3):
         super().__init__()
@@ -181,20 +189,25 @@ class FraudSAGE(torch.nn.Module):
 # TRAINING
 # ============================================================
 
+
 def train(model, data, optimizer, epochs=200, patience=15):
     best_val_pr_auc = 0.0
     best_state = None
     patience_counter = 0
 
     # Class weights for imbalanced loss
-    pos_weight = (data.y[data.train_mask] == 0).sum().float() / (data.y[data.train_mask] == 1).sum().float()
+    pos_weight = (data.y[data.train_mask] == 0).sum().float() / (
+        data.y[data.train_mask] == 1
+    ).sum().float()
     class_weights = torch.tensor([1.0, pos_weight.item()], device=data.x.device)
 
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
         out = model(data)
-        loss = F.nll_loss(out[data.train_mask], data.y[data.train_mask], weight=class_weights)
+        loss = F.nll_loss(
+            out[data.train_mask], data.y[data.train_mask], weight=class_weights
+        )
         loss.backward()
         optimizer.step()
 
@@ -212,7 +225,9 @@ def train(model, data, optimizer, epochs=200, patience=15):
         else:
             patience_counter += 1
             if patience_counter >= patience:
-                print(f"Early stopping at epoch {epoch} (best val PR-AUC: {best_val_pr_auc:.4f})")
+                print(
+                    f"Early stopping at epoch {epoch} (best val PR-AUC: {best_val_pr_auc:.4f})"
+                )
                 break
 
     model.load_state_dict(best_state)
@@ -222,6 +237,7 @@ def train(model, data, optimizer, epochs=200, patience=15):
 # ============================================================
 # EVALUATION
 # ============================================================
+
 
 @torch.no_grad()
 def evaluate(model, data, mask, threshold=0.5):
@@ -241,7 +257,10 @@ def evaluate(model, data, mask, threshold=0.5):
         "f1": f1_score(true, pred, zero_division=0),
         "cost": float(fp * COST_FALSE_POSITIVE + fn * COST_FALSE_NEGATIVE),
         "threshold": float(threshold),
-        "tp": int(tp), "fp": int(fp), "tn": int(tn), "fn": int(fn),
+        "tp": int(tp),
+        "fp": int(fp),
+        "tn": int(tn),
+        "fn": int(fn),
     }
 
 
@@ -268,6 +287,7 @@ def select_threshold(model, data, val_mask):
 # ============================================================
 # MAIN
 # ============================================================
+
 
 def main():
     print("Loading graph data...")
@@ -308,17 +328,25 @@ def main():
         json.dump(metrics_summary, f, indent=2)
 
     print("\nGNN Results:")
-    for split_name, m in [("Train", train_metrics), ("Val", val_metrics), ("Test", test_metrics)]:
+    for split_name, m in [
+        ("Train", train_metrics),
+        ("Val", val_metrics),
+        ("Test", test_metrics),
+    ]:
         print(f"\n{split_name}:")
         print(f"  Precision: {m['precision']:.4f}")
         print(f"  Recall:    {m['recall']:.4f}")
         print(f"  F1:        {m['f1']:.4f}")
-        print(f"  Accuracy:  {(m['tp'] + m['tn']) / (m['tp'] + m['tn'] + m['fp'] + m['fn']):.4f}")
+        print(
+            f"  Accuracy:  {(m['tp'] + m['tn']) / (m['tp'] + m['tn'] + m['fp'] + m['fn']):.4f}"
+        )
         print(f"  ROC-AUC:   {m['roc_auc']:.4f}")
         print(f"  PR-AUC:    {m['pr_auc']:.4f}")
         print(f"  Cost:      ₹{m['cost']:,.0f}")
         print(f"  Threshold: {m['threshold']:.3f}")
-        print(f"  Confusion Matrix: [[TN={m['tn']}, FP={m['fp']}], [FN={m['fn']}, TP={m['tp']}]]")
+        print(
+            f"  Confusion Matrix: [[TN={m['tn']}, FP={m['fp']}], [FN={m['fn']}, TP={m['tp']}]]"
+        )
 
 
 if __name__ == "__main__":

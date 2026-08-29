@@ -1,5 +1,6 @@
 import re
 
+
 def normalize_address(raw_address: str) -> str:
     text = raw_address.lower()
     text = re.sub(r"[^a-z0-9\s]", "", text)

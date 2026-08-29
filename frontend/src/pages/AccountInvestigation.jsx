@@ -11,13 +11,215 @@ import Card from "../components/Card";
 import GraphView from "../components/GraphView";
 
 
+const INVESTIGATION_STORAGE_VERSION = 2;
+
+const MODEL_DISPLAY_NAMES = {
+  Ensemble_LGBM_B_GNN: "V4 Ensemble",
+  LightGBM_Model_A_Tuned: "LightGBM Model A",
+  LightGBM_Model_B_Tuned: "LightGBM Model B",
+};
+
+function getModelDisplayName(modelVersion) {
+  return (
+    MODEL_DISPLAY_NAMES[modelVersion] ||
+    modelVersion ||
+    "Unknown model"
+  );
+}
+
+function formatScore(value) {
+  const score = Number(value);
+
+  if (!Number.isFinite(score)) {
+    return "—";
+  }
+
+  return `${(score * 100).toFixed(4)}%`;
+}
+
+function formatFact(key, value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
+  if (
+    key === "return_rate" ||
+    key === "refund_rate" ||
+    key === "dispute_rate"
+  ) {
+    return `${(Number(value) * 100).toFixed(1)}%`;
+  }
+
+  if (
+    key === "total_amount" ||
+    key === "total_refund_amount"
+  ) {
+    return `₹${Number(value).toLocaleString("en-IN")}`;
+  }
+
+  if (key === "total_refunds") {
+    return Number(value).toLocaleString("en-IN");
+  }
+
+  if (typeof value === "number") {
+    return Number.isInteger(value)
+      ? value.toLocaleString("en-IN")
+      : value.toFixed(2);
+  }
+
+  return String(value);
+}
+
+function formatCurrency(value) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "₹0";
+  }
+
+  return `₹${amount.toLocaleString("en-IN", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+function deriveTimelineFacts(timeline, observedFacts = {}) {
+  if (!Array.isArray(timeline) || timeline.length === 0) {
+    return observedFacts;
+  }
+
+  const totalOrders = Number(observedFacts.total_orders ?? 0);
+
+  const returnEvents = timeline.filter(
+    (event) =>
+      String(event.event || "").toLowerCase() === "return requested"
+  );
+
+  const refundEvents = timeline.filter(
+    (event) =>
+      String(event.event || "").toLowerCase() === "refund processed"
+  );
+
+  const refundAmounts = refundEvents.map((event) => {
+    const match = String(event.details || "").match(
+      /amount\s*₹?\s*([\d,]+(?:\.\d+)?)/i
+    );
+
+    return match
+      ? Number(match[1].replace(/,/g, ""))
+      : 0;
+  });
+
+  const timelineRefundAmount = refundAmounts.reduce(
+    (sum, amount) => sum + amount,
+    0
+  );
+
+  const result = {
+    ...observedFacts,
+  };
+
+  // Timeline is authoritative when explicit return events exist.
+  if (returnEvents.length > 0) {
+    result.return_rate =
+      totalOrders > 0
+        ? returnEvents.length / totalOrders
+        : observedFacts.return_rate;
+
+    result.total_returns = returnEvents.length;
+  }
+
+  // Timeline is authoritative when explicit refund events exist.
+  if (refundEvents.length > 0) {
+    result.total_refunds = refundEvents.length;
+    result.total_refund_amount = timelineRefundAmount;
+
+    result.refund_rate =
+      totalOrders > 0
+        ? refundEvents.length / totalOrders
+        : observedFacts.refund_rate;
+  }
+
+  return result;
+}
+
+function buildCaseReport(detail, facts) {
+  if (!detail) {
+    return "";
+  }
+
+  const graphEvidence = detail.graph_evidence || {};
+  const evidenceStatus = detail.evidence_status || {};
+
+  const lines = [
+    `Account ID: ${detail.account_id}`,
+    `Risk score (Ensemble): ${Number(detail.proba ?? 0).toFixed(6)}`,
+    `Investigation rank: ${detail.rank} / ${detail.rank_total ?? "—"} flagged accounts`,
+    "",
+    "Observed facts:",
+    `  total_orders: ${facts.total_orders ?? "—"}`,
+    `  total_amount: ${facts.total_amount ?? "—"}`,
+    `  total_refunds: ${facts.total_refunds ?? "—"}`,
+    `  total_refund_amount: ${facts.total_refund_amount ?? "—"}`,
+    `  return_rate: ${facts.return_rate ?? "—"}`,
+    `  refund_rate: ${facts.refund_rate ?? "—"}`,
+    `  dispute_rate: ${facts.dispute_rate ?? "—"}`,
+    `  shared_device_count: ${facts.shared_device_count ?? "—"}`,
+    `  shared_ip_prefix_count: ${facts.shared_ip_prefix_count ?? "—"}`,
+    `  community_size: ${facts.community_size ?? "—"}`,
+    "",
+    "Top model contributors (Model A / Model B):",
+  ];
+
+  if (Array.isArray(detail.top_shap_features)) {
+    detail.top_shap_features.slice(0, 5).forEach((feature) => {
+      lines.push(
+        `  ${feature.feature}: ${Number(feature.shap_value).toFixed(4)}`
+      );
+    });
+  }
+
+  lines.push("");
+  lines.push("Graph evidence:");
+
+  if (Array.isArray(graphEvidence.edges)) {
+    graphEvidence.edges.forEach((edge) => {
+      lines.push(
+        `  ${edge.relationship || edge.type || "related"} -> ${
+          edge.account_id || edge.target || "unknown"
+        }`
+      );
+    });
+  } else {
+    lines.push(
+      `  ${graphEvidence.total_graph_links ?? 0} linked accounts`
+    );
+  }
+
+  lines.push("");
+  lines.push("Evidence status:");
+
+  if (evidenceStatus.has_dispute_at_cutoff) {
+    lines.push("  Dispute observed at prediction cutoff.");
+  } else {
+    lines.push("  No dispute observed at prediction cutoff.");
+  }
+
+  lines.push("");
+  lines.push("Recommended action:");
+  lines.push(
+    `  ${detail.recommended_action || "No action available"}`
+  );
+
+  return lines.join("\n");
+}
+
 function ActionPanel({ tier, accountId }) {
   switch (tier) {
     case "CRITICAL":
       return (
         <div className="flex gap-2 mt-2">
           <Link to={`/verification/${accountId}`} className="bg-black text-white px-4 py-2 rounded-md text-sm">
-            Place Soft Hold
+            Review Soft Hold
           </Link>
           <Link to={`/human-review/${accountId}`} className="border border-black px-4 py-2 rounded-md text-sm">
             Open Human Review
@@ -57,8 +259,6 @@ const INVESTIGATION_STEPS = [
   "Complete",
 ];
 
-// Current operating model — change only when backend model changes.
-const OPERATING_MODEL = "Ensemble_LGBM_B_GNN";
 
 
 export default function AccountInvestigation() {
@@ -72,7 +272,7 @@ export default function AccountInvestigation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedTool, setExpandedTool] = useState(null);
-
+  const displayedFacts = deriveTimelineFacts(timeline,detail?.observed_facts || {});
 
   useEffect(() => {
     Promise.all([
@@ -90,9 +290,31 @@ export default function AccountInvestigation() {
 
         if (stored) {
           try {
-            setInvestigation(JSON.parse(stored));
+            const parsed = JSON.parse(stored);
+
+            // Only restore investigations written by the current
+            // investigation format.
+            if (
+              parsed?.version ===
+              INVESTIGATION_STORAGE_VERSION
+            ) {
+              setInvestigation(parsed.data);
+            } else {
+              // Remove stale investigation data generated by the
+              // previous prompt/data contract.
+              localStorage.removeItem(
+                `ringwatch_investigation_${accountId}`
+              );
+            }
           } catch (err) {
-            console.warn("Could not restore investigation:", err);
+            console.warn(
+              "Could not restore investigation:",
+              err
+            );
+
+            localStorage.removeItem(
+              `ringwatch_investigation_${accountId}`
+            );
           }
         }
       })
@@ -120,7 +342,10 @@ export default function AccountInvestigation() {
       // Persist result for this account
       localStorage.setItem(
         `ringwatch_investigation_${accountId}`,
-        JSON.stringify(result)
+        JSON.stringify({
+          version: INVESTIGATION_STORAGE_VERSION,
+          data: result,
+        })
       );
 
       setInvestigationStep(INVESTIGATION_STEPS.length - 1);
@@ -156,7 +381,8 @@ export default function AccountInvestigation() {
           </h2>
 
           <p className="text-sm text-muted-foreground">
-            Investigation Rank #{detail.rank} of 7
+            Investigation Rank #{detail.rank} of{" "}
+            {detail.rank_total ?? "—"}
           </p>
         </div>
 
@@ -172,15 +398,20 @@ export default function AccountInvestigation() {
           </h3>
 
           <p className="text-sm font-semibold">
-            {OPERATING_MODEL}
+            {getModelDisplayName(detail.model_version)}
           </p>
 
           <p className="text-xs text-muted-foreground">
-            Score: {(Number(detail.proba) * 100).toFixed(2)}%
+            Model version: {detail.model_version}
           </p>
 
           <p className="text-xs text-muted-foreground">
-            Rank: #{detail.rank}
+            Score: {formatScore(detail.proba)}
+          </p>
+
+          <p className="text-xs text-muted-foreground">
+            Investigation rank: #{detail.rank} /{" "}
+            {detail.rank_total ?? "—"}
           </p>
         </Card>
 
@@ -261,9 +492,15 @@ export default function AccountInvestigation() {
             </p>
 
             <p className="text-sm font-medium">
-              {detail.evidence_status?.missing_evidence_count === null
-                ? "No dispute yet"
-                : `${detail.evidence_status.missing_evidence_count} missing`}
+              {detail.evidence_status?.has_dispute_at_cutoff
+                ? `${detail.evidence_status?.missing_evidence_count ?? 0} missing`
+                : "No dispute at cutoff"}
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              {detail.evidence_status?.has_dispute_at_cutoff
+                ? "Evidence availability evaluated for the dispute."
+                : "No dispute existed at the prediction cutoff."}
             </p>
           </div>
 
@@ -282,7 +519,8 @@ export default function AccountInvestigation() {
         </p>
 
         <p className="text-sm text-muted-foreground mt-2">
-          Action authority: deterministic policy
+          Action authority: deterministic policy engine.
+          AI analysis is advisory and does not execute financial actions.
         </p>
 
         <ActionPanel tier={detail.risk_tier} accountId={accountId} />
@@ -302,7 +540,7 @@ export default function AccountInvestigation() {
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(detail.observed_facts).map(
+              {Object.entries(displayedFacts).map(
                 ([key, value]) => (
                   <div key={key}>
                     <dt className="text-xs text-muted-foreground">
@@ -310,7 +548,7 @@ export default function AccountInvestigation() {
                     </dt>
 
                     <dd className="text-sm font-medium">
-                      {value}
+                      {formatFact(key, value)}
                     </dd>
                   </div>
                 )
@@ -324,6 +562,11 @@ export default function AccountInvestigation() {
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Top SHAP Contributors
             </h3>
+
+            <p className="text-xs text-muted-foreground mb-3">
+              Feature contributions from the LightGBM A/B explainability
+              models used by the Ensemble_LGBM_B_GNN risk model.
+            </p>
 
             <ul className="space-y-2">
               {detail.top_shap_features.map((f) => (
@@ -452,7 +695,7 @@ export default function AccountInvestigation() {
         </h3>
 
         <pre className="whitespace-pre-wrap text-sm font-mono">
-          {detail.case_report_text}
+          {buildCaseReport(detail, displayedFacts)}
         </pre>
       </Card>
 
@@ -495,6 +738,63 @@ export default function AccountInvestigation() {
 
         {investigation && !isInvestigating && (
           <div className="space-y-6">
+            {/* Authoritative financial exposure */}
+            {investigation.financial_exposure && (
+              <div className="rounded-lg border border-border p-4">
+                <h4 className="text-sm font-semibold mb-3">
+                  Financial Exposure
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Gross Order Value
+                    </dt>
+
+                    <dd className="text-sm font-medium">
+                      {formatCurrency(
+                        investigation.financial_exposure
+                          .gross_order_value
+                      )}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Total Refunds
+                    </dt>
+
+                    <dd className="text-sm font-medium">
+                      {formatCurrency(
+                        investigation.financial_exposure
+                          .refund_amount
+                      )}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Potential Exposure
+                    </dt>
+
+                    <dd className="text-sm font-medium">
+                      {formatCurrency(
+                        investigation.financial_exposure
+                          .potential_exposure
+                      )}
+                    </dd>
+                  </div>
+
+                </div>
+
+                <p className="text-xs text-muted-foreground mt-3">
+                  Financial values are calculated deterministically from
+                  account data and are authoritative over AI-generated prose.
+                </p>
+              </div>
+            )}
+
             {/* Summary */}
             <div className="rounded-lg bg-muted p-4">
               <h4 className="text-sm font-semibold mb-2">
@@ -683,7 +983,10 @@ export default function AccountInvestigation() {
               </span>
 
               <p className="text-xs mt-1">
-                Action source: {investigation.action_source}
+                Action source:{" "}
+                {investigation.action_source === "deterministic_policy"
+                  ? "Deterministic Policy Engine"
+                  : investigation.action_source}
               </p>
             </div>
           </div>

@@ -141,28 +141,21 @@ class AuditService:
             record = {
                 "timestamp": safe_str(row.get("timestamp")),
                 "account_id": safe_str(row.get("account_id")),
-
                 "model_version": safe_str(
                     row.get("model_version"),
                     "Ensemble_LGBM_B_GNN",
                 ),
-
                 "proba": safe_float(row.get("proba")),
-
                 "rank": safe_int(row.get("rank")),
-
                 "risk_tier": safe_str(
                     row.get("risk_tier"),
                     "UNKNOWN",
                 ),
-
                 "top_k_flag": safe_bool(
                     row.get("top_k_flag"),
                     False,
                 ),
-
                 "action_recommended": action_recommended,
-
                 "case_report_generated": safe_bool(
                     row.get("case_report_generated"),
                     False,

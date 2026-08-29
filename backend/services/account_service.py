@@ -61,9 +61,26 @@ class AccountService:
 
         row = action_row.iloc[0]
 
+        # ---------------------------------------------------------
+        # Queue/model metadata
+        # ---------------------------------------------------------
+
+        rank = int(row["rank"])
+
+        # bounded_actions_test.csv contains the complete flagged
+        # investigation queue.
+        rank_total = int(len(actions_df))
+
+        # Current V4 production scoring model.
+        # Keep this centralized in the backend rather than hard-coding
+        # the display name in React.
+        model_version = "Ensemble_LGBM_B_GNN"
+
         result: dict[str, Any] = {
             "account_id": str(account_id),
-            "rank": int(row["rank"]),
+            "rank": rank,
+            "rank_total": rank_total,
+            "model_version": model_version,
             "proba": float(row["proba"]),
             "risk_tier": str(row["risk_tier"]),
             "recommended_action": str(row["recommended_action"]),
@@ -86,77 +103,121 @@ class AccountService:
             "case_report_text": "No case report available.",
         }
 
-        # Graph
+        # ---------------------------------------------------------
+        # Graph evidence
+        # ---------------------------------------------------------
+
         try:
             graph_evidence = await self.graph_service.get_graph_evidence(account_id)
+
             result["graph_evidence"] = _to_python(graph_evidence)
+
         except Exception:
             pass
 
-        # Evidence
+        # ---------------------------------------------------------
+        # Evidence status
+        # ---------------------------------------------------------
+
         try:
             evidence = await self.evidence_service.get_evidence_status(account_id)
+
             result["evidence_status"] = {
                 "has_dispute_at_cutoff": bool(evidence.has_dispute_at_cutoff),
-                "fields": {k: str(v) for k, v in evidence.fields.items()},
+                "fields": {key: str(value) for key, value in evidence.fields.items()},
                 "missing_evidence_count": _to_python(evidence.missing_evidence_count),
             }
+
         except Exception:
             pass
 
-        # Report
+        # ---------------------------------------------------------
+        # Case report
+        # ---------------------------------------------------------
+
         try:
             result["case_report_text"] = await self.report_service.get_case_report(
                 account_id
             )
+
         except Exception:
             pass
 
+        # ---------------------------------------------------------
         # SHAP
+        # ---------------------------------------------------------
+
         try:
             shap_df = self.explainability_repo.get_shap()
+
             shap_row = shap_df[shap_df["account_id"] == account_id]
+
             if not shap_row.empty:
+
                 feature_cols = [
-                    c
-                    for c in shap_df.columns
-                    if c not in ["account_id", "rank", "proba", "top_k_flag"]
+                    column
+                    for column in shap_df.columns
+                    if column
+                    not in [
+                        "account_id",
+                        "rank",
+                        "proba",
+                        "top_k_flag",
+                    ]
                 ]
+
                 values = shap_row.iloc[0][feature_cols]
+
                 sorted_features = sorted(
                     feature_cols,
-                    key=lambda c: abs(float(values[c])),
+                    key=lambda column: abs(float(values[column])),
                     reverse=True,
                 )
+
                 result["top_shap_features"] = [
                     {
-                        "feature": feat,
-                        "shap_value": float(values[feat]),
+                        "feature": feature,
+                        "shap_value": float(values[feature]),
                     }
-                    for feat in sorted_features[:5]
+                    for feature in sorted_features[:5]
                 ]
+
         except Exception:
             pass
 
+        # ---------------------------------------------------------
         # Observed facts
+        # ---------------------------------------------------------
+
         try:
             features_df = self.feature_repo.get_features()
+
             feature_row = features_df[features_df["account_id"] == account_id]
+
             if not feature_row.empty:
+
                 fact_cols = [
                     "total_orders",
+                    "total_amount",
+                    "total_refunds",
+                    "total_refund_amount",
                     "return_rate",
                     "refund_rate",
                     "dispute_rate",
                     "shared_device_count",
                     "shared_ip_prefix_count",
                     "community_size",
+                    "total_returns",
                 ]
-                for col in fact_cols:
-                    if col in feature_row.columns:
-                        result["observed_facts"][col] = _to_python(
-                            feature_row.iloc[0][col]
+
+                for column in fact_cols:
+
+                    if column in feature_row.columns:
+
+                        result["observed_facts"][column] = _to_python(
+                            feature_row.iloc[0][column]
                         )
+
         except Exception:
             pass
 

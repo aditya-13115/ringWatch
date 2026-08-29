@@ -99,9 +99,7 @@ def apply_normal_behavior(
         if pd.isna(delivery_time):
             continue
 
-        return_time = delivery_time + pd.Timedelta(
-            days=int(rng.integers(2, 6))
-        )
+        return_time = delivery_time + pd.Timedelta(days=int(rng.integers(2, 6)))
 
         orders.loc[
             idx,
@@ -122,9 +120,7 @@ def apply_normal_behavior(
         orders.loc[
             idx,
             "return_lag_hours",
-        ] = (
-            return_time - delivery_time
-        ).total_seconds() / 3600
+        ] = (return_time - delivery_time).total_seconds() / 3600
 
         # Refund follows return.
         orders.loc[
@@ -143,9 +139,7 @@ def apply_normal_behavior(
         orders.loc[
             idx,
             "refund_timestamp",
-        ] = return_time + pd.Timedelta(
-            hours=int(rng.integers(4, 24))
-        )
+        ] = return_time + pd.Timedelta(hours=int(rng.integers(4, 24)))
 
     # --------------------------------------------------------
     # Dispute ~0.5%
@@ -167,9 +161,7 @@ def apply_normal_behavior(
         ]
 
         if pd.notna(refund_time):
-            dispute_time = refund_time + pd.Timedelta(
-                days=int(rng.integers(1, 4))
-            )
+            dispute_time = refund_time + pd.Timedelta(days=int(rng.integers(1, 4)))
         else:
             delivery_time = orders.loc[
                 idx,
@@ -179,9 +171,7 @@ def apply_normal_behavior(
             if pd.isna(delivery_time):
                 continue
 
-            dispute_time = delivery_time + pd.Timedelta(
-                days=int(rng.integers(2, 5))
-            )
+            dispute_time = delivery_time + pd.Timedelta(days=int(rng.integers(2, 5)))
 
         orders.loc[
             idx,

@@ -67,15 +67,18 @@ BEST_PARAMS_PATH = MODEL_DIR / "best_params_tuned.json"
 # LOAD DATA (same as original lightgbm.py)
 # ============================================================
 
+
 def load_data():
     features_a = pd.read_csv(FEATURES_PATH)
     features_b = pd.read_csv(FEATURES_GRAPH_PATH)
     ground_truth = pd.read_csv(GROUND_TRUTH_PATH)
 
     # Validate required columns
-    for df, name in [(features_a, "features_accounts.csv"),
-                     (features_b, "features_graph.csv"),
-                     (ground_truth, "ring_ground_truth.csv")]:
+    for df, name in [
+        (features_a, "features_accounts.csv"),
+        (features_b, "features_graph.csv"),
+        (ground_truth, "ring_ground_truth.csv"),
+    ]:
         if ID_COL not in df.columns:
             raise KeyError(f"{name} missing {ID_COL}")
 
@@ -99,6 +102,7 @@ def load_data():
 # RING-AWARE SPLIT (identical to original)
 # ============================================================
 
+
 def ring_aware_split(ground_truth, random_state=RANDOM_STATE):
     rng = np.random.default_rng(random_state)
 
@@ -115,8 +119,8 @@ def ring_aware_split(ground_truth, random_state=RANDOM_STATE):
     n_val = int(n_rings * VAL_RATIO)
 
     train_rings = set(ring_ids[:n_train])
-    val_rings = set(ring_ids[n_train:n_train + n_val])
-    test_rings = set(ring_ids[n_train + n_val:])
+    val_rings = set(ring_ids[n_train : n_train + n_val])
+    test_rings = set(ring_ids[n_train + n_val :])
 
     train_ring_ids = ring_members[ring_members[RING_ID_COL].isin(train_rings)][ID_COL]
     val_ring_ids = ring_members[ring_members[RING_ID_COL].isin(val_rings)][ID_COL]
@@ -126,13 +130,18 @@ def ring_aware_split(ground_truth, random_state=RANDOM_STATE):
     non_ring_ids = non_ring[ID_COL].tolist()
     # Use sklearn train_test_split to maintain proportions
     from sklearn.model_selection import train_test_split
+
     normal_train, normal_remain = train_test_split(
-        non_ring_ids, test_size=(VAL_RATIO + TEST_RATIO),
-        random_state=random_state, shuffle=True
+        non_ring_ids,
+        test_size=(VAL_RATIO + TEST_RATIO),
+        random_state=random_state,
+        shuffle=True,
     )
     normal_val, normal_test = train_test_split(
-        normal_remain, test_size=TEST_RATIO / (VAL_RATIO + TEST_RATIO),
-        random_state=random_state, shuffle=True
+        normal_remain,
+        test_size=TEST_RATIO / (VAL_RATIO + TEST_RATIO),
+        random_state=random_state,
+        shuffle=True,
     )
 
     train_ids = pd.concat([train_ring_ids, pd.Series(normal_train)]).astype(str)
@@ -146,10 +155,10 @@ def ring_aware_split(ground_truth, random_state=RANDOM_STATE):
 # PREPARE MODEL INPUTS (modified to accept a subset of IDs)
 # ============================================================
 
+
 def prepare_features(features_df, ground_truth, ids):
     df = features_df.merge(
-        ground_truth[[ID_COL, TARGET_COL, RING_ID_COL]],
-        on=ID_COL, how="left"
+        ground_truth[[ID_COL, TARGET_COL, RING_ID_COL]], on=ID_COL, how="left"
     )
     df = df[df[ID_COL].isin(ids)].copy()
 
@@ -164,10 +173,12 @@ def prepare_features(features_df, ground_truth, ids):
 # OPTUNA OBJECTIVE FUNCTION
 # ============================================================
 
+
 def create_objective(X, y, groups, n_splits=5, metric="pr_auc"):
     """
     groups: array-like, ring_id for ring members, account_id for non-ring.
     """
+
     def objective(trial):
         params = {
             "objective": "binary",
@@ -222,8 +233,11 @@ def create_objective(X, y, groups, n_splits=5, metric="pr_auc"):
 # TUNE MODEL
 # ============================================================
 
+
 def tune_model(features_df, ground_truth, train_ids, n_trials=50, model_name="model"):
-    X, y, feature_cols, account_ids = prepare_features(features_df, ground_truth, train_ids)
+    X, y, feature_cols, account_ids = prepare_features(
+        features_df, ground_truth, train_ids
+    )
 
     # Create groups for GroupKFold
     groups_map = ground_truth.set_index(ID_COL)[RING_ID_COL].to_dict()
@@ -243,7 +257,9 @@ def tune_model(features_df, ground_truth, train_ids, n_trials=50, model_name="mo
 
     objective = create_objective(X, y, groups, n_splits=5, metric="pr_auc")
 
-    study = optuna.create_study(direction="maximize", sampler=TPESampler(seed=RANDOM_STATE))
+    study = optuna.create_study(
+        direction="maximize", sampler=TPESampler(seed=RANDOM_STATE)
+    )
     study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 
     best_params = study.best_params
@@ -259,8 +275,17 @@ def tune_model(features_df, ground_truth, train_ids, n_trials=50, model_name="mo
 # TRAIN FINAL MODEL & EVALUATE
 # ============================================================
 
-def train_final_and_evaluate(features_df, ground_truth, train_ids, val_ids, test_ids,
-                             best_params, model_path, model_name):
+
+def train_final_and_evaluate(
+    features_df,
+    ground_truth,
+    train_ids,
+    val_ids,
+    test_ids,
+    best_params,
+    model_path,
+    model_name,
+):
     # Prepare training data (train_ids)
     X_train, y_train, _, _ = prepare_features(features_df, ground_truth, train_ids)
     X_val, y_val, _, _ = prepare_features(features_df, ground_truth, val_ids)
@@ -347,6 +372,7 @@ def train_final_and_evaluate(features_df, ground_truth, train_ids, val_ids, test
 # MAIN
 # ============================================================
 
+
 def main():
     print("\n" + "=" * 60)
     print("RINGWATCH DAY 6 – LIGHTGBM HYPERPARAMETER TUNING")
@@ -356,7 +382,9 @@ def main():
     features_a, features_b, ground_truth = load_data()
 
     # 2. Split
-    train_ids, val_ids, test_ids = ring_aware_split(ground_truth, random_state=RANDOM_STATE)
+    train_ids, val_ids, test_ids = ring_aware_split(
+        ground_truth, random_state=RANDOM_STATE
+    )
     print(f"\nRing-aware split:")
     print(f"Train: {len(train_ids):,}")
     print(f"Validation: {len(val_ids):,}")
@@ -377,12 +405,24 @@ def main():
     # 5. Train final models and evaluate on test
     print("\nTraining final models with best hyperparameters...")
     metrics_a = train_final_and_evaluate(
-        features_a, ground_truth, train_ids, val_ids, test_ids,
-        best_params_a, MODEL_A_TUNED_PATH, "Model A"
+        features_a,
+        ground_truth,
+        train_ids,
+        val_ids,
+        test_ids,
+        best_params_a,
+        MODEL_A_TUNED_PATH,
+        "Model A",
     )
     metrics_b = train_final_and_evaluate(
-        features_b, ground_truth, train_ids, val_ids, test_ids,
-        best_params_b, MODEL_B_TUNED_PATH, "Model B"
+        features_b,
+        ground_truth,
+        train_ids,
+        val_ids,
+        test_ids,
+        best_params_b,
+        MODEL_B_TUNED_PATH,
+        "Model B",
     )
 
     # 6. Save best parameters and metrics
@@ -394,14 +434,22 @@ def main():
         "model_B": {
             "best_params": best_params_b,
             "cv_pr_auc": cv_score_b,
-        }
+        },
     }
     with open(BEST_PARAMS_PATH, "w") as f:
         json.dump(best_params_summary, f, indent=2)
 
     final_metrics = {
-        "model_A": {k: v for k, v in metrics_a.items() if k not in ["y_proba_test", "y_pred_test", "y_test"]},
-        "model_B": {k: v for k, v in metrics_b.items() if k not in ["y_proba_test", "y_pred_test", "y_test"]},
+        "model_A": {
+            k: v
+            for k, v in metrics_a.items()
+            if k not in ["y_proba_test", "y_pred_test", "y_test"]
+        },
+        "model_B": {
+            k: v
+            for k, v in metrics_b.items()
+            if k not in ["y_proba_test", "y_pred_test", "y_test"]
+        },
     }
     with open(MODEL_METRICS_TUNED_PATH, "w") as f:
         json.dump(final_metrics, f, indent=2)

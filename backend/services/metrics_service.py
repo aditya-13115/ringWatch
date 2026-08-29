@@ -7,7 +7,6 @@ import pandas as pd
 from backend.core.config import get_settings
 from backend.repositories.explainability_repository import ExplainabilityRepository
 
-
 COST_FP = 2000.0
 COST_FN = 15000.0
 
@@ -25,13 +24,9 @@ class MetricsService:
         # All V4 model artifacts live in the same directory.
         self.model_dir = self.model_metrics_path.parent
 
-        self.ensemble_metrics_path = (
-            self.model_dir / "ensemble_metrics.json"
-        )
+        self.ensemble_metrics_path = self.model_dir / "ensemble_metrics.json"
 
-        self.gnn_metrics_path = (
-            self.model_dir / "gnn_metrics.json"
-        )
+        self.gnn_metrics_path = self.model_dir / "gnn_metrics.json"
 
     # ---------------------------------------------------------
     # Helpers
@@ -78,13 +73,9 @@ class MetricsService:
         model_metrics = self._load_json(self.model_metrics_path)
 
         # New V4 artifacts.
-        ensemble_metrics = self._load_json(
-            self.ensemble_metrics_path
-        )
+        ensemble_metrics = self._load_json(self.ensemble_metrics_path)
 
-        gnn_metrics = self._load_json(
-            self.gnn_metrics_path
-        )
+        gnn_metrics = self._load_json(self.gnn_metrics_path)
 
         # -----------------------------------------------------
         # Investigation summary
@@ -94,11 +85,7 @@ class MetricsService:
             actions_df = self.explainability_repo.get_actions()
 
             if "risk_tier" in actions_df.columns:
-                tier_counts = (
-                    actions_df["risk_tier"]
-                    .value_counts()
-                    .to_dict()
-                )
+                tier_counts = actions_df["risk_tier"].value_counts().to_dict()
             else:
                 tier_counts = {}
 
@@ -124,9 +111,7 @@ class MetricsService:
         model_b_test = model_b.get("test", model_b)
 
         baseline = (
-            model_metrics.get("baseline_test")
-            or model_metrics.get("baseline")
-            or {}
+            model_metrics.get("baseline_test") or model_metrics.get("baseline") or {}
         )
 
         # -----------------------------------------------------
@@ -137,30 +122,14 @@ class MetricsService:
         # -----------------------------------------------------
 
         ensemble = {
-            "threshold": self._safe_float(
-                ensemble_metrics.get("threshold")
-            ),
-            "precision": self._safe_float(
-                ensemble_metrics.get("precision")
-            ),
-            "recall": self._safe_float(
-                ensemble_metrics.get("recall")
-            ),
-            "f1": self._safe_float(
-                ensemble_metrics.get("f1")
-            ),
-            "accuracy": self._safe_float(
-                ensemble_metrics.get("accuracy")
-            ),
-            "roc_auc": self._safe_float(
-                ensemble_metrics.get("roc_auc")
-            ),
-            "pr_auc": self._safe_float(
-                ensemble_metrics.get("pr_auc")
-            ),
-            "cost": self._safe_float(
-                ensemble_metrics.get("cost")
-            ),
+            "threshold": self._safe_float(ensemble_metrics.get("threshold")),
+            "precision": self._safe_float(ensemble_metrics.get("precision")),
+            "recall": self._safe_float(ensemble_metrics.get("recall")),
+            "f1": self._safe_float(ensemble_metrics.get("f1")),
+            "accuracy": self._safe_float(ensemble_metrics.get("accuracy")),
+            "roc_auc": self._safe_float(ensemble_metrics.get("roc_auc")),
+            "pr_auc": self._safe_float(ensemble_metrics.get("pr_auc")),
+            "cost": self._safe_float(ensemble_metrics.get("cost")),
             "confusion_matrix": ensemble_metrics.get(
                 "confusion_matrix",
                 {},
@@ -177,30 +146,14 @@ class MetricsService:
         gnn_test = gnn_metrics.get("test", {})
 
         gnn = {
-            "threshold": self._safe_float(
-                gnn_test.get("threshold")
-            ),
-            "precision": self._safe_float(
-                gnn_test.get("precision")
-            ),
-            "recall": self._safe_float(
-                gnn_test.get("recall")
-            ),
-            "f1": self._safe_float(
-                gnn_test.get("f1")
-            ),
-            "accuracy": self._safe_float(
-                gnn_test.get("accuracy")
-            ),
-            "roc_auc": self._safe_float(
-                gnn_test.get("roc_auc")
-            ),
-            "pr_auc": self._safe_float(
-                gnn_test.get("pr_auc")
-            ),
-            "cost": self._safe_float(
-                gnn_test.get("cost")
-            ),
+            "threshold": self._safe_float(gnn_test.get("threshold")),
+            "precision": self._safe_float(gnn_test.get("precision")),
+            "recall": self._safe_float(gnn_test.get("recall")),
+            "f1": self._safe_float(gnn_test.get("f1")),
+            "accuracy": self._safe_float(gnn_test.get("accuracy")),
+            "roc_auc": self._safe_float(gnn_test.get("roc_auc")),
+            "pr_auc": self._safe_float(gnn_test.get("pr_auc")),
+            "cost": self._safe_float(gnn_test.get("cost")),
             "tp": gnn_test.get("tp"),
             "fp": gnn_test.get("fp"),
             "tn": gnn_test.get("tn"),
@@ -213,7 +166,6 @@ class MetricsService:
 
         return {
             "model_metrics": model_metrics,
-
             "models": {
                 "model_A": model_a_test,
                 "model_B": model_b_test,
@@ -221,7 +173,6 @@ class MetricsService:
                 "ensemble": ensemble,
                 "baseline": baseline,
             },
-
             "operating_model": {
                 "name": "V4 Ensemble",
                 "description": (
@@ -230,11 +181,8 @@ class MetricsService:
                 ),
                 "threshold": ensemble["threshold"],
             },
-
             "ensemble_metrics": ensemble_metrics,
-
             "gnn_metrics": gnn_metrics,
-
             "investigation_summary": investigation_summary,
         }
 
@@ -341,9 +289,7 @@ class MetricsService:
 
         for model_key, possible_columns in candidate_columns.items():
 
-            proba_col = find_prediction_column(
-                possible_columns
-            )
+            proba_col = find_prediction_column(possible_columns)
 
             if proba_col is None:
                 continue
@@ -385,9 +331,7 @@ class MetricsService:
             tp = 0
             fp = 0
 
-            total_positive = int(
-                sorted_true.sum()
-            )
+            total_positive = int(sorted_true.sum())
 
             fn = total_positive
 
@@ -406,24 +350,13 @@ class MetricsService:
                     fp += 1
 
                 # Precision
-                precision = (
-                    tp / (tp + fp)
-                    if (tp + fp) > 0
-                    else 0.0
-                )
+                precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
 
                 # Recall
-                recall = (
-                    tp / (tp + fn)
-                    if (tp + fn) > 0
-                    else 0.0
-                )
+                recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
 
                 # Intervention cost
-                cost = (
-                    fp * COST_FP
-                    + fn * COST_FN
-                )
+                cost = fp * COST_FP + fn * COST_FN
 
                 precision_curve.append(
                     {

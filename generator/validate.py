@@ -139,7 +139,9 @@ def validate_orders():
     devices = pd.read_csv(PATHS["devices"], parse_dates=["first_seen_at"])
     addresses = pd.read_csv(PATHS["addresses"], parse_dates=["first_seen_at"])
     phones = pd.read_csv(PATHS["phones"], parse_dates=["first_seen_at"])
-    instruments = pd.read_csv(PATHS["payment_instruments"], parse_dates=["first_seen_at"])
+    instruments = pd.read_csv(
+        PATHS["payment_instruments"], parse_dates=["first_seen_at"]
+    )
     orders = pd.read_csv(
         PATHS["orders"],
         low_memory=False,
@@ -187,7 +189,9 @@ def validate_orders():
     assert set(orders["device_id"]).issubset(device_ids), "Invalid device_id found."
     assert set(orders["address_id"]).issubset(address_ids), "Invalid address_id found."
     assert set(orders["phone_hash"]).issubset(phone_ids), "Invalid phone_hash found."
-    assert set(orders["instrument_id"]).issubset(instrument_ids), "Invalid instrument_id found."
+    assert set(orders["instrument_id"]).issubset(
+        instrument_ids
+    ), "Invalid instrument_id found."
 
     # Population type no longer in accounts.csv
     # (validation of normal-only orders can be removed or adjusted)
@@ -211,23 +215,34 @@ def validate_orders():
         raise AssertionError(f"Required fields contain nulls:\n" f"{invalid_nulls}")
 
     # Account timestamp consistency
-    merged = orders.merge(accounts[["account_id", "account_created_at"]], on="account_id", how="left")
-    invalid_account_time = merged[merged["order_timestamp"] < merged["account_created_at"]]
+    merged = orders.merge(
+        accounts[["account_id", "account_created_at"]], on="account_id", how="left"
+    )
+    invalid_account_time = merged[
+        merged["order_timestamp"] < merged["account_created_at"]
+    ]
     if len(invalid_account_time) > 0:
-        raise AssertionError(f"{len(invalid_account_time)} orders occur before account creation.")
+        raise AssertionError(
+            f"{len(invalid_account_time)} orders occur before account creation."
+        )
 
     # Delivery timestamp consistency
     delivered = orders[orders["delivery_status"] == "delivered"]
     invalid_delivery = delivered[
-        delivered["delivery_timestamp"].isna() | (delivered["delivery_timestamp"] < delivered["order_timestamp"])
+        delivered["delivery_timestamp"].isna()
+        | (delivered["delivery_timestamp"] < delivered["order_timestamp"])
     ]
     if len(invalid_delivery) > 0:
-        raise AssertionError(f"{len(invalid_delivery)} delivered orders have invalid delivery timestamps.")
+        raise AssertionError(
+            f"{len(invalid_delivery)} delivered orders have invalid delivery timestamps."
+        )
 
     not_delivered = orders[orders["delivery_status"].isin(["pending", "failed"])]
     invalid_not_delivered = not_delivered[not_delivered["delivery_timestamp"].notna()]
     if len(invalid_not_delivered) > 0:
-        raise AssertionError(f"{len(invalid_not_delivered)} pending/failed orders have delivery timestamps.")
+        raise AssertionError(
+            f"{len(invalid_not_delivered)} pending/failed orders have delivery timestamps."
+        )
 
     invalid_rto = orders[(orders["delivery_status"] == "failed") != orders["rto_flag"]]
     if len(invalid_rto) > 0:
@@ -255,6 +270,7 @@ def validate_orders():
 # DAY 3 VALIDATION
 # ============================================================
 
+
 def validate_day3():
     print("\n")
     print("=" * 55)
@@ -271,18 +287,35 @@ def validate_day3():
     devices = pd.read_csv(PATHS["devices"], parse_dates=["first_seen_at"])
     addresses = pd.read_csv(PATHS["addresses"], parse_dates=["first_seen_at"])
     phones = pd.read_csv(PATHS["phones"], parse_dates=["first_seen_at"])
-    instruments = pd.read_csv(PATHS["payment_instruments"], parse_dates=["first_seen_at"])
+    instruments = pd.read_csv(
+        PATHS["payment_instruments"], parse_dates=["first_seen_at"]
+    )
     orders = pd.read_csv(
         PATHS["orders"],
         low_memory=False,
-        parse_dates=["order_timestamp", "delivery_timestamp", "return_timestamp", "refund_timestamp"],
+        parse_dates=[
+            "order_timestamp",
+            "delivery_timestamp",
+            "return_timestamp",
+            "refund_timestamp",
+        ],
     )
     refunds = pd.read_csv(PATHS["refunds"], parse_dates=["refund_timestamp"])
-    disputes = pd.read_csv(PATHS["disputes"], parse_dates=["dispute_created_at", "respond_by"])
-    ground_truth = pd.read_csv(PATHS["ring_ground_truth"], parse_dates=["ring_start_time", "ring_end_time"])
+    disputes = pd.read_csv(
+        PATHS["disputes"], parse_dates=["dispute_created_at", "respond_by"]
+    )
+    ground_truth = pd.read_csv(
+        PATHS["ring_ground_truth"], parse_dates=["ring_start_time", "ring_end_time"]
+    )
 
     # Basic file checks
-    required_files = [PATHS["accounts"], PATHS["orders"], PATHS["refunds"], PATHS["disputes"], PATHS["ring_ground_truth"]]
+    required_files = [
+        PATHS["accounts"],
+        PATHS["orders"],
+        PATHS["refunds"],
+        PATHS["disputes"],
+        PATHS["ring_ground_truth"],
+    ]
     for path in required_files:
         if not path.exists():
             raise FileNotFoundError(f"Missing file: {path}")
@@ -338,26 +371,38 @@ def validate_day3():
             raise AssertionError("Dispute table contains orders without dispute_flag.")
 
     # Timestamp checks
-    invalid_delivery = orders[(orders["delivery_status"] == "delivered") & (orders["delivery_timestamp"] < orders["order_timestamp"])]
+    invalid_delivery = orders[
+        (orders["delivery_status"] == "delivered")
+        & (orders["delivery_timestamp"] < orders["order_timestamp"])
+    ]
     if len(invalid_delivery) > 0:
         raise AssertionError(f"{len(invalid_delivery)} invalid delivery timestamps.")
 
     returned_orders = orders[orders["return_flag"] == True]
     if len(returned_orders) > 0:
-        invalid_returns = returned_orders[returned_orders["return_timestamp"] < returned_orders["delivery_timestamp"]]
+        invalid_returns = returned_orders[
+            returned_orders["return_timestamp"] < returned_orders["delivery_timestamp"]
+        ]
         if len(invalid_returns) > 0:
             raise AssertionError("Invalid return timestamps.")
 
     refunded_orders = orders[orders["refund_flag"] == True]
     if len(refunded_orders) > 0:
-        invalid_refunds = refunded_orders[refunded_orders["refund_timestamp"] < refunded_orders["return_timestamp"]]
+        invalid_refunds = refunded_orders[
+            refunded_orders["refund_timestamp"] < refunded_orders["return_timestamp"]
+        ]
         if len(invalid_refunds) > 0:
             raise AssertionError("Invalid refund timestamps.")
 
     if len(disputes) > 0:
-        dispute_orders = orders[orders["order_id"].isin(disputes["order_id"])][["order_id", "refund_timestamp", "delivery_timestamp"]]
+        dispute_orders = orders[orders["order_id"].isin(disputes["order_id"])][
+            ["order_id", "refund_timestamp", "delivery_timestamp"]
+        ]
         dispute_check = disputes.merge(dispute_orders, on="order_id", how="left")
-        expected_base = dispute_check["refund_timestamp"].where(dispute_check["refund_timestamp"].notna(), dispute_check["delivery_timestamp"])
+        expected_base = dispute_check["refund_timestamp"].where(
+            dispute_check["refund_timestamp"].notna(),
+            dispute_check["delivery_timestamp"],
+        )
         invalid_dispute_created = dispute_check["dispute_created_at"] < expected_base
         if invalid_dispute_created.any():
             raise AssertionError("Invalid dispute_created_at timestamps.")
@@ -372,49 +417,73 @@ def validate_day3():
     ring_accounts = private_accounts[private_accounts["population_type"] == "ring"]
     true_ring_members = ground_truth[ground_truth["true_ring_member"] == True]
 
-    expected_ring_members = sum(N_RING_TYPES[rt] * RING_ACCOUNTS_PER_TYPE[rt] for rt in N_RING_TYPES)
+    expected_ring_members = sum(
+        N_RING_TYPES[rt] * RING_ACCOUNTS_PER_TYPE[rt] for rt in N_RING_TYPES
+    )
     if len(ring_accounts) != expected_ring_members:
-        raise AssertionError(f"Expected {expected_ring_members} ring-reserved accounts, got {len(ring_accounts)}.")
+        raise AssertionError(
+            f"Expected {expected_ring_members} ring-reserved accounts, got {len(ring_accounts)}."
+        )
     if len(true_ring_members) != expected_ring_members:
-        raise AssertionError(f"Expected {expected_ring_members} ring members, got {len(true_ring_members)}.")
+        raise AssertionError(
+            f"Expected {expected_ring_members} ring members, got {len(true_ring_members)}."
+        )
 
     unique_ring_ids = ground_truth["abuse_ring_id"].dropna().nunique()
     expected_ring_ids = sum(N_RING_TYPES.values())
     if unique_ring_ids != expected_ring_ids:
-        raise AssertionError(f"Expected {expected_ring_ids} unique ring IDs, got {unique_ring_ids}.")
+        raise AssertionError(
+            f"Expected {expected_ring_ids} unique ring IDs, got {unique_ring_ids}."
+        )
 
     ring_types_present = set(true_ring_members["ring_type"])
     if ring_types_present != set(N_RING_TYPES):
-        raise AssertionError(f"Ring types missing: {set(N_RING_TYPES) - ring_types_present}")
+        raise AssertionError(
+            f"Ring types missing: {set(N_RING_TYPES) - ring_types_present}"
+        )
 
     for rt, expected_members in RING_ACCOUNTS_PER_TYPE.items():
         actual_count = true_ring_members[true_ring_members["ring_type"] == rt].shape[0]
         expected_total = N_RING_TYPES[rt] * expected_members
         if actual_count != expected_total:
-            raise AssertionError(f"{rt} expected {expected_total} accounts, got {actual_count}")
+            raise AssertionError(
+                f"{rt} expected {expected_total} accounts, got {actual_count}"
+            )
 
     if true_ring_members["abuse_ring_id"].isna().any():
         raise AssertionError("A true ring member is missing abuse_ring_id.")
 
     # Hard negative check
-    hard_accounts = private_accounts[private_accounts["population_type"] == "hard_negative"]
-    expected_hard_accounts = N_ACCOUNTS - len(ring_accounts) - int((private_accounts["population_type"] == "normal").sum())
+    hard_accounts = private_accounts[
+        private_accounts["population_type"] == "hard_negative"
+    ]
+    expected_hard_accounts = (
+        N_ACCOUNTS
+        - len(ring_accounts)
+        - int((private_accounts["population_type"] == "normal").sum())
+    )
     if len(hard_accounts) != expected_hard_accounts:
-        raise AssertionError(f"Expected {expected_hard_accounts} hard-negative accounts, got {len(hard_accounts)}.")
+        raise AssertionError(
+            f"Expected {expected_hard_accounts} hard-negative accounts, got {len(hard_accounts)}."
+        )
 
     hard_orders = orders[orders["account_id"].isin(hard_accounts["account_id"])]
     ring_orders = orders[orders["account_id"].isin(true_ring_members["account_id"])]
     if len(hard_orders) == 0:
         raise AssertionError("No hard-negative orders found.")
 
-    hard_truth = ground_truth[ground_truth["account_id"].isin(hard_accounts["account_id"])]
+    hard_truth = ground_truth[
+        ground_truth["account_id"].isin(hard_accounts["account_id"])
+    ]
     if hard_truth["true_ring_member"].any():
         raise AssertionError("Hard-negative account marked as true ring member.")
 
     # V4-specific checks
     for col in accounts.columns:
         if col.startswith("_"):
-            raise AssertionError(f"Internal latent column '{col}' leaked into accounts.csv")
+            raise AssertionError(
+                f"Internal latent column '{col}' leaked into accounts.csv"
+            )
 
     # Optional: Warn if some ring members have no orders
     ring_member_ids = set(true_ring_members["account_id"])

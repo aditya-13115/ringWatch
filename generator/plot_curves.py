@@ -6,7 +6,12 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 
-from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
+from sklearn.metrics import (
+    roc_curve,
+    auc,
+    precision_recall_curve,
+    average_precision_score,
+)
 
 from .config import SEED
 from .features_config import (
@@ -39,6 +44,7 @@ PLOT_DIR.mkdir(parents=True, exist_ok=True)
 # UTILITY
 # ============================================================
 
+
 def load_models_and_data():
     """Load all models and data, and return test probabilities and labels."""
     # Load ground truth and features
@@ -51,7 +57,9 @@ def load_models_and_data():
     features_b[ID_COL] = features_b[ID_COL].astype(str)
 
     # Split
-    train_ids, val_ids, test_ids = ring_aware_split(ground_truth, random_state=RANDOM_STATE)
+    train_ids, val_ids, test_ids = ring_aware_split(
+        ground_truth, random_state=RANDOM_STATE
+    )
 
     # Load LightGBM models
     model_a_path = PROCESSED_DIR / "model" / "model_lgbm_A_tuned.pkl"
@@ -62,8 +70,12 @@ def load_models_and_data():
         model_b = pickle.load(f)
 
     # Prepare LightGBM features for test
-    X_test_a, y_test_a, _, test_account_ids_a = prepare_features(features_a, ground_truth, test_ids)
-    X_test_b, y_test_b, _, test_account_ids_b = prepare_features(features_b, ground_truth, test_ids)
+    X_test_a, y_test_a, _, test_account_ids_a = prepare_features(
+        features_a, ground_truth, test_ids
+    )
+    X_test_b, y_test_b, _, test_account_ids_b = prepare_features(
+        features_b, ground_truth, test_ids
+    )
 
     # Predict probabilities
     proba_a = model_a.predict_proba(X_test_a)[:, 1]
@@ -89,9 +101,13 @@ def load_models_and_data():
         proba_gnn_test = out[data.test_mask].exp()[:, 1].cpu().numpy()
 
     # Align GNN test account IDs with LightGBM test account IDs
-    test_node_account_ids = [data.account_ids[i] for i in range(data.num_nodes) if data.test_mask[i]]
+    test_node_account_ids = [
+        data.account_ids[i] for i in range(data.num_nodes) if data.test_mask[i]
+    ]
     # Ensure order matches LightGBM test ids (should be same order because both use same split)
-    assert list(test_node_account_ids) == list(test_account_ids_a), "Order mismatch between GNN and LightGBM test IDs"
+    assert list(test_node_account_ids) == list(
+        test_account_ids_a
+    ), "Order mismatch between GNN and LightGBM test IDs"
 
     y_test = y_test_a  # same labels
 
@@ -110,6 +126,7 @@ def load_models_and_data():
 # ============================================================
 # PLOTTING FUNCTIONS
 # ============================================================
+
 
 def plot_roc_curves(data_dict):
     plt.figure(figsize=(8, 6))
@@ -187,6 +204,7 @@ def main():
     plot_score_distributions(data)
 
     print(f"\nAll plots saved to {PLOT_DIR}")
+
 
 if __name__ == "__main__":
     main()

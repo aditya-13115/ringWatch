@@ -29,7 +29,9 @@ class AddressNormalizerService:
             # 2) Exact match after abbreviation expansion
             exact_id_expanded = self._exact_match(expanded_normalized)
             if exact_id_expanded is not None:
-                return self._success(raw_address, expanded_normalized, exact_id_expanded, 0.98)
+                return self._success(
+                    raw_address, expanded_normalized, exact_id_expanded, 0.98
+                )
 
             # 3) LLM component parsing
             llm_comps = await self._safe_llm_parse(raw_address)
@@ -41,7 +43,9 @@ class AddressNormalizerService:
                     return self._success(raw_address, formatted, best_id, score)
                 if score >= 0.70:
                     return self._review(raw_address, formatted, best_id, score)
-                return self._review(raw_address, formatted or basic_normalized, best_id, score)
+                return self._review(
+                    raw_address, formatted or basic_normalized, best_id, score
+                )
 
             # 4) Fuzzy fallback without LLM
             best_id, score = self._fuzzy_match(expanded_normalized)
@@ -131,7 +135,7 @@ class AddressNormalizerService:
         prompt = (
             "Extract the following fields from this Indian address:\n"
             f"Address: {raw_address}\n"
-            'Return JSON with keys: flat, building, street, area, city, state, pincode.\n'
+            "Return JSON with keys: flat, building, street, area, city, state, pincode.\n"
             "If a field is missing, use null."
         )
 
@@ -181,7 +185,9 @@ class AddressNormalizerService:
             )
 
             pincode_match = False
-            if comps.get("pincode") and str(comps["pincode"]) == str(addr.get("pincode", "")):
+            if comps.get("pincode") and str(comps["pincode"]) == str(
+                addr.get("pincode", "")
+            ):
                 pincode_match = True
 
             city_match = False

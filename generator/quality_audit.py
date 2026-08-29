@@ -5,6 +5,7 @@ and the final Day-4/Day-5 feature matrices.
 
 It is intentionally independent of the model-training pipeline.
 """
+
 from __future__ import annotations
 
 import json
@@ -14,7 +15,12 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from .config import PATHS
-from .features_config import PREDICTION_CUTOFF, FEATURES_PATH, FEATURES_GRAPH_PATH, GROUND_TRUTH_PATH
+from .features_config import (
+    PREDICTION_CUTOFF,
+    FEATURES_PATH,
+    FEATURES_GRAPH_PATH,
+    GROUND_TRUTH_PATH,
+)
 
 
 def _auc_safe(y_true, scores):
@@ -39,7 +45,11 @@ def audit_feature_matrix(features_df, ground_truth_df, feature_cols_to_ignore=No
     df = df.set_index("account_id")
     df = df.reindex(y.index)
     df["true_ring_member"] = y
-    candidates = [c for c in df.columns if c not in feature_cols_to_ignore and c != "true_ring_member"]
+    candidates = [
+        c
+        for c in df.columns
+        if c not in feature_cols_to_ignore and c != "true_ring_member"
+    ]
     rows = []
     for col in candidates:
         if df[col].dtype not in [np.float64, np.int64, np.float32, np.int32]:
@@ -53,7 +63,13 @@ def audit_feature_matrix(features_df, ground_truth_df, feature_cols_to_ignore=No
         if vals.nunique() < 2:
             continue
         auc = _auc_safe(y.values, vals.values)
-        rows.append({"feature": col, "single_feature_auc": round(auc, 6), "unique_values": int(vals.nunique())})
+        rows.append(
+            {
+                "feature": col,
+                "single_feature_auc": round(auc, 6),
+                "unique_values": int(vals.nunique()),
+            }
+        )
     out = pd.DataFrame(rows).sort_values("single_feature_auc", ascending=False)
     return out
 
@@ -63,11 +79,15 @@ def build_raw_signals():
     cutoff = pd.Timestamp(PREDICTION_CUTOFF)
     accounts = pd.read_csv(PATHS["accounts"])
     # Load private population labels
-    private_accounts = pd.read_csv(PATHS["accounts"].parent / "account_population_labels_private.csv")
+    private_accounts = pd.read_csv(
+        PATHS["accounts"].parent / "account_population_labels_private.csv"
+    )
     accounts = accounts.merge(private_accounts, on="account_id", how="left")
 
     orders = pd.read_csv(PATHS["orders"], low_memory=False)
-    orders["order_timestamp"] = pd.to_datetime(orders["order_timestamp"], errors="coerce")
+    orders["order_timestamp"] = pd.to_datetime(
+        orders["order_timestamp"], errors="coerce"
+    )
     orders = orders[orders.order_timestamp <= cutoff].copy()
     gt = pd.read_csv(PATHS["ring_ground_truth"])
     g = orders.groupby("account_id")
@@ -83,9 +103,15 @@ def build_raw_signals():
         distinct_phones=("phone_hash", "nunique"),
         distinct_instruments=("instrument_id", "nunique"),
     ).reset_index()
-    coupon_usage = g["coupon_code"].apply(lambda x: x.notna().mean()).rename("coupon_usage_rate")
+    coupon_usage = (
+        g["coupon_code"].apply(lambda x: x.notna().mean()).rename("coupon_usage_rate")
+    )
     s = s.merge(coupon_usage, on="account_id", how="left")
-    s = accounts[["account_id", "population_type"]].merge(s, on="account_id", how="left").fillna(0)
+    s = (
+        accounts[["account_id", "population_type"]]
+        .merge(s, on="account_id", how="left")
+        .fillna(0)
+    )
     s = s.merge(gt[["account_id", "true_ring_member"]], on="account_id", how="left")
     return s
 
@@ -94,14 +120,24 @@ def run():
     # 1. Raw signals audit (as before)
     raw_df = build_raw_signals()
     y = raw_df.true_ring_member.astype(int)
-    candidates = [c for c in raw_df.columns if c not in {"account_id", "population_type", "true_ring_member"}]
+    candidates = [
+        c
+        for c in raw_df.columns
+        if c not in {"account_id", "population_type", "true_ring_member"}
+    ]
     rows = []
     for c in candidates:
         vals = pd.to_numeric(raw_df[c], errors="coerce").fillna(0)
         if vals.nunique() < 2:
             continue
         auc = _auc_safe(y.values, vals.values)
-        rows.append({"feature": c, "single_feature_auc": round(auc, 6), "unique_values": int(vals.nunique())})
+        rows.append(
+            {
+                "feature": c,
+                "single_feature_auc": round(auc, 6),
+                "unique_values": int(vals.nunique()),
+            }
+        )
     raw_audit = pd.DataFrame(rows).sort_values("single_feature_auc", ascending=False)
 
     # 2. Final feature audits
@@ -133,27 +169,47 @@ def run():
     payload = {
         "cutoff": str(PREDICTION_CUTOFF),
         "raw_signal_audit": raw_audit.to_dict("records"),
-        "day4_feature_audit": final_audits.get("Day4").to_dict("records") if final_audits.get("Day4") is not None else None,
-        "day5_feature_audit": final_audits.get("Day5").to_dict("records") if final_audits.get("Day5") is not None else None,
+        "day4_feature_audit": (
+            final_audits.get("Day4").to_dict("records")
+            if final_audits.get("Day4") is not None
+            else None
+        ),
+        "day5_feature_audit": (
+            final_audits.get("Day5").to_dict("records")
+            if final_audits.get("Day5") is not None
+            else None
+        ),
         "max_single_feature_auc": float(max_auc),
         "threshold": threshold,
         "anti_shortcut_passed": bool(passed),
     }
 
     # Save report
-    report_path = Path(PATHS["accounts"]).parent / "processed" / "v4_quality_audit_extended.json"
+    report_path = (
+        Path(PATHS["accounts"]).parent / "processed" / "v4_quality_audit_extended.json"
+    )
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     print("\nV4 extended quality audit")
     print("=" * 45)
-    print(f"Raw signals max AUC: {raw_audit.single_feature_auc.max():.4f}" if len(raw_audit) else "Raw signals: no features")
+    print(
+        f"Raw signals max AUC: {raw_audit.single_feature_auc.max():.4f}"
+        if len(raw_audit)
+        else "Raw signals: no features"
+    )
     if final_audits.get("Day4") is not None:
-        print(f"Day4 features max AUC: {final_audits['Day4'].single_feature_auc.max():.4f}")
+        print(
+            f"Day4 features max AUC: {final_audits['Day4'].single_feature_auc.max():.4f}"
+        )
     if final_audits.get("Day5") is not None:
-        print(f"Day5 features max AUC: {final_audits['Day5'].single_feature_auc.max():.4f}")
+        print(
+            f"Day5 features max AUC: {final_audits['Day5'].single_feature_auc.max():.4f}"
+        )
     print(f"Overall max single-feature AUC: {max_auc:.4f}")
-    print(f"Anti-shortcut check (threshold {threshold}): {'PASSED' if passed else 'FAILED'}")
+    print(
+        f"Anti-shortcut check (threshold {threshold}): {'PASSED' if passed else 'FAILED'}"
+    )
     return payload
 
 

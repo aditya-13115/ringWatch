@@ -2,13 +2,21 @@ import numpy as np
 import pandas as pd
 
 from .config import (
-    SEED, PATHS,
-    N_RING_TYPES, RING_ACCOUNTS_PER_TYPE, N_RING_ACCOUNTS,
-    RING_START_MIN, RING_START_MAX,
+    SEED,
+    PATHS,
+    N_RING_TYPES,
+    RING_ACCOUNTS_PER_TYPE,
+    N_RING_ACCOUNTS,
+    RING_START_MIN,
+    RING_START_MAX,
 )
 from .ids import (
-    make_order_id, make_device_id, make_address_id,
-    make_phone_hash, make_instrument_id, make_instrument_hash,
+    make_order_id,
+    make_device_id,
+    make_address_id,
+    make_phone_hash,
+    make_instrument_id,
+    make_instrument_hash,
 )
 
 rng = np.random.default_rng(SEED)
@@ -39,10 +47,18 @@ def load_data():
     devices = pd.read_csv(PATHS["devices"], parse_dates=["first_seen_at"])
     addresses = pd.read_csv(PATHS["addresses"], parse_dates=["first_seen_at"])
     phones = pd.read_csv(PATHS["phones"], parse_dates=["first_seen_at"])
-    instruments = pd.read_csv(PATHS["payment_instruments"], parse_dates=["first_seen_at"])
-    orders = pd.read_csv(PATHS["orders"], parse_dates=[
-        "order_timestamp", "delivery_timestamp", "return_timestamp", "refund_timestamp",
-    ])
+    instruments = pd.read_csv(
+        PATHS["payment_instruments"], parse_dates=["first_seen_at"]
+    )
+    orders = pd.read_csv(
+        PATHS["orders"],
+        parse_dates=[
+            "order_timestamp",
+            "delivery_timestamp",
+            "return_timestamp",
+            "refund_timestamp",
+        ],
+    )
     return accounts, devices, addresses, phones, instruments, orders
 
 
@@ -79,7 +95,18 @@ def create_address(addresses, first_seen_at, is_drop_address=False):
     row = {
         "address_id": address_id,
         "canonical_address": f"ring address {index}",
-        "city": rng.choice(["Mumbai","Delhi","Bengaluru","Chennai","Hyderabad","Pune","Ahmedabad","Kolkata"]),
+        "city": rng.choice(
+            [
+                "Mumbai",
+                "Delhi",
+                "Bengaluru",
+                "Chennai",
+                "Hyderabad",
+                "Pune",
+                "Ahmedabad",
+                "Kolkata",
+            ]
+        ),
         "pincode": str(rng.integers(100000, 999999)),
         "is_drop_address": bool(is_drop_address),
         "first_seen_at": pd.Timestamp(first_seen_at),
@@ -110,11 +137,28 @@ def create_instrument(instruments, first_seen_at, instrument_type="card"):
 
 
 def build_order(
-    order_id, account_id, device_id, address_id, phone_hash, instrument_id,
-    order_timestamp, amount, discount_amount, coupon_code, category, delivery_timestamp,
-    return_flag=False, return_reason_code=None, return_timestamp=pd.NaT,
-    refund_flag=False, refund_amount=None, refund_timestamp=pd.NaT,
-    dispute_flag=False, dispute_phase=None, dispute_reason_code=None, dispute_reason_category=None,
+    order_id,
+    account_id,
+    device_id,
+    address_id,
+    phone_hash,
+    instrument_id,
+    order_timestamp,
+    amount,
+    discount_amount,
+    coupon_code,
+    category,
+    delivery_timestamp,
+    return_flag=False,
+    return_reason_code=None,
+    return_timestamp=pd.NaT,
+    refund_flag=False,
+    refund_amount=None,
+    refund_timestamp=pd.NaT,
+    dispute_flag=False,
+    dispute_phase=None,
+    dispute_reason_code=None,
+    dispute_reason_category=None,
 ):
     if pd.notna(delivery_timestamp):
         delivery_status = "delivered"
@@ -135,18 +179,28 @@ def build_order(
         "order_timestamp": pd.Timestamp(order_timestamp),
         "delivery_status": delivery_status,
         "delivery_attempts": 1,
-        "delivery_timestamp": pd.Timestamp(delivery_timestamp) if pd.notna(delivery_timestamp) else pd.NaT,
+        "delivery_timestamp": (
+            pd.Timestamp(delivery_timestamp) if pd.notna(delivery_timestamp) else pd.NaT
+        ),
         "rto_flag": False,
         "return_flag": bool(return_flag),
         "return_reason_code": return_reason_code,
-        "return_timestamp": pd.Timestamp(return_timestamp) if pd.notna(return_timestamp) else pd.NaT,
+        "return_timestamp": (
+            pd.Timestamp(return_timestamp) if pd.notna(return_timestamp) else pd.NaT
+        ),
         "return_lag_hours": (
-            (pd.Timestamp(return_timestamp) - pd.Timestamp(delivery_timestamp)).total_seconds() / 3600
-            if return_flag else None
+            (
+                pd.Timestamp(return_timestamp) - pd.Timestamp(delivery_timestamp)
+            ).total_seconds()
+            / 3600
+            if return_flag
+            else None
         ),
         "refund_flag": bool(refund_flag),
         "refund_amount": float(refund_amount) if refund_amount is not None else None,
-        "refund_timestamp": pd.Timestamp(refund_timestamp) if pd.notna(refund_timestamp) else pd.NaT,
+        "refund_timestamp": (
+            pd.Timestamp(refund_timestamp) if pd.notna(refund_timestamp) else pd.NaT
+        ),
         "dispute_flag": bool(dispute_flag),
         "dispute_phase": dispute_phase,
         "dispute_reason_code": dispute_reason_code,
@@ -156,8 +210,15 @@ def build_order(
 
 
 def inject_wardrobing(
-    accounts, devices, addresses, phones, instruments,
-    account_ids, order_counter, ring_id="R001", ring_start=pd.Timestamp("2026-01-10"),
+    accounts,
+    devices,
+    addresses,
+    phones,
+    instruments,
+    account_ids,
+    order_counter,
+    ring_id="R001",
+    ring_start=pd.Timestamp("2026-01-10"),
 ):
     devices, shared_device = create_device(devices, ring_start - pd.Timedelta(days=1))
     orders = []
@@ -165,10 +226,16 @@ def inject_wardrobing(
 
     for idx, account_id in enumerate(account_ids):
         account_created = ring_start + pd.Timedelta(hours=idx * 2)
-        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = account_created
+        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = (
+            account_created
+        )
 
-        addresses, address_id = create_address(addresses, account_created - pd.Timedelta(hours=1))
-        phones, phone_hash = create_phone(phones, account_created - pd.Timedelta(hours=1))
+        addresses, address_id = create_address(
+            addresses, account_created - pd.Timedelta(hours=1)
+        )
+        phones, phone_hash = create_phone(
+            phones, account_created - pd.Timedelta(hours=1)
+        )
         instruments, instrument_id = create_instrument(
             instruments, account_created - pd.Timedelta(hours=1), "card"
         )
@@ -203,27 +270,59 @@ def inject_wardrobing(
 
             orders.append(
                 build_order(
-                    order_id, account_id, shared_device, address_id, phone_hash, instrument_id,
-                    order_time, amount, 0, None, "fashion", delivery_time,
-                    return_flag, return_reason, return_time,
-                    refund_flag, refund_amount, refund_time,
+                    order_id,
+                    account_id,
+                    shared_device,
+                    address_id,
+                    phone_hash,
+                    instrument_id,
+                    order_time,
+                    amount,
+                    0,
+                    None,
+                    "fashion",
+                    delivery_time,
+                    return_flag,
+                    return_reason,
+                    return_time,
+                    refund_flag,
+                    refund_amount,
+                    refund_time,
                 )
             )
 
-        members.append({
-            "account_id": account_id,
-            "abuse_ring_id": ring_id,
-            "ring_type": "wardrobing",
-            "ring_start_time": account_created,
-            "ring_end_time": account_created + pd.Timedelta(days=12),
-        })
+        members.append(
+            {
+                "account_id": account_id,
+                "abuse_ring_id": ring_id,
+                "ring_type": "wardrobing",
+                "ring_start_time": account_created,
+                "ring_end_time": account_created + pd.Timedelta(days=12),
+            }
+        )
 
-    return accounts, devices, addresses, phones, instruments, pd.DataFrame(orders), members, order_counter
+    return (
+        accounts,
+        devices,
+        addresses,
+        phones,
+        instruments,
+        pd.DataFrame(orders),
+        members,
+        order_counter,
+    )
 
 
 def inject_promo_farming(
-    accounts, devices, addresses, phones, instruments,
-    account_ids, order_counter, ring_id="R002", ring_start=pd.Timestamp("2026-01-20 09:00:00"),
+    accounts,
+    devices,
+    addresses,
+    phones,
+    instruments,
+    account_ids,
+    order_counter,
+    ring_id="R002",
+    ring_start=pd.Timestamp("2026-01-20 09:00:00"),
 ):
     shared_ip = "10.77.77.0/24"
     shared_coupon = "RING_RARE_777"
@@ -235,13 +334,19 @@ def inject_promo_farming(
 
     for idx, account_id in enumerate(account_ids):
         account_created = ring_start + pd.Timedelta(minutes=idx * 15)
-        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = account_created
+        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = (
+            account_created
+        )
 
         devices, device_id = create_device(
             devices, account_created - pd.Timedelta(hours=1), shared_ip
         )
-        addresses, address_id = create_address(addresses, account_created - pd.Timedelta(hours=1))
-        phones, phone_hash = create_phone(phones, account_created - pd.Timedelta(hours=1))
+        addresses, address_id = create_address(
+            addresses, account_created - pd.Timedelta(hours=1)
+        )
+        phones, phone_hash = create_phone(
+            phones, account_created - pd.Timedelta(hours=1)
+        )
 
         n_orders = int(rng.integers(2, 4))
 
@@ -280,27 +385,59 @@ def inject_promo_farming(
 
             orders.append(
                 build_order(
-                    order_id, account_id, device_id, address_id, phone_hash, shared_instrument,
-                    order_time, amount, discount_amount, coupon_code, category, delivery_time,
-                    return_flag, return_reason, return_time,
-                    refund_flag, refund_amount, refund_time,
+                    order_id,
+                    account_id,
+                    device_id,
+                    address_id,
+                    phone_hash,
+                    shared_instrument,
+                    order_time,
+                    amount,
+                    discount_amount,
+                    coupon_code,
+                    category,
+                    delivery_time,
+                    return_flag,
+                    return_reason,
+                    return_time,
+                    refund_flag,
+                    refund_amount,
+                    refund_time,
                 )
             )
 
-        members.append({
-            "account_id": account_id,
-            "abuse_ring_id": ring_id,
-            "ring_type": "promo_refund_farming",
-            "ring_start_time": account_created,
-            "ring_end_time": account_created + pd.Timedelta(days=6),
-        })
+        members.append(
+            {
+                "account_id": account_id,
+                "abuse_ring_id": ring_id,
+                "ring_type": "promo_refund_farming",
+                "ring_start_time": account_created,
+                "ring_end_time": account_created + pd.Timedelta(days=6),
+            }
+        )
 
-    return accounts, devices, addresses, phones, instruments, pd.DataFrame(orders), members, order_counter
+    return (
+        accounts,
+        devices,
+        addresses,
+        phones,
+        instruments,
+        pd.DataFrame(orders),
+        members,
+        order_counter,
+    )
 
 
 def inject_friendly_fraud(
-    accounts, devices, addresses, phones, instruments,
-    account_ids, order_counter, ring_id="R003", ring_start=pd.Timestamp("2026-02-01"),
+    accounts,
+    devices,
+    addresses,
+    phones,
+    instruments,
+    account_ids,
+    order_counter,
+    ring_id="R003",
+    ring_start=pd.Timestamp("2026-02-01"),
 ):
     addresses, shared_address = create_address(
         addresses, ring_start - pd.Timedelta(days=1), is_drop_address=True
@@ -311,9 +448,13 @@ def inject_friendly_fraud(
 
     for idx, account_id in enumerate(account_ids):
         account_created = ring_start + pd.Timedelta(hours=idx * 4)
-        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = account_created
+        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = (
+            account_created
+        )
 
-        devices, device_id = create_device(devices, account_created - pd.Timedelta(hours=1))
+        devices, device_id = create_device(
+            devices, account_created - pd.Timedelta(hours=1)
+        )
         instruments, instrument_id = create_instrument(
             instruments, account_created - pd.Timedelta(hours=1), "card"
         )
@@ -332,27 +473,63 @@ def inject_friendly_fraud(
 
             orders.append(
                 build_order(
-                    order_id, account_id, device_id, shared_address, shared_phone,
-                    instrument_id, order_time, amount, 0, None, "electronics", delivery_time,
-                    False, None, pd.NaT, False, None, pd.NaT,
-                    True, "retrieval", "item_not_received", "friendly_fraud",
+                    order_id,
+                    account_id,
+                    device_id,
+                    shared_address,
+                    shared_phone,
+                    instrument_id,
+                    order_time,
+                    amount,
+                    0,
+                    None,
+                    "electronics",
+                    delivery_time,
+                    False,
+                    None,
+                    pd.NaT,
+                    False,
+                    None,
+                    pd.NaT,
+                    True,
+                    "retrieval",
+                    "item_not_received",
+                    "friendly_fraud",
                 )
             )
 
-        members.append({
-            "account_id": account_id,
-            "abuse_ring_id": ring_id,
-            "ring_type": "friendly_fraud",
-            "ring_start_time": account_created,
-            "ring_end_time": account_created + pd.Timedelta(days=8),
-        })
+        members.append(
+            {
+                "account_id": account_id,
+                "abuse_ring_id": ring_id,
+                "ring_type": "friendly_fraud",
+                "ring_start_time": account_created,
+                "ring_end_time": account_created + pd.Timedelta(days=8),
+            }
+        )
 
-    return accounts, devices, addresses, phones, instruments, pd.DataFrame(orders), members, order_counter
+    return (
+        accounts,
+        devices,
+        addresses,
+        phones,
+        instruments,
+        pd.DataFrame(orders),
+        members,
+        order_counter,
+    )
 
 
 def inject_subtle_distributed(
-    accounts, devices, addresses, phones, instruments,
-    account_ids, order_counter, ring_id="R004", ring_start=pd.Timestamp("2026-02-10"),
+    accounts,
+    devices,
+    addresses,
+    phones,
+    instruments,
+    account_ids,
+    order_counter,
+    ring_id="R004",
+    ring_start=pd.Timestamp("2026-02-10"),
 ):
     shared_coupon = "RING_RARE_555"
     orders = []
@@ -360,11 +537,19 @@ def inject_subtle_distributed(
 
     for idx, account_id in enumerate(account_ids):
         account_created = ring_start + pd.Timedelta(hours=idx * 6)
-        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = account_created
+        accounts.loc[accounts["account_id"] == account_id, "account_created_at"] = (
+            account_created
+        )
 
-        devices, device_id = create_device(devices, account_created - pd.Timedelta(hours=1))
-        addresses, address_id = create_address(addresses, account_created - pd.Timedelta(hours=1))
-        phones, phone_hash = create_phone(phones, account_created - pd.Timedelta(hours=1))
+        devices, device_id = create_device(
+            devices, account_created - pd.Timedelta(hours=1)
+        )
+        addresses, address_id = create_address(
+            addresses, account_created - pd.Timedelta(hours=1)
+        )
+        phones, phone_hash = create_phone(
+            phones, account_created - pd.Timedelta(hours=1)
+        )
         instruments, instrument_id = create_instrument(
             instruments, account_created - pd.Timedelta(hours=1), "upi"
         )
@@ -379,7 +564,9 @@ def inject_subtle_distributed(
             order_time += pd.Timedelta(minutes=jitter_minutes, seconds=jitter_seconds)
 
             if order_time <= account_created:
-                order_time = account_created + pd.Timedelta(minutes=int(rng.integers(5, 60)))
+                order_time = account_created + pd.Timedelta(
+                    minutes=int(rng.integers(5, 60))
+                )
 
             delivery_time = order_time + pd.Timedelta(days=2)
             amount = float(rng.integers(1500, 4500))
@@ -409,23 +596,47 @@ def inject_subtle_distributed(
 
             orders.append(
                 build_order(
-                    order_id, account_id, device_id, address_id, phone_hash, instrument_id,
-                    order_time, amount, discount_amount, coupon_code,
-                    rng.choice(["fashion", "home", "toys"]), delivery_time,
-                    return_flag, return_reason, return_time,
-                    refund_flag, refund_amount, refund_time,
+                    order_id,
+                    account_id,
+                    device_id,
+                    address_id,
+                    phone_hash,
+                    instrument_id,
+                    order_time,
+                    amount,
+                    discount_amount,
+                    coupon_code,
+                    rng.choice(["fashion", "home", "toys"]),
+                    delivery_time,
+                    return_flag,
+                    return_reason,
+                    return_time,
+                    refund_flag,
+                    refund_amount,
+                    refund_time,
                 )
             )
 
-        members.append({
-            "account_id": account_id,
-            "abuse_ring_id": ring_id,
-            "ring_type": "subtle_distributed",
-            "ring_start_time": account_created,
-            "ring_end_time": account_created + pd.Timedelta(days=8),
-        })
+        members.append(
+            {
+                "account_id": account_id,
+                "abuse_ring_id": ring_id,
+                "ring_type": "subtle_distributed",
+                "ring_start_time": account_created,
+                "ring_end_time": account_created + pd.Timedelta(days=8),
+            }
+        )
 
-    return accounts, devices, addresses, phones, instruments, pd.DataFrame(orders), members, order_counter
+    return (
+        accounts,
+        devices,
+        addresses,
+        phones,
+        instruments,
+        pd.DataFrame(orders),
+        members,
+        order_counter,
+    )
 
 
 def run_ring_injection():
@@ -458,47 +669,92 @@ def run_ring_injection():
         for ring_num in range(count):
             days_offset = rng.integers(0, total_days + 1)
             start_time = start_min + pd.Timedelta(days=int(days_offset))
-            ids = ring_ids[idx:idx + size]
+            ids = ring_ids[idx : idx + size]
             idx += size
             ring_id_str = f"R{ring_count + 1:03d}"
 
             if ring_type == "wardrobing":
                 result = inject_wardrobing(
-                    accounts, devices, addresses, phones, instruments,
-                    ids, order_counter, ring_id=ring_id_str, ring_start=start_time,
+                    accounts,
+                    devices,
+                    addresses,
+                    phones,
+                    instruments,
+                    ids,
+                    order_counter,
+                    ring_id=ring_id_str,
+                    ring_start=start_time,
                 )
             elif ring_type == "promo_refund_farming":
                 result = inject_promo_farming(
-                    accounts, devices, addresses, phones, instruments,
-                    ids, order_counter, ring_id=ring_id_str, ring_start=start_time,
+                    accounts,
+                    devices,
+                    addresses,
+                    phones,
+                    instruments,
+                    ids,
+                    order_counter,
+                    ring_id=ring_id_str,
+                    ring_start=start_time,
                 )
             elif ring_type == "friendly_fraud":
                 result = inject_friendly_fraud(
-                    accounts, devices, addresses, phones, instruments,
-                    ids, order_counter, ring_id=ring_id_str, ring_start=start_time,
+                    accounts,
+                    devices,
+                    addresses,
+                    phones,
+                    instruments,
+                    ids,
+                    order_counter,
+                    ring_id=ring_id_str,
+                    ring_start=start_time,
                 )
             elif ring_type == "subtle_distributed":
                 result = inject_subtle_distributed(
-                    accounts, devices, addresses, phones, instruments,
-                    ids, order_counter, ring_id=ring_id_str, ring_start=start_time,
+                    accounts,
+                    devices,
+                    addresses,
+                    phones,
+                    instruments,
+                    ids,
+                    order_counter,
+                    ring_id=ring_id_str,
+                    ring_start=start_time,
                 )
             else:
                 continue
 
-            accounts, devices, addresses, phones, instruments, ring_orders, members, order_counter = result
+            (
+                accounts,
+                devices,
+                addresses,
+                phones,
+                instruments,
+                ring_orders,
+                members,
+                order_counter,
+            ) = result
             all_orders.append(ring_orders)
             all_members.extend(members)
             ring_count += 1
 
-            print(f"{ring_type} ring {ring_num + 1}/{count}: {len(members)} accounts, {len(ring_orders)} orders")
+            print(
+                f"{ring_type} ring {ring_num + 1}/{count}: {len(members)} accounts, {len(ring_orders)} orders"
+            )
 
     # Allocation assertions
     if idx != N_RING_ACCOUNTS:
-        raise AssertionError(f"Ring account allocation mismatch: consumed {idx}, expected {N_RING_ACCOUNTS}.")
+        raise AssertionError(
+            f"Ring account allocation mismatch: consumed {idx}, expected {N_RING_ACCOUNTS}."
+        )
     if ring_count != sum(N_RING_TYPES.values()):
-        raise AssertionError(f"Ring count mismatch: created {ring_count}, expected {sum(N_RING_TYPES.values())}.")
+        raise AssertionError(
+            f"Ring count mismatch: created {ring_count}, expected {sum(N_RING_TYPES.values())}."
+        )
     if len(all_members) != N_RING_ACCOUNTS:
-        raise AssertionError(f"Ring member mismatch: created {len(all_members)}, expected {N_RING_ACCOUNTS}.")
+        raise AssertionError(
+            f"Ring member mismatch: created {len(all_members)}, expected {N_RING_ACCOUNTS}."
+        )
 
     ring_orders_df = pd.concat(all_orders, ignore_index=True)
     updated_orders = pd.concat([orders, ring_orders_df], ignore_index=True)
@@ -513,4 +769,12 @@ def run_ring_injection():
     print(f"\nTotal ring orders: {len(ring_orders_df):,}")
     print(f"Total orders after rings: {len(updated_orders):,}")
 
-    return accounts, devices, addresses, phones, instruments, updated_orders, all_members
+    return (
+        accounts,
+        devices,
+        addresses,
+        phones,
+        instruments,
+        updated_orders,
+        all_members,
+    )

@@ -28,7 +28,7 @@ from .lightgbm_tuned import (
     TARGET_COL,
     RING_ID_COL,
 )
-from .gnn_model import load_graph_data, create_masks, FraudSAGE   # changed import
+from .gnn_model import load_graph_data, create_masks, FraudSAGE  # changed import
 
 # ============================================================
 # CONSTANTS
@@ -44,6 +44,7 @@ ENSEMBLE_METRICS_PATH = PROCESSED_DIR / "model" / "ensemble_metrics.json"
 # MAIN
 # ============================================================
 
+
 def main():
     print("Loading data and models...")
 
@@ -55,7 +56,9 @@ def main():
     features_b[ID_COL] = features_b[ID_COL].astype(str)
 
     # Split (same as used in training)
-    train_ids, val_ids, test_ids = ring_aware_split(ground_truth, random_state=RANDOM_STATE)
+    train_ids, val_ids, test_ids = ring_aware_split(
+        ground_truth, random_state=RANDOM_STATE
+    )
 
     # Load LightGBM Model B (tuned)
     lgb_model_path = PROCESSED_DIR / "model" / "model_lgbm_B_tuned.pkl"
@@ -99,16 +102,24 @@ def main():
     # Align probabilities by account ID
     # LightGBM returns probabilities for val_account_ids, test_account_ids in the order of those lists.
     # GNN returns probabilities in the order of nodes that have val_mask/test_mask True.
-    val_node_account_ids = [data.account_ids[i] for i in range(data.num_nodes) if data.val_mask[i]]
-    test_node_account_ids = [data.account_ids[i] for i in range(data.num_nodes) if data.test_mask[i]]
+    val_node_account_ids = [
+        data.account_ids[i] for i in range(data.num_nodes) if data.val_mask[i]
+    ]
+    test_node_account_ids = [
+        data.account_ids[i] for i in range(data.num_nodes) if data.test_mask[i]
+    ]
 
     # Create mapping from account_id to LightGBM probability
     proba_b_val_dict = dict(zip(val_account_ids, proba_b_val))
     proba_b_test_dict = dict(zip(test_account_ids, proba_b_test))
 
     # Align LightGBM probabilities to GNN order
-    proba_b_val_aligned = np.array([proba_b_val_dict[acc] for acc in val_node_account_ids])
-    proba_b_test_aligned = np.array([proba_b_test_dict[acc] for acc in test_node_account_ids])
+    proba_b_val_aligned = np.array(
+        [proba_b_val_dict[acc] for acc in val_node_account_ids]
+    )
+    proba_b_test_aligned = np.array(
+        [proba_b_test_dict[acc] for acc in test_node_account_ids]
+    )
 
     # Ensemble (average)
     ensemble_proba_val = (proba_b_val_aligned + proba_gnn_val) / 2.0
@@ -152,7 +163,12 @@ def main():
         "roc_auc": roc_auc,
         "pr_auc": pr_auc,
         "cost": cost,
-        "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+        "confusion_matrix": {
+            "tn": int(tn),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tp": int(tp),
+        },
     }
 
     print("\nEnsemble (LightGBM B + GNN) Test Results:")

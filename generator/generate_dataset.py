@@ -3,6 +3,7 @@
 This entry point intentionally keeps the historical Day-1/Day-3 validation
 contract while using the cohesive V4 data-generating process.
 """
+
 from .realistic_engine import generate_dataset
 from .validate import validate_entities, validate_day3
 from .quality_audit import run as run_quality_audit

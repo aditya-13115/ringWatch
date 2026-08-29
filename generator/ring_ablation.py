@@ -94,14 +94,14 @@ def ring_type_ablation(
     )
 
     # Ensure all predictions have ground truth
-    assert merged[TARGET_COL].notna().all(), (
-        "Some test predictions are missing ground truth labels."
-    )
+    assert (
+        merged[TARGET_COL].notna().all()
+    ), "Some test predictions are missing ground truth labels."
 
     # Ensure true_label column matches ground truth
-    assert (merged["true_label"].astype(int) == merged[TARGET_COL].astype(int)).all(), (
-        "true_label column does not match ground truth."
-    )
+    assert (
+        merged["true_label"].astype(int) == merged[TARGET_COL].astype(int)
+    ).all(), "true_label column does not match ground truth."
 
     # --------------------------------------------------------
     # Overall false positives
@@ -245,10 +245,7 @@ def main():
 
     print_ablation(results)
 
-    output_path = (
-        Path(MODEL_A_PATH).parent
-        / "ring_type_ablation.json"
-    )
+    output_path = Path(MODEL_A_PATH).parent / "ring_type_ablation.json"
 
     save_ablation_results(
         results,

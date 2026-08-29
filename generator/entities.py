@@ -37,7 +37,6 @@ from .ids import (
 
 from .address_utils import normalize_address
 
-
 fake = Faker("en_IN")
 fake.seed_instance(SEED)
 
@@ -108,24 +107,17 @@ def generate_accounts():
 
     df = pd.DataFrame(rows)
 
-    df = (
-        df.sort_values("account_id")
-        .reset_index(drop=True)
-    )
+    df = df.sort_values("account_id").reset_index(drop=True)
 
     # ---------------------------------------------------------
     # Population sanity checks
     # ---------------------------------------------------------
 
     if len(df) != N_ACCOUNTS:
-        raise AssertionError(
-            f"Expected {N_ACCOUNTS} accounts, got {len(df)}."
-        )
+        raise AssertionError(f"Expected {N_ACCOUNTS} accounts, got {len(df)}.")
 
     if not df["account_id"].is_unique:
-        raise AssertionError(
-            "Duplicate account IDs generated."
-        )
+        raise AssertionError("Duplicate account IDs generated.")
 
     expected = {
         "normal": N_NORMAL_ACCOUNTS,
@@ -133,16 +125,11 @@ def generate_accounts():
         "hard_negative": N_HARD_NEGATIVE_ACCOUNTS,
     }
 
-    counts = (
-        df["population_type"]
-        .value_counts()
-        .to_dict()
-    )
+    counts = df["population_type"].value_counts().to_dict()
 
     if counts != expected:
         raise AssertionError(
-            f"Population mismatch: {counts} "
-            f"vs expected {expected}"
+            f"Population mismatch: {counts} " f"vs expected {expected}"
         )
 
     return df
@@ -225,14 +212,9 @@ def generate_addresses():
         city = loc["city"]
         state = loc["state"]
 
-        prefix = rng.choice(
-            loc["pincode_prefix"]
-        )
+        prefix = rng.choice(loc["pincode_prefix"])
 
-        pincode = (
-            prefix
-            + f"{rng.integers(0, 1000):03d}"
-        )
+        pincode = prefix + f"{rng.integers(0, 1000):03d}"
 
         house_num = fake.building_number()
         street = fake.street_name()
@@ -240,9 +222,7 @@ def generate_addresses():
 
         raw_address = f"{house_num}, {street}, {locality}, {city}, {state} {pincode}"
 
-        canonical = normalize_address(
-            raw_address
-        )
+        canonical = normalize_address(raw_address)
 
         rows.append(
             {
@@ -261,14 +241,10 @@ def generate_addresses():
     df = pd.DataFrame(rows)
 
     if len(df) != N_ADDRESSES:
-        raise AssertionError(
-            f"Expected {N_ADDRESSES} addresses, got {len(df)}."
-        )
+        raise AssertionError(f"Expected {N_ADDRESSES} addresses, got {len(df)}.")
 
     if not df["address_id"].is_unique:
-        raise AssertionError(
-            "Duplicate address IDs generated."
-        )
+        raise AssertionError("Duplicate address IDs generated.")
 
     return df
 
@@ -324,16 +300,9 @@ def generate_devices():
             p=os_probabilities,
         )
 
-        browser_family = rng.choice(
-            browser_by_os[os_family]
-        )
+        browser_family = rng.choice(browser_by_os[os_family])
 
-        ip_prefix = (
-            f"10."
-            f"{rng.integers(0, 256)}."
-            f"{rng.integers(0, 256)}."
-            f"0/24"
-        )
+        ip_prefix = f"10." f"{rng.integers(0, 256)}." f"{rng.integers(0, 256)}." f"0/24"
 
         rows.append(
             {
@@ -351,14 +320,10 @@ def generate_devices():
     df = pd.DataFrame(rows)
 
     if len(df) != N_DEVICES:
-        raise AssertionError(
-            f"Expected {N_DEVICES} devices, got {len(df)}."
-        )
+        raise AssertionError(f"Expected {N_DEVICES} devices, got {len(df)}.")
 
     if not df["device_id"].is_unique:
-        raise AssertionError(
-            "Duplicate device IDs generated."
-        )
+        raise AssertionError("Duplicate device IDs generated.")
 
     return df
 
@@ -380,14 +345,10 @@ def generate_phones():
     df = pd.DataFrame(rows)
 
     if len(df) != N_PHONES:
-        raise AssertionError(
-            f"Expected {N_PHONES} phones, got {len(df)}."
-        )
+        raise AssertionError(f"Expected {N_PHONES} phones, got {len(df)}.")
 
     if not df["phone_hash"].is_unique:
-        raise AssertionError(
-            "Duplicate phone hashes generated."
-        )
+        raise AssertionError("Duplicate phone hashes generated.")
 
     return df
 
@@ -431,14 +392,11 @@ def generate_payment_instruments():
 
     if len(df) != N_INSTRUMENTS:
         raise AssertionError(
-            f"Expected {N_INSTRUMENTS} payment instruments, "
-            f"got {len(df)}."
+            f"Expected {N_INSTRUMENTS} payment instruments, " f"got {len(df)}."
         )
 
     if not df["instrument_id"].is_unique:
-        raise AssertionError(
-            "Duplicate instrument IDs generated."
-        )
+        raise AssertionError("Duplicate instrument IDs generated.")
 
     return df
 

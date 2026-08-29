@@ -29,9 +29,7 @@ async def get_audit(
             except (TypeError, ValueError):
                 record["proba"] = None
 
-        cleaned_records.append(
-            AuditRecordResponse(**record)
-        )
+        cleaned_records.append(AuditRecordResponse(**record))
 
     return AuditResponse(records=cleaned_records)
 
