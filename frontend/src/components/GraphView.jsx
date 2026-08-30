@@ -50,6 +50,28 @@ export default function GraphView({ accountId }) {
     return deg;
   }, [graph]);
 
+  const strongestEdge = useMemo(() => {
+    if (!graph?.edges?.length) {
+      return null;
+    }
+
+    return graph.edges.reduce(
+      (strongest, edge) => {
+        const weight = Number(edge.weight || 0);
+
+        if (
+          !strongest ||
+          weight > Number(strongest.weight || 0)
+        ) {
+          return edge;
+        }
+
+        return strongest;
+      },
+      null
+    );
+  }, [graph]);
+
   if (loading) return <div className="text-sm text-muted-foreground">Loading graph…</div>;
   if (error) return <div className="text-destructive">{error}</div>;
   if (!graph || graph.nodes.length === 0) {
@@ -201,6 +223,66 @@ export default function GraphView({ accountId }) {
           </div>
         )}
       </div>
+
+      {/* Strongest relationship */}
+      {strongestEdge && (
+        <div className="rounded-md border border-border p-4 bg-card">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h4 className="text-sm font-semibold">
+                Strongest Relationship
+              </h4>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                Highest-weight relationship in this account's
+                available graph evidence.
+              </p>
+            </div>
+
+            <span className="text-xs font-medium rounded-full border border-border px-2 py-1">
+              {Number(strongestEdge.weight).toFixed(2)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-xs">
+            <div>
+              <span className="text-muted-foreground block">
+                Relationship
+              </span>
+
+              <span className="font-semibold">
+                {EDGE_LABELS[strongestEdge.edge_type] ||
+                  strongestEdge.edge_type}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-muted-foreground block">
+                Source
+              </span>
+
+              <span className="font-mono">
+                {strongestEdge.source}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-muted-foreground block">
+                Target
+              </span>
+
+              <span className="font-mono">
+                {strongestEdge.target}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground mt-3">
+            Relationship weight is an initial heuristic evidence
+            strength, not proof of coordinated abuse.
+          </p>
+        </div>
+      )}
 
       {/* Selected edge details */}
       {selectedEdge && (

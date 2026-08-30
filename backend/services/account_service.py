@@ -1,9 +1,10 @@
 from typing import Any
 from fastapi import HTTPException
-
+import pickle
+from pathlib import Path
 import numpy as np
 import pandas as pd
-
+from backend.core.config import get_settings
 from backend.repositories.explainability_repository import ExplainabilityRepository
 from backend.repositories.feature_repository import FeatureRepository
 from backend.services.graph_service import GraphService
@@ -49,6 +50,212 @@ class AccountService:
         self.evidence_service = evidence_service
         self.action_service = action_service
         self.report_service = report_service
+
+    def _load_primary_model(self):
+        settings = get_settings()
+
+        if not settings.primary_model_path.exists():
+            raise FileNotFoundError(
+                f"Primary model not found: "
+                f"{settings.primary_model_path}"
+            )
+
+        with open(settings.primary_model_path, "rb") as f:
+            return pickle.load(f)
+
+
+    async def get_feature_ablation(
+        self,
+        account_id: str,
+    ) -> dict[str, Any]:
+        """
+        Perform model-faithful feature ablation for the
+        strongest Model A SHAP contributors.
+
+        A feature is ablated by replacing its account value
+        with the median value observed in the Model A feature
+        population, then rescoring with the same trained model.
+
+        This measures model sensitivity to the feature. It is
+        not a causal claim.
+        """
+
+        settings = get_settings()
+
+        features_path = settings.features_accounts_path
+
+        if not features_path.exists():
+            raise FileNotFoundError(
+                f"Model A feature matrix not found: "
+                f"{features_path}"
+            )
+
+        features_df = pd.read_csv(features_path)
+
+        if "account_id" not in features_df.columns:
+            raise KeyError(
+                "features_accounts.csv missing account_id"
+            )
+
+        features_df["account_id"] = (
+            features_df["account_id"].astype(str)
+        )
+
+        account_rows = features_df[
+            features_df["account_id"] == str(account_id)
+        ]
+
+        if account_rows.empty:
+            raise KeyError(
+                f"Account {account_id} not found "
+                f"in Model A feature matrix"
+            )
+
+        model = self._load_primary_model()
+
+        model_features = list(
+            getattr(
+                model,
+                "feature_name_",
+                [],
+            )
+        )
+
+        if not model_features:
+            model_features = [
+                column
+                for column in features_df.columns
+                if column != "account_id"
+            ]
+
+        missing_features = [
+            feature
+            for feature in model_features
+            if feature not in features_df.columns
+        ]
+
+        if missing_features:
+            raise KeyError(
+                "Model A features missing from feature matrix: "
+                + ", ".join(missing_features)
+            )
+
+        X_population = features_df[
+            model_features
+        ].copy()
+
+        X_account = features_df.loc[
+            account_rows.index,
+            model_features,
+        ].copy()
+
+        original_score = float(
+            model.predict_proba(X_account)[0][1]
+        )
+
+        shap_df = self.explainability_repo.get_shap()
+
+        shap_row = shap_df[
+            shap_df["account_id"].astype(str)
+            == str(account_id)
+        ]
+
+        if shap_row.empty:
+            return {
+                "account_id": str(account_id),
+                "model_version": "LightGBM_Model_A_Tuned",
+                "original_score": original_score,
+                "ablations": [],
+                "note": (
+                    "No SHAP explanation is available "
+                    "for this account."
+                ),
+            }
+
+        shap_row = shap_row.iloc[0]
+
+        candidates = []
+
+        for column in shap_df.columns:
+            if not column.startswith("A_"):
+                continue
+
+            feature_name = column[2:]
+
+            if feature_name not in model_features:
+                continue
+
+            try:
+                shap_value = float(shap_row[column])
+            except (TypeError, ValueError):
+                continue
+
+            if not np.isfinite(shap_value):
+                continue
+
+            candidates.append(
+                {
+                    "feature": feature_name,
+                    "shap_value": shap_value,
+                    "abs_shap": abs(shap_value),
+                }
+            )
+
+        candidates.sort(
+            key=lambda item: item["abs_shap"],
+            reverse=True,
+        )
+
+        ablations = []
+
+        for candidate in candidates[:5]:
+            feature = candidate["feature"]
+
+            X_ablated = X_account.copy()
+
+            median_value = pd.to_numeric(
+                X_population[feature],
+                errors="coerce",
+            ).median()
+
+            if pd.isna(median_value):
+                median_value = 0.0
+
+            X_ablated.loc[
+                X_ablated.index[0],
+                feature,
+            ] = median_value
+
+            ablated_score = float(
+                model.predict_proba(X_ablated)[0][1]
+            )
+
+            delta = ablated_score - original_score
+
+            ablations.append(
+                {
+                    "feature": feature,
+                    "shap_value": candidate["shap_value"],
+                    "original_score": original_score,
+                    "ablated_score": ablated_score,
+                    "score_delta": delta,
+                    "absolute_score_change": abs(delta),
+                    "ablation_method": "population_median",
+                }
+            )
+
+        return {
+            "account_id": str(account_id),
+            "model_version": "LightGBM_Model_A_Tuned",
+            "original_score": original_score,
+            "ablations": ablations,
+            "note": (
+                "Feature ablation measures sensitivity of the "
+                "trained model to individual features. It is "
+                "not evidence of real-world causality."
+            ),
+        }
+        
 
     async def get_account_detail(self, account_id: str) -> dict[str, Any]:
         actions_df = self.explainability_repo.get_actions()

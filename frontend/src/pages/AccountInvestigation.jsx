@@ -4,6 +4,7 @@ import {
   getAccount,
   investigateAccount,
   getAccountTimeline,
+  getFeatureAblation,
 } from "../api/account";
 import { Link } from "react-router-dom";
 import Badge from "../components/Badge";
@@ -152,7 +153,7 @@ function buildCaseReport(detail, facts) {
 
   const lines = [
     `Account ID: ${detail.account_id}`,
-    `Risk score (Ensemble): ${Number(detail.proba ?? 0).toFixed(6)}`,
+    `Model risk score: ${Number(detail.proba ?? 0).toFixed(6)}`,
     `Investigation rank: ${detail.rank} / ${detail.rank_total ?? "—"} flagged accounts`,
     "",
     "Observed facts:",
@@ -167,7 +168,7 @@ function buildCaseReport(detail, facts) {
     `  shared_ip_prefix_count: ${facts.shared_ip_prefix_count ?? "—"}`,
     `  community_size: ${facts.community_size ?? "—"}`,
     "",
-    "Top model contributors (Model A / Model B):",
+    "Top Model A contributors:",
   ];
 
   if (Array.isArray(detail.top_shap_features)) {
@@ -272,6 +273,14 @@ export default function AccountInvestigation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedTool, setExpandedTool] = useState(null);
+  const [featureAblation, setFeatureAblation] =
+    useState(null);
+
+  const [ablationLoading, setAblationLoading] =
+    useState(false);
+
+  const [ablationError, setAblationError] =
+    useState(null);
   const displayedFacts = detail?.observed_facts || {};
 
   const graphEvidence = detail?.graph_evidence || {};
@@ -343,6 +352,34 @@ export default function AccountInvestigation() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+  }, [accountId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setAblationLoading(true);
+    setAblationError(null);
+
+    getFeatureAblation(accountId)
+      .then((data) => {
+        if (!cancelled) {
+          setFeatureAblation(data);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setAblationError(e.message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setAblationLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [accountId]);
 
 
@@ -636,8 +673,8 @@ export default function AccountInvestigation() {
             </h3>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Model-faithful feature contributions from the LightGBM A/B explainability
-              models used by the Ensemble_LGBM_B_GNN risk model.
+              Model-faithful feature contributions from the
+              LightGBM Model A primary risk model.
             </p>
 
             <ul className="space-y-2">
@@ -661,7 +698,138 @@ export default function AccountInvestigation() {
               ))}
             </ul>
           </Card>
+          
+          {/* Feature Ablation */}
+          <Card className="p-4">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Feature Ablation
+                </h3>
 
+                <p className="text-xs text-muted-foreground mt-1">
+                  Measures how the Model A score changes when individual
+                  top-contributing features are replaced with their
+                  population median.
+                </p>
+              </div>
+
+              {featureAblation?.model_version && (
+                <span className="text-xs text-muted-foreground">
+                  {featureAblation.model_version}
+                </span>
+              )}
+            </div>
+
+            {ablationLoading && (
+              <p className="text-sm text-muted-foreground">
+                Calculating feature sensitivity…
+              </p>
+            )}
+
+            {ablationError && (
+              <p className="text-sm text-destructive">
+                {ablationError}
+              </p>
+            )}
+
+            {!ablationLoading &&
+              !ablationError &&
+              featureAblation?.ablations?.length > 0 && (
+                <>
+                  <div className="rounded-md border border-border p-3 mb-3">
+                    <span className="text-xs text-muted-foreground block">
+                      Original model score
+                    </span>
+
+                    <span className="text-lg font-semibold">
+                      {Number(
+                        featureAblation.original_score
+                      ).toFixed(6)}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {featureAblation.ablations.map(
+                      (item) => (
+                        <div
+                          key={item.feature}
+                          className="rounded-md border border-border p-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-medium">
+                              {item.feature}
+                            </span>
+
+                            <span className="text-xs text-muted-foreground">
+                              SHAP{" "}
+                              {Number(
+                                item.shap_value
+                              ).toFixed(4)}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-3 mt-3 text-xs">
+                            <div>
+                              <span className="text-muted-foreground block">
+                                Original
+                              </span>
+
+                              <span className="font-medium">
+                                {Number(
+                                  item.original_score
+                                ).toFixed(6)}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-muted-foreground block">
+                                Ablated
+                              </span>
+
+                              <span className="font-medium">
+                                {Number(
+                                  item.ablated_score
+                                ).toFixed(6)}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-muted-foreground block">
+                                Score change
+                              </span>
+
+                              <span className="font-medium">
+                                {item.score_delta >= 0
+                                  ? "+"
+                                  : ""}
+                                {Number(
+                                  item.score_delta
+                                ).toFixed(6)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground mt-3">
+                    Ablation shows model sensitivity, not causal
+                    influence or proof of abuse.
+                  </p>
+                </>
+              )}
+
+            {!ablationLoading &&
+              !ablationError &&
+              (!featureAblation?.ablations ||
+                featureAblation.ablations.length === 0) && (
+                <p className="text-sm text-muted-foreground">
+                  No feature-ablation results available.
+                </p>
+              )}
+          </Card>
 
           {/* Evidence Status */}
           <Card className="p-4">

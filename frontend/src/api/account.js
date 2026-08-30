@@ -17,3 +17,9 @@ export function investigateAccount(accountId) {
 export function getAccountTimeline(accountId) {
   return apiFetch(`/api/accounts/${accountId}/timeline`);
 }
+
+export function getFeatureAblation(accountId) {
+  return apiFetch(
+    `/api/accounts/${accountId}/feature-ablation`
+  );
+}

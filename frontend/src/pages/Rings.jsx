@@ -86,91 +86,156 @@ export default function Rings() {
    * by highest-risk member probability.
    */
   const communities = useMemo(() => {
-    const adjacency = new Map();
+  const adjacency = new Map();
 
-    graph.nodes.forEach((node) => {
-      adjacency.set(node.id, new Set());
-    });
+  graph.nodes.forEach((node) => {
+    adjacency.set(node.id, new Set());
+  });
 
-    graph.links.forEach((link) => {
-      if (!adjacency.has(link.source)) {
-        adjacency.set(link.source, new Set());
-      }
+  graph.links.forEach((link) => {
+    const source =
+      typeof link.source === "object"
+        ? link.source.id
+        : link.source;
 
-      if (!adjacency.has(link.target)) {
-        adjacency.set(link.target, new Set());
-      }
+    const target =
+      typeof link.target === "object"
+        ? link.target.id
+        : link.target;
 
-      adjacency.get(link.source).add(link.target);
-      adjacency.get(link.target).add(link.source);
-    });
-
-    const queueById = new Map(
-      queue.map((account) => [account.account_id, account])
-    );
-
-    const visited = new Set();
-    const result = [];
-
-    for (const node of graph.nodes) {
-      if (visited.has(node.id)) continue;
-
-      const stack = [node.id];
-      const members = [];
-
-      visited.add(node.id);
-
-      while (stack.length) {
-        const current = stack.pop();
-
-        members.push(current);
-
-        for (const next of adjacency.get(current) || []) {
-          if (!visited.has(next)) {
-            visited.add(next);
-            stack.push(next);
-          }
-        }
-      }
-
-      const flaggedMembers = members
-        .map((id) => queueById.get(id))
-        .filter(Boolean);
-
-      const peak = flaggedMembers.reduce(
-        (best, item) =>
-          !best || Number(item.proba) > Number(best.proba)
-            ? item
-            : best,
-        null
-      );
-
-      const memberLinks = graph.links.filter(
-        (link) =>
-          members.includes(link.source) &&
-          members.includes(link.target)
-      ).length;
-
-      result.push({
-        members,
-        flaggedMembers,
-        peak,
-        memberLinks,
-      });
+    if (!adjacency.has(source)) {
+      adjacency.set(source, new Set());
     }
 
-    return result
-      .filter(
-        (community) =>
-          community.members.length > 1 ||
-          community.flaggedMembers.length > 0
-      )
-      .sort(
-        (a, b) =>
-          Number(b.peak?.proba || 0) -
-          Number(a.peak?.proba || 0)
+    if (!adjacency.has(target)) {
+      adjacency.set(target, new Set());
+    }
+
+    adjacency.get(source).add(target);
+    adjacency.get(target).add(source);
+  });
+
+  const queueById = new Map(
+    queue.map((account) => [
+      account.account_id,
+      account,
+    ])
+  );
+
+  const visited = new Set();
+  const result = [];
+
+  for (const node of graph.nodes) {
+    if (visited.has(node.id)) continue;
+
+    const stack = [node.id];
+    const members = [];
+
+    visited.add(node.id);
+
+    while (stack.length) {
+      const current = stack.pop();
+
+      members.push(current);
+
+      for (const next of adjacency.get(current) || []) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          stack.push(next);
+        }
+      }
+    }
+
+    const memberSet = new Set(members);
+
+    const flaggedMembers = members
+      .map((id) => queueById.get(id))
+      .filter(Boolean);
+
+    const peak = flaggedMembers.reduce(
+      (best, item) =>
+        !best ||
+        Number(item.proba) > Number(best.proba)
+          ? item
+          : best,
+      null
+    );
+
+    const internalLinks = graph.links.filter((link) => {
+      const source =
+        typeof link.source === "object"
+          ? link.source.id
+          : link.source;
+
+      const target =
+        typeof link.target === "object"
+          ? link.target.id
+          : link.target;
+
+      return (
+        memberSet.has(source) &&
+        memberSet.has(target)
       );
-  }, [graph.nodes, graph.links, queue]);
+    });
+
+    const edgeCounts = {};
+
+    internalLinks.forEach((link) => {
+      edgeCounts[link.edge_type] =
+        (edgeCounts[link.edge_type] || 0) + 1;
+    });
+
+    const strongestEdge =
+      internalLinks.length > 0
+        ? internalLinks.reduce(
+            (strongest, link) => {
+              const weight = Number(link.weight || 0);
+
+              if (
+                !strongest ||
+                weight > Number(strongest.weight || 0)
+              ) {
+                return {
+                  ...link,
+                  source:
+                    typeof link.source === "object"
+                      ? link.source.id
+                      : link.source,
+                  target:
+                    typeof link.target === "object"
+                      ? link.target.id
+                      : link.target,
+                };
+              }
+
+              return strongest;
+            },
+            null
+          )
+        : null;
+
+    result.push({
+      members,
+      flaggedMembers,
+      peak,
+      memberLinks: internalLinks.length,
+      edgeCounts,
+      strongestEdge,
+    });
+  }
+
+  return result
+    .filter(
+      (community) =>
+        community.members.length > 1 ||
+        community.flaggedMembers.length > 0
+    )
+    .sort(
+      (a, b) =>
+        Number(b.peak?.proba || 0) -
+        Number(a.peak?.proba || 0)
+    );
+}, [graph.nodes, graph.links, queue]);
 
   /*
    * Only the currently selected top N communities are highlighted.
@@ -516,75 +581,123 @@ export default function Rings() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {communities
             .slice(0, communityLimit)
-            .map((community, index) => (
-              <div
-                key={`${community.members[0]}-${index}`}
-                className="rounded-lg border border-border bg-card p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      Community #{index + 1}
-                    </p>
+            .map((community, index) => {
+              const strongestType =
+                community.strongestEdge?.edge_type;
 
-                    <p className="font-semibold mt-1">
-                      {community.members.length} connected
-                      accounts
-                    </p>
+              return (
+                <div
+                  key={`${community.members[0]}-${index}`}
+                  className="rounded-lg border border-border bg-card p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Abuse Community #{index + 1}
+                      </p>
+
+                      <p className="font-semibold mt-1">
+                        {community.members.length} connected accounts
+                      </p>
+                    </div>
+
+                    {community.peak && (
+                      <span className="text-xs font-medium rounded-full border border-border px-2 py-1">
+                        {(Number(community.peak.proba) * 100).toFixed(2)}%
+                      </span>
+                    )}
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
+                    <div>
+                      <span className="text-muted-foreground block">
+                        Flagged members
+                      </span>
+
+                      <span className="font-semibold">
+                        {community.flaggedMembers.length}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-muted-foreground block">
+                        Internal links
+                      </span>
+
+                      <span className="font-semibold">
+                        {community.memberLinks}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-muted-foreground block">
+                        Strongest edge
+                      </span>
+
+                      <span className="font-semibold">
+                        {strongestType
+                          ? EDGE_LABELS[strongestType] ||
+                            strongestType
+                          : "—"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-muted-foreground block">
+                        Edge weight
+                      </span>
+
+                      <span className="font-semibold">
+                        {community.strongestEdge?.weight != null
+                          ? Number(
+                              community.strongestEdge.weight
+                            ).toFixed(2)
+                          : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {community.strongestEdge && (
+                    <div className="mt-4 rounded-md border border-border bg-muted/30 p-3">
+                      <p className="text-xs font-medium">
+                        Strongest relationship
+                      </p>
+
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {EDGE_LABELS[
+                          community.strongestEdge.edge_type
+                        ] ||
+                          community.strongestEdge.edge_type}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {typeof community.strongestEdge.source === "object"
+                          ? community.strongestEdge.source.id
+                          : community.strongestEdge.source}{" "}
+                        →{" "}
+                        {typeof community.strongestEdge.target === "object"
+                          ? community.strongestEdge.target.id
+                          : community.strongestEdge.target}
+                      </p>
+                    </div>
+                  )}
 
                   {community.peak && (
-                    <span className="text-xs font-medium rounded-full border border-border px-2 py-1">
-                      {(
-                        Number(
-                          community.peak.proba
-                        ) * 100
-                      ).toFixed(2)}
-                      %
-                    </span>
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/investigations/${community.peak.account_id}`
+                        )
+                      }
+                      className="mt-4 text-xs underline underline-offset-4"
+                    >
+                      Investigate highest-risk member ·{" "}
+                      {community.peak.account_id}
+                    </button>
                   )}
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
-                  <div>
-                    <span className="text-muted-foreground block">
-                      Flagged members
-                    </span>
-
-                    <span className="font-semibold">
-                      {
-                        community.flaggedMembers
-                          .length
-                      }
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-muted-foreground block">
-                      Internal links
-                    </span>
-
-                    <span className="font-semibold">
-                      {community.memberLinks}
-                    </span>
-                  </div>
-                </div>
-
-                {community.peak && (
-                  <button
-                    onClick={() =>
-                      navigate(
-                        `/investigations/${community.peak.account_id}`
-                      )
-                    }
-                    className="mt-4 text-xs underline underline-offset-4"
-                  >
-                    Investigate highest-risk member ·{" "}
-                    {community.peak.account_id}
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
         </div>
 
         {/* Community count selector */}

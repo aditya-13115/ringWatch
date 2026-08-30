@@ -267,6 +267,7 @@ RingWatch
 │   │   └── main.jsx
 │   ├── .gitignore
 │   ├── eslint.config.js
+│   ├── frontend.zip
 │   ├── index.html
 │   ├── package-lock.json
 │   ├── package.json
@@ -304,11 +305,15 @@ RingWatch
 │   ├── day8_9_explainability.ipynb
 │   ├── ringwatch_30k_model_investigation.ipynb
 │   └── ringwatch_v4_model_investigation.ipynb
+├── scripts
+│   └── generate_razorpay_batch.py
 ├── .env
 ├── .gitignore
 ├── .python-version
 ├── example.env
+├── notebooks.zip
 ├── pyproject.toml
+├── razorpay_test_batch.json
 ├── README.md
 ├── run_generate_validate.py
 └── uv.lock

@@ -518,13 +518,87 @@ export default function AuditLog() {
                                 </div>
                               )}
 
-                              {/* Action */}
+                              {/* Decision Chain */}
 
                               <div>
                                 <strong>
-                                  Final Action:
-                                </strong>{" "}
-                                {getAction(record)}
+                                  Decision Chain:
+                                </strong>
+
+                                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                  <div className="rounded-md border border-border p-3">
+                                    <p className="text-muted-foreground">
+                                      Risk model
+                                    </p>
+
+                                    <p className="font-medium mt-1">
+                                      {record.model_version ||
+                                        OPERATING_MODEL}
+                                    </p>
+                                  </div>
+
+                                  <div className="rounded-md border border-border p-3">
+                                    <p className="text-muted-foreground">
+                                      Risk tier
+                                    </p>
+
+                                    <p className="font-medium mt-1">
+                                      {record.risk_tier || "—"}
+                                    </p>
+                                  </div>
+
+                                  <div className="rounded-md border border-border p-3">
+                                    <p className="text-muted-foreground">
+                                      Investigation
+                                    </p>
+
+                                    <p className="font-medium mt-1">
+                                      {record.investigation_source ||
+                                        "Not run"}
+                                    </p>
+                                  </div>
+
+                                  <div className="rounded-md border border-border p-3">
+                                    <p className="text-muted-foreground">
+                                      Evidence / tools
+                                    </p>
+
+                                    <p className="font-medium mt-1">
+                                      {safeToolCalls.length} tool call
+                                      {safeToolCalls.length === 1
+                                        ? ""
+                                        : "s"}
+                                    </p>
+                                  </div>
+
+                                  <div className="rounded-md border border-border p-3">
+                                    <p className="text-muted-foreground">
+                                      Recommended action
+                                    </p>
+
+                                    <p className="font-medium mt-1">
+                                      {getAction(record)}
+                                    </p>
+                                  </div>
+
+                                  <div className="rounded-md border border-border p-3">
+                                    <p className="text-muted-foreground">
+                                      Action authority
+                                    </p>
+
+                                    <p className="font-medium mt-1">
+                                      {record.action_source ||
+                                        "deterministic_policy"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <p className="text-[11px] text-muted-foreground mt-3">
+                                  The model produces the risk signal. Investigation
+                                  gathers evidence. The deterministic policy controls
+                                  the recommended action. AI does not directly execute
+                                  financial actions.
+                                </p>
                               </div>
 
                               <div>
