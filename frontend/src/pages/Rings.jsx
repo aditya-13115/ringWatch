@@ -319,14 +319,84 @@ export default function Rings() {
    * This runs behind the normal node rendering.
    */
   const drawCommunityBackgrounds = (ctx, globalScale) => {
+    /*
+    * Draw a boundary around the actual shape of each community.
+    *
+    * The previous implementation used:
+    *
+    *   centroid + maximum distance = large circle
+    *
+    * which could produce huge overlapping circles when a community
+    * contained nodes spread across the graph.
+    *
+    * Instead, use a convex hull around the community's actual
+    * node positions.
+    */
+
+    const getConvexHull = (points) => {
+      if (points.length <= 1) {
+        return points;
+      }
+
+      const sorted = [...points].sort((a, b) => {
+        if (a.x !== b.x) return a.x - b.x;
+        return a.y - b.y;
+      });
+
+      const cross = (o, a, b) =>
+        (a.x - o.x) * (b.y - o.y) -
+        (a.y - o.y) * (b.x - o.x);
+
+      const lower = [];
+
+      for (const point of sorted) {
+        while (
+          lower.length >= 2 &&
+          cross(
+            lower[lower.length - 2],
+            lower[lower.length - 1],
+            point
+          ) <= 0
+        ) {
+          lower.pop();
+        }
+
+        lower.push(point);
+      }
+
+      const upper = [];
+
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const point = sorted[i];
+
+        while (
+          upper.length >= 2 &&
+          cross(
+            upper[upper.length - 2],
+            upper[upper.length - 1],
+            point
+          ) <= 0
+        ) {
+          upper.pop();
+        }
+
+        upper.push(point);
+      }
+
+      lower.pop();
+      upper.pop();
+
+      return lower.concat(upper);
+    };
+
     highlightedCommunities.forEach(
       (community, communityIndex) => {
+        const nodeById = new Map(
+          graphData.nodes.map((node) => [node.id, node])
+        );
+
         const members = community.members
-          .map((memberId) =>
-            graphData.nodes.find(
-              (node) => node.id === memberId
-            )
-          )
+          .map((memberId) => nodeById.get(memberId))
           .filter(
             (node) =>
               node &&
@@ -334,66 +404,13 @@ export default function Rings() {
               typeof node.y === "number"
           );
 
-        if (members.length < 2) return;
+        if (!members.length) return;
 
         const color =
           COMMUNITY_COLORS[
             communityIndex % COMMUNITY_COLORS.length
           ];
 
-        const centerX =
-          members.reduce(
-            (sum, node) => sum + node.x,
-            0
-          ) / members.length;
-
-        const centerY =
-          members.reduce(
-            (sum, node) => sum + node.y,
-            0
-          ) / members.length;
-
-        const maxDistance = members.reduce(
-          (max, node) => {
-            const dx = node.x - centerX;
-            const dy = node.y - centerY;
-
-            return Math.max(
-              max,
-              Math.sqrt(dx * dx + dy * dy)
-            );
-          },
-          0
-        );
-
-        const padding = 35 / globalScale;
-        const radius =
-          Math.max(
-            maxDistance + padding,
-            45 / globalScale
-          );
-
-        /*
-         * Low-opacity fill.
-         */
-        ctx.beginPath();
-
-        ctx.arc(
-          centerX,
-          centerY,
-          radius,
-          0,
-          2 * Math.PI
-        );
-
-        ctx.fillStyle = color
-          .replace(")", "")
-          .replace("rgb", "rgba");
-
-        /*
-         * Hex colors cannot directly use rgba(),
-         * so convert the hex color to RGB.
-         */
         const hex = color.replace("#", "");
 
         const r = parseInt(
@@ -411,24 +428,199 @@ export default function Rings() {
           16
         );
 
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.045)`;
+        /*
+        * Convert screen-space padding into graph-space padding.
+        */
+        const padding = 24 / globalScale;
+
+        /*
+        * Single-node community.
+        */
+        if (members.length === 1) {
+          const node = members[0];
+          const radius = 22 / globalScale;
+
+          ctx.beginPath();
+
+          ctx.arc(
+            node.x,
+            node.y,
+            radius,
+            0,
+            2 * Math.PI
+          );
+
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.045)`;
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.25)`;
+          ctx.lineWidth = 1.5 / globalScale;
+          ctx.stroke();
+
+          return;
+        }
+
+        /*
+        * Two-node community.
+        *
+        * A circle around the midpoint provides a clean
+        * capsule-like boundary without needing a separate
+        * geometry implementation.
+        */
+        if (members.length === 2) {
+          const [a, bPoint] = members;
+
+          const dx = bPoint.x - a.x;
+          const dy = bPoint.y - a.y;
+
+          const distance = Math.sqrt(
+            dx * dx + dy * dy
+          );
+
+          const centerX =
+            (a.x + bPoint.x) / 2;
+
+          const centerY =
+            (a.y + bPoint.y) / 2;
+
+          const radius =
+            distance / 2 + padding;
+
+          ctx.beginPath();
+
+          ctx.arc(
+            centerX,
+            centerY,
+            radius,
+            0,
+            2 * Math.PI
+          );
+
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.045)`;
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.25)`;
+          ctx.lineWidth = 1.5 / globalScale;
+          ctx.stroke();
+
+          return;
+        }
+
+        /*
+        * Build convex hull for communities with 3+ members.
+        */
+        const hull = getConvexHull(
+          members.map((node) => ({
+            x: node.x,
+            y: node.y,
+          }))
+        );
+
+        if (hull.length < 3) return;
+
+        /*
+        * Find the hull centroid.
+        *
+        * We use it only to push hull points outward slightly,
+        * creating a small visual gap between the boundary and
+        * the nodes.
+        */
+        const centerX =
+          hull.reduce(
+            (sum, point) => sum + point.x,
+            0
+          ) / hull.length;
+
+        const centerY =
+          hull.reduce(
+            (sum, point) => sum + point.y,
+            0
+          ) / hull.length;
+
+        const expandedHull = hull.map(
+          (point) => {
+            const dx = point.x - centerX;
+            const dy = point.y - centerY;
+
+            const distance = Math.sqrt(
+              dx * dx + dy * dy
+            );
+
+            if (distance === 0) {
+              return {
+                x: point.x,
+                y: point.y,
+              };
+            }
+
+            return {
+              x:
+                point.x +
+                (dx / distance) * padding,
+
+              y:
+                point.y +
+                (dy / distance) * padding,
+            };
+          }
+        );
+
+        /*
+        * Draw filled community region.
+        */
+        ctx.beginPath();
+
+        ctx.moveTo(
+          expandedHull[0].x,
+          expandedHull[0].y
+        );
+
+        for (
+          let i = 1;
+          i < expandedHull.length;
+          i++
+        ) {
+          ctx.lineTo(
+            expandedHull[i].x,
+            expandedHull[i].y
+          );
+        }
+
+        ctx.closePath();
+
+        ctx.fillStyle =
+          `rgba(${r}, ${g}, ${b}, 0.045)`;
+
         ctx.fill();
 
         /*
-         * Subtle border.
-         */
+        * Draw subtle boundary.
+        */
         ctx.beginPath();
 
-        ctx.arc(
-          centerX,
-          centerY,
-          radius,
-          0,
-          2 * Math.PI
+        ctx.moveTo(
+          expandedHull[0].x,
+          expandedHull[0].y
         );
 
-        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.25)`;
-        ctx.lineWidth = 1.5 / globalScale;
+        for (
+          let i = 1;
+          i < expandedHull.length;
+          i++
+        ) {
+          ctx.lineTo(
+            expandedHull[i].x,
+            expandedHull[i].y
+          );
+        }
+
+        ctx.closePath();
+
+        ctx.strokeStyle =
+          `rgba(${r}, ${g}, ${b}, 0.25)`;
+
+        ctx.lineWidth =
+          1.5 / globalScale;
 
         ctx.stroke();
       }
