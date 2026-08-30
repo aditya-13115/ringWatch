@@ -32,10 +32,16 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
 
     # Primary operational fraud model
-    primary_model: str = "LightGBM_Model_A_Tuned"
+    # RingWatch uses the V4 Ensemble for production scoring.
+    # The ensemble is LightGBM B (tuned) + GNN.
+    primary_model: str = "Ensemble_LGBM_B_GNN"
 
-    # V4 tuned Model A
-    primary_model_path: Path = (
+    # V4 Ensemble operating threshold
+    primary_model_threshold: float = 0.6831313131313131
+
+    # LightGBM A tuned is retained only for feature-ablation
+    # sensitivity analysis. It is NOT the primary operating model.
+    ablation_model_path: Path = (
         PROJECT_ROOT
         / "data"
         / "v4_realistic_30k"
@@ -43,9 +49,6 @@ class Settings(BaseSettings):
         / "model"
         / "model_lgbm_A_tuned.pkl"
     )
-
-    # Existing operational threshold
-    primary_model_threshold: float = 0.01
 
     # V4 dataset
     data_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k"

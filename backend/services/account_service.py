@@ -11,7 +11,7 @@ from backend.services.graph_service import GraphService
 from backend.services.evidence_service import EvidenceService
 from backend.services.action_service import ActionService
 from backend.services.report_service import ReportService
-from backend.services.action_service import ACTION_MAP, risk_tier_for_rank
+from backend.services.action_service import ACTION_MAP, tier_from_row
 
 EVIDENCE_FIELDS = [
     "proof_of_service",
@@ -51,18 +51,16 @@ class AccountService:
         self.action_service = action_service
         self.report_service = report_service
 
-    def _load_primary_model(self):
+    def _load_ablation_model(self):
         settings = get_settings()
 
-        if not settings.primary_model_path.exists():
+        if not settings.ablation_model_path.exists():
             raise FileNotFoundError(
-                f"Primary model not found: "
-                f"{settings.primary_model_path}"
+                f"Ablation model not found: " f"{settings.ablation_model_path}"
             )
 
-        with open(settings.primary_model_path, "rb") as f:
+        with open(settings.ablation_model_path, "rb") as f:
             return pickle.load(f)
-
 
     async def get_feature_ablation(
         self,
@@ -70,7 +68,9 @@ class AccountService:
     ) -> dict[str, Any]:
         """
         Perform model-faithful feature ablation for the
-        strongest Model A SHAP contributors.
+        LightGBM A component used for sensitivity analysis.
+
+        This is NOT the primary RingWatch operating model.
 
         A feature is ablated by replacing its account value
         with the median value observed in the Model A feature
@@ -86,32 +86,24 @@ class AccountService:
 
         if not features_path.exists():
             raise FileNotFoundError(
-                f"Model A feature matrix not found: "
-                f"{features_path}"
+                f"Ablation feature matrix not found: " f"{features_path}"
             )
 
         features_df = pd.read_csv(features_path)
 
         if "account_id" not in features_df.columns:
-            raise KeyError(
-                "features_accounts.csv missing account_id"
-            )
+            raise KeyError("features_accounts.csv missing account_id")
 
-        features_df["account_id"] = (
-            features_df["account_id"].astype(str)
-        )
+        features_df["account_id"] = features_df["account_id"].astype(str)
 
-        account_rows = features_df[
-            features_df["account_id"] == str(account_id)
-        ]
+        account_rows = features_df[features_df["account_id"] == str(account_id)]
 
         if account_rows.empty:
             raise KeyError(
-                f"Account {account_id} not found "
-                f"in Model A feature matrix"
+                f"Account {account_id} not found " f"in the ablation feature matrix"
             )
 
-        model = self._load_primary_model()
+        model = self._load_ablation_model()
 
         model_features = list(
             getattr(
@@ -123,42 +115,31 @@ class AccountService:
 
         if not model_features:
             model_features = [
-                column
-                for column in features_df.columns
-                if column != "account_id"
+                column for column in features_df.columns if column != "account_id"
             ]
 
         missing_features = [
-            feature
-            for feature in model_features
-            if feature not in features_df.columns
+            feature for feature in model_features if feature not in features_df.columns
         ]
 
         if missing_features:
             raise KeyError(
-                "Model A features missing from feature matrix: "
+                "Ablation model features missing from feature matrix: "
                 + ", ".join(missing_features)
             )
 
-        X_population = features_df[
-            model_features
-        ].copy()
+        X_population = features_df[model_features].copy()
 
         X_account = features_df.loc[
             account_rows.index,
             model_features,
         ].copy()
 
-        original_score = float(
-            model.predict_proba(X_account)[0][1]
-        )
+        original_score = float(model.predict_proba(X_account)[0][1])
 
         shap_df = self.explainability_repo.get_shap()
 
-        shap_row = shap_df[
-            shap_df["account_id"].astype(str)
-            == str(account_id)
-        ]
+        shap_row = shap_df[shap_df["account_id"].astype(str) == str(account_id)]
 
         if shap_row.empty:
             return {
@@ -166,10 +147,7 @@ class AccountService:
                 "model_version": "LightGBM_Model_A_Tuned",
                 "original_score": original_score,
                 "ablations": [],
-                "note": (
-                    "No SHAP explanation is available "
-                    "for this account."
-                ),
+                "note": ("No SHAP explanation is available " "for this account."),
             }
 
         shap_row = shap_row.iloc[0]
@@ -226,9 +204,7 @@ class AccountService:
                 feature,
             ] = median_value
 
-            ablated_score = float(
-                model.predict_proba(X_ablated)[0][1]
-            )
+            ablated_score = float(model.predict_proba(X_ablated)[0][1])
 
             delta = ablated_score - original_score
 
@@ -255,7 +231,6 @@ class AccountService:
                 "not evidence of real-world causality."
             ),
         }
-        
 
     async def get_account_detail(self, account_id: str) -> dict[str, Any]:
         actions_df = self.explainability_repo.get_actions()
@@ -283,6 +258,7 @@ class AccountService:
         # Keep this centralized in the backend rather than hard-coding
         # the display name in React.
         model_version = "Ensemble_LGBM_B_GNN"
+        risk_tier = tier_from_row(row)
 
         result: dict[str, Any] = {
             "account_id": str(account_id),
@@ -290,8 +266,8 @@ class AccountService:
             "rank_total": rank_total,
             "model_version": model_version,
             "proba": float(row["proba"]),
-            "risk_tier": risk_tier_for_rank(rank),
-            "recommended_action": ACTION_MAP[risk_tier_for_rank(rank)]["action_description"],
+            "risk_tier": risk_tier,
+            "recommended_action": ACTION_MAP[risk_tier]["action_description"],
             "observed_facts": {},
             "top_shap_features": [],
             "graph_evidence": {

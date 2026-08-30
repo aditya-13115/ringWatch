@@ -142,6 +142,24 @@ def main():
             best_cost = cost
             best_thr = thr
 
+    # Save canonical ensemble test predictions after the validation threshold
+    # has been selected. This file is also useful to the Metrics API.
+    ensemble_predictions = pd.DataFrame(
+        {
+            "account_id": test_node_account_ids,
+            "true_label": y_test.astype(int),
+            "proba_ensemble": ensemble_proba_test,
+            "pred_ensemble": (ensemble_proba_test >= best_thr).astype(int),
+        }
+    )
+
+    ensemble_predictions_path = (
+        PROCESSED_DIR / "model" / "ensemble_predictions_test.csv"
+    )
+    ensemble_predictions.to_csv(ensemble_predictions_path, index=False)
+
+    print(f"\nEnsemble test predictions saved to:" f"\n{ensemble_predictions_path}")
+
     # Final evaluation on test set
     pred_test = (ensemble_proba_test >= best_thr).astype(int)
     tn, fp, fn, tp = confusion_matrix(y_test, pred_test, labels=[0, 1]).ravel()

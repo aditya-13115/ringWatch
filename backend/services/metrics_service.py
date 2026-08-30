@@ -230,6 +230,32 @@ class MetricsService:
         except Exception:
             return {}
 
+        # The V4 ensemble has its own canonical prediction artifact because
+        # model_predictions_test.csv predates the GNN/ensemble stage. Merge it
+        # by account_id when available so the Metrics page can plot the actual
+        # V4 Ensemble scores instead of silently omitting the ensemble curve.
+        ensemble_preds_path = self.model_dir / "ensemble_predictions_test.csv"
+        if ensemble_preds_path.exists() and "account_id" in df.columns:
+            try:
+                ensemble_df = pd.read_csv(ensemble_preds_path)
+                if {"account_id", "proba_ensemble"}.issubset(ensemble_df.columns):
+                    merge_columns = ["account_id", "proba_ensemble"]
+                    if (
+                        "true_label" in ensemble_df.columns
+                        and "true_label" not in df.columns
+                    ):
+                        merge_columns.append("true_label")
+                    df = df.merge(
+                        ensemble_df[merge_columns],
+                        on="account_id",
+                        how="left",
+                        suffixes=("", "_ensemble"),
+                    )
+            except Exception:
+                # Curves for the legacy columns should still work if the
+                # optional ensemble artifact cannot be read.
+                pass
+
         if "true_label" not in df.columns:
             return {}
 

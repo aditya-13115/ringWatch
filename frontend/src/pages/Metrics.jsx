@@ -151,12 +151,12 @@ export default function Metrics() {
     },
     {
       key: "model_A",
-      name: "LightGBM A",
+      name: "LightGBM A (Tuned)",
       data: modelA,
     },
     {
       key: "model_B",
-      name: "LightGBM B",
+      name: "LightGBM B (Tuned)",
       data: modelB,
     },
     {
@@ -201,11 +201,11 @@ export default function Metrics() {
     },
     {
       key: "model_A",
-      label: "LightGBM A",
+      label: "LightGBM A (Tuned)",
     },
     {
       key: "model_B",
-      label: "LightGBM B",
+      label: "LightGBM B (Tuned)",
     },
     {
       key: "gnn",
@@ -306,11 +306,11 @@ export default function Metrics() {
                 </th>
 
                 <th className="px-4 py-2">
-                  LightGBM A
+                  LightGBM A (Tuned)
                 </th>
 
                 <th className="px-4 py-2">
-                  LightGBM B
+                  LightGBM B (Tuned)
                 </th>
 
                 <th className="px-4 py-2">
@@ -441,7 +441,7 @@ export default function Metrics() {
 
         <Card className="p-4">
           <h3 className="text-sm font-medium mb-2">
-            LightGBM A
+            LightGBM A (Tuned)
           </h3>
 
           <p className="text-sm text-muted-foreground">
@@ -455,7 +455,7 @@ export default function Metrics() {
 
         <Card className="p-4">
           <h3 className="text-sm font-medium mb-2">
-            LightGBM B
+            LightGBM B (Tuned)
           </h3>
 
           <p className="text-sm text-muted-foreground">

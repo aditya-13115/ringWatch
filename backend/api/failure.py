@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.services.failure_service import FailureDemoService
 from backend.dependencies import get_failure_service
 
-
 router = APIRouter(
     prefix="/failure-demo",
     tags=["failure"],
@@ -12,9 +11,7 @@ router = APIRouter(
 
 @router.post("/razorpay")
 async def ingest_razorpay_batch(
-    failure_service: FailureDemoService = Depends(
-        get_failure_service
-    ),
+    failure_service: FailureDemoService = Depends(get_failure_service),
 ):
     """
     Fetch a Test Mode Razorpay batch and run RingWatch
@@ -35,11 +32,10 @@ async def ingest_razorpay_batch(
             detail=f"Failure demo processing failed: {exc}",
         ) from exc
 
+
 @router.post("/razorpay-synthetic")
 async def generate_razorpay_synthetic_batch(
-    failure_service: FailureDemoService = Depends(
-        get_failure_service
-    ),
+    failure_service: FailureDemoService = Depends(get_failure_service),
 ):
     """
     Generate a deterministic Razorpay-shaped test batch

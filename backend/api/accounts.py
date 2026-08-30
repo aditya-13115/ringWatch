@@ -11,14 +11,10 @@ router = APIRouter(prefix="/accounts", tags=["accounts"])
 @router.get("/{account_id}/feature-ablation")
 async def get_feature_ablation(
     account_id: str,
-    account_service: AccountService = Depends(
-        get_account_service
-    ),
+    account_service: AccountService = Depends(get_account_service),
 ):
     try:
-        return await account_service.get_feature_ablation(
-            account_id
-        )
+        return await account_service.get_feature_ablation(account_id)
     except KeyError as e:
         raise HTTPException(
             status_code=404,

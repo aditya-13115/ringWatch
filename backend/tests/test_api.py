@@ -137,11 +137,10 @@ def test_investigate_valid():
         assert "recommended_action" in data
         assert data["source"] in ["llm", "deterministic"]
 
+
 def test_failure_demo_razorpay():
     with TestClient(app) as client:
-        response = client.post(
-            "/api/failure-demo/razorpay-synthetic"
-        )
+        response = client.post("/api/failure-demo/razorpay-synthetic")
 
         assert response.status_code == 200
 
@@ -156,17 +155,8 @@ def test_failure_demo_razorpay():
         assert data["valid_processed"] == 90
         assert data["human_review_routed"] == 10
 
-        assert (
-            data["safety"]["malformed_entered_investigation_pipeline"]
-            is False
-        )
+        assert data["safety"]["malformed_entered_investigation_pipeline"] is False
 
-        assert (
-            data["safety"]["quarantined_before_model_inference"]
-            is True
-        )
+        assert data["safety"]["quarantined_before_model_inference"] is True
 
-        assert (
-            data["safety"]["human_review_required"]
-            is True
-        )
+        assert data["safety"]["human_review_required"] is True

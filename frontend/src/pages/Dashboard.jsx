@@ -5,7 +5,7 @@ import Badge from "../components/Badge";
 import Card from "../components/Card";
 
 const LIMITS = [10, 25, 50, 100];
-const TIERS = ["ALL", "CRITICAL", "HIGH"];
+const TIERS = ["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
 export default function Dashboard() {
   const [queue, setQueue] = useState([]);
@@ -19,7 +19,9 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
 
-    getQueue(limit)
+    // Load the complete queue so tier filters can reach MEDIUM/LOW
+    // accounts instead of filtering only the first high-risk rows.
+    getQueue(100000)
       .then((data) => {
         setQueue(data.accounts);
         setTotalFlagged(data.total);
@@ -32,6 +34,11 @@ export default function Dashboard() {
     tierFilter === "ALL"
       ? queue
       : queue.filter((a) => a.risk_tier === tierFilter);
+
+  // Keep the selector as the number of rows shown while filtering the
+  // complete queue, so MEDIUM/LOW are available without changing the
+  // displayed page size.
+  const visibleQueue = filteredQueue.slice(0, limit);
 
   const formatRiskScore = (score) => {
     const percentage = Number(score) * 100;
@@ -56,9 +63,9 @@ export default function Dashboard() {
           </h2>
 
           <p className="text-sm text-muted-foreground">
-            Showing {filteredQueue.length} of {totalFlagged} flagged accounts
+            Showing {visibleQueue.length} of {totalFlagged} flagged accounts
             {" · "}
-            Model A
+            V4 Ensemble
           </p>
         </div>
 
@@ -107,7 +114,7 @@ export default function Dashboard() {
           </thead>
 
           <tbody>
-            {filteredQueue.map((account) => (
+            {visibleQueue.map((account) => (
               <tr
                 key={account.account_id}
                 className="border-b border-border hover:bg-muted/50"
@@ -150,7 +157,7 @@ export default function Dashboard() {
               </tr>
             ))}
 
-            {filteredQueue.length === 0 && (
+            {visibleQueue.length === 0 && (
               <tr>
                 <td
                   colSpan={6}

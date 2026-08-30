@@ -42,7 +42,7 @@ export default function About() {
             <li>Synthetic dataset with hidden abuse rings</li>
             <li>Cutoff-safe feature engineering</li>
             <li>Graph construction & Louvain communities</li>
-            <li>LightGBM Model B for risk ranking</li>
+            <li>V4 Ensemble (Tuned LightGBM B + GNN) for risk ranking</li>
             <li>SHAP explanations & evidence gap analysis</li>
             <li>AI Investigator (Groq) with tool calling</li>
             <li>Deterministic Policy Engine for action decision</li>

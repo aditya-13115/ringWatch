@@ -26,8 +26,30 @@ ACTION_MAP = {
 
 
 def risk_tier_for_rank(rank: int) -> str:
-    """Apply the dashboard investigation-priority policy by rank."""
-    return "CRITICAL" if int(rank) <= 5 else "HIGH"
+    """Fallback tier policy when a persisted tier is unavailable.
+
+    The V4 explainability artifact is the source of truth for the actual
+    queue tier because its CRITICAL tier also considers community size.
+    This rank-only policy is kept only as a defensive fallback.
+    """
+    rank = int(rank)
+    if rank <= 10:
+        return "CRITICAL"
+    if rank <= 25:
+        return "HIGH"
+    if rank <= 65:
+        return "MEDIUM"
+    return "LOW"
+
+
+def tier_from_row(row) -> str:
+    """
+    Derive the operational risk tier from queue rank.
+
+    Persisted risk_tier values are not used here because they may
+    have been generated under an older tier policy.
+    """
+    return risk_tier_for_rank(int(row["rank"]))
 
 
 class ActionService:
@@ -42,7 +64,7 @@ class ActionService:
             raise ValueError(f"Account {account_id} not found")
 
         row = row.iloc[0]
-        tier = risk_tier_for_rank(int(row["rank"]))
+        tier = tier_from_row(row)
         map_entry = ACTION_MAP[tier]
 
         return BoundedAction(

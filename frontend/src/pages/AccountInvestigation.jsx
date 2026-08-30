@@ -16,8 +16,8 @@ const INVESTIGATION_STORAGE_VERSION = 2;
 
 const MODEL_DISPLAY_NAMES = {
   Ensemble_LGBM_B_GNN: "V4 Ensemble",
-  LightGBM_Model_A_Tuned: "LightGBM Model A",
-  LightGBM_Model_B_Tuned: "LightGBM Model B",
+  LightGBM_Model_A_Tuned: "LightGBM Model A (Tuned · Ablation)",
+  LightGBM_Model_B_Tuned: "LightGBM Model B (Tuned · Ensemble Component)",
 };
 
 function getModelDisplayName(modelVersion) {
@@ -168,7 +168,7 @@ function buildCaseReport(detail, facts) {
     `  shared_ip_prefix_count: ${facts.shared_ip_prefix_count ?? "—"}`,
     `  community_size: ${facts.community_size ?? "—"}`,
     "",
-    "Top Model A contributors:",
+    "Top model contributors (LightGBM components):",
   ];
 
   if (Array.isArray(detail.top_shap_features)) {
@@ -674,7 +674,7 @@ export default function AccountInvestigation() {
 
             <p className="text-xs text-muted-foreground mb-3">
               Model-faithful feature contributions from the
-              LightGBM Model A primary risk model.
+              LightGBM components used by the V4 Ensemble.
             </p>
 
             <ul className="space-y-2">
@@ -708,9 +708,10 @@ export default function AccountInvestigation() {
                 </h3>
 
                 <p className="text-xs text-muted-foreground mt-1">
-                  Measures how the Model A score changes when individual
-                  top-contributing features are replaced with their
-                  population median.
+                  Measures how the LightGBM A component score changes when
+                  individual top-contributing features are replaced with their
+                  population median. This is a component-level sensitivity
+                  analysis, not the V4 Ensemble score.
                 </p>
               </div>
 

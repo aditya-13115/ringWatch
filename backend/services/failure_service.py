@@ -12,7 +12,6 @@ from urllib.request import Request, urlopen
 
 from backend.core.config import get_settings
 
-
 settings = get_settings()
 
 key_id = settings.razorpay_key_id
@@ -95,29 +94,21 @@ class FailureDemoService:
             "status": "RAZORPAY_FETCH_SUCCESS",
             "source": "razorpay",
             "environment": "test",
-
             "batch_id": batch_id,
             "request_id": request_id,
-
             "started_at": started_at,
             "completed_at": completed_at,
-
             "batch_size": len(payments),
-
             # No failure handling is performed on the Razorpay tab.
             "malformed_rows": 0,
             "quarantined": 0,
             "valid_processed": 0,
             "human_review_routed": 0,
-
             # IMPORTANT:
             # Frontend displays this directly.
             "payments": payments,
-
             "quarantined_records": [],
-
             "audit_trail": audit_trail,
-
             "safety": {
                 "malformed_entered_investigation_pipeline": False,
                 "quarantined_before_model_inference": False,
@@ -125,7 +116,6 @@ class FailureDemoService:
                 "sent_to_model_inference": False,
                 "original_razorpay_data_preserved": True,
             },
-
             "fault_injection": {
                 "enabled": False,
                 "count": 0,
@@ -154,9 +144,9 @@ class FailureDemoService:
 
         url = f"{self.RAZORPAY_URL}?{query}"
 
-        token = base64.b64encode(
-            f"{key_id}:{key_secret}".encode("utf-8")
-        ).decode("ascii")
+        token = base64.b64encode(f"{key_id}:{key_secret}".encode("utf-8")).decode(
+            "ascii"
+        )
 
         request = Request(
             url,
@@ -185,21 +175,15 @@ class FailureDemoService:
             ) from exc
 
         except URLError as exc:
-            raise RuntimeError(
-                f"Could not reach Razorpay API: {exc.reason}"
-            ) from exc
+            raise RuntimeError(f"Could not reach Razorpay API: {exc.reason}") from exc
 
         except Exception as exc:
-            raise RuntimeError(
-                f"Razorpay API request failed: {exc}"
-            ) from exc
+            raise RuntimeError(f"Razorpay API request failed: {exc}") from exc
 
         items = response.get("items", [])
 
         if not isinstance(items, list):
-            raise RuntimeError(
-                "Unexpected Razorpay response: 'items' is not a list."
-            )
+            raise RuntimeError("Unexpected Razorpay response: 'items' is not a list.")
 
         return items
 
@@ -211,9 +195,7 @@ class FailureDemoService:
         with urlopen(request, timeout=20) as response:
             import json
 
-            return json.loads(
-                response.read().decode("utf-8")
-            )
+            return json.loads(response.read().decode("utf-8"))
 
     def _inject_demo_fault(
         self,
@@ -327,10 +309,9 @@ class FailureDemoService:
     ) -> dict[str, Any]:
 
         original_record = record.get(
-        "_ringwatch_original_input",
-        record,
+            "_ringwatch_original_input",
+            record,
         )
-
 
         return {
             "row_number": row_number,
@@ -341,30 +322,26 @@ class FailureDemoService:
             "batch_id": batch_id,
             "failed_fields": validation["errors"],
             "original_input": {
-            "id": original_record.get("id"),
-            "entity": original_record.get("entity"),
-            "amount": original_record.get("amount"),
-            "currency": original_record.get("currency"),
-            "status": original_record.get("status"),
-            "method": original_record.get("method"),
-            "order_id": original_record.get("order_id"),
-            "description": original_record.get("description"),
-            "email": FailureDemoService._mask_email(
-                original_record.get("email")
-            ),
-            "contact": FailureDemoService._mask_contact(
-                original_record.get("contact")
-            ),
-            "notes": {
-                "address": (original_record.get("notes") or {}).get("address"),
+                "id": original_record.get("id"),
+                "entity": original_record.get("entity"),
+                "amount": original_record.get("amount"),
+                "currency": original_record.get("currency"),
+                "status": original_record.get("status"),
+                "method": original_record.get("method"),
+                "order_id": original_record.get("order_id"),
+                "description": original_record.get("description"),
+                "email": FailureDemoService._mask_email(original_record.get("email")),
+                "contact": FailureDemoService._mask_contact(
+                    original_record.get("contact")
+                ),
+                "notes": {
+                    "address": (original_record.get("notes") or {}).get("address"),
+                },
             },
-        },
-        "validated_input": {
-            "amount": record.get("amount"),
-        },
-        "fault_injected": bool(
-            record.get("_ringwatch_demo_fault")
-        ),
+            "validated_input": {
+                "amount": record.get("amount"),
+            },
+            "fault_injected": bool(record.get("_ringwatch_demo_fault")),
             "quarantine_reason": (
                 validation["errors"][0]["message"]
                 if validation["errors"]
@@ -436,10 +413,7 @@ class FailureDemoService:
         if not value or not isinstance(value, str):
             return None
 
-        digits = "".join(
-            ch for ch in value
-            if ch.isdigit()
-        )
+        digits = "".join(ch for ch in value if ch.isdigit())
 
         if len(digits) < 4:
             return "***"
@@ -552,24 +526,19 @@ class FailureDemoService:
             "request_id": request_id,
             "started_at": started_at,
             "completed_at": datetime.now(timezone.utc).isoformat(),
-
             "batch_size": len(working_batch),
             "malformed_rows": malformed_count,
             "quarantined": len(quarantined_records),
             "valid_processed": valid_count,
             "human_review_routed": len(quarantined_records),
-
             "processed_records": processed_records,
             "quarantined_records": quarantined_records,
-
             "audit_trail": audit_trail,
-
             "safety": {
                 "malformed_entered_investigation_pipeline": False,
                 "quarantined_before_model_inference": True,
                 "human_review_required": malformed_count > 0,
             },
-
             "fault_injection": {
                 "enabled": True,
                 "count": min(
@@ -610,16 +579,8 @@ class FailureDemoService:
                     "netbanking",
                 ]
             ),
-            "order_id": (
-                f"order_demo_{uuid.uuid4().hex[:14]}"
-            ),
-            "description": (
-                f"RingWatch synthetic payment {index}"
-            ),
-            "email": (
-                f"demo{index}@example.com"
-            ),
-            "contact": (
-                f"+9198{index:08d}"
-            ),
+            "order_id": (f"order_demo_{uuid.uuid4().hex[:14]}"),
+            "description": (f"RingWatch synthetic payment {index}"),
+            "email": (f"demo{index}@example.com"),
+            "contact": (f"+9198{index:08d}"),
         }

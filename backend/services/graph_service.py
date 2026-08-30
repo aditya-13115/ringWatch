@@ -3,7 +3,6 @@ import pandas as pd
 from backend.domain.graph import AccountGraph, GraphNode, GraphEdge
 from backend.repositories.explainability_repository import ExplainabilityRepository
 
-
 EDGE_WEIGHTS = {
     "shares_device": 1.0,
     "shares_phone": 1.0,
