@@ -1,0 +1,304 @@
+account_id,total_graph_links,strongest_edge_type,strongest_edge_weight,number_of_device_links,number_of_ip_links,number_of_coupon_links,linked_accounts
+A025455,8,shares_device,1.0,3,0,1,shares_coupon -> A003877 | shares_address -> A004037 | shares_device -> A005374 | shares_device -> A008480 | shares_phone -> A013392 | shares_payment_instrument -> A014430 | shares_device -> A027558 | shares_address -> A028487
+A010538,18,shares_device,1.0,9,0,6,shares_device -> A002796 | shares_device -> A005122 | shares_coupon -> A005444 | shares_device -> A006516 | shares_coupon -> A006947 | shares_phone -> A011841 | shares_device -> A016888 | shares_device -> A018975 | shares_device -> A019983 | shares_coupon -> A020312 | shares_device -> A023029 | shares_payment_instrument -> A024122 | shares_coupon -> A025957 | shares_device -> A027549 | shares_device -> A027918 | shares_coupon -> A028969 | shares_coupon -> A029591 | shares_payment_instrument -> A029996
+A011351,3,shares_device,1.0,1,0,1,shares_device -> A017384 | shares_address -> A019024 | shares_coupon -> A019663
+A026494,10,shares_device,1.0,4,0,3,shares_coupon -> A000463 | shares_device -> A002948 | shares_payment_instrument -> A006537 | shares_coupon -> A009053 | shares_device -> A011774 | shares_device -> A011846 | shares_device -> A013125 | shares_address -> A015152 | shares_phone -> A020938 | shares_coupon -> A021705
+A022581,6,shares_device,1.0,2,0,0,shares_address -> A002144 | shares_device -> A003518 | shares_device -> A007538 | shares_phone -> A010368 | shares_address -> A023629 | shares_payment_instrument -> A025949
+A025761,7,shares_payment_instrument,1.0,1,0,1,shares_coupon -> A000880 | shares_payment_instrument -> A002730 | shares_address -> A005653 | shares_payment_instrument -> A010391 | shares_payment_instrument -> A023104 | shares_payment_instrument -> A027470 | shares_device -> A029015
+A006574,1,shares_device,1.0,1,0,0,shares_device -> A004883
+A010391,14,shares_device,1.0,4,0,3,shares_coupon -> A003200 | shares_device -> A005792 | shares_coupon -> A007135 | shares_device -> A007586 | shares_phone -> A009627 | shares_phone -> A013012 | shares_address -> A015483 | shares_coupon -> A016635 | shares_device -> A023005 | shares_payment_instrument -> A023104 | shares_phone -> A025345 | shares_payment_instrument -> A025761 | shares_payment_instrument -> A027470 | shares_device -> A029829
+A021748,5,shares_phone,1.0,2,0,0,shares_phone -> A005488 | shares_device -> A005856 | shares_device -> A017445 | shares_address -> A022098 | shares_payment_instrument -> A025208
+A004963,2,shares_phone,1.0,0,0,0,shares_phone -> A014923 | shares_address -> A028734
+A010368,6,shares_device,1.0,2,0,1,shares_device -> A005925 | shares_phone -> A016964 | shares_coupon -> A017614 | shares_phone -> A022581 | shares_payment_instrument -> A026454 | shares_device -> A029391
+A027268,3,shares_device,1.0,1,0,1,shares_address -> A000993 | shares_coupon -> A019510 | shares_device -> A029829
+A028987,4,shares_phone,1.0,1,0,0,shares_phone -> A013812 | shares_address -> A019718 | shares_device -> A021872 | shares_address -> A023049
+A016054,9,shares_device,1.0,1,0,0,shares_device -> A000399 | shares_payment_instrument -> A001771 | shares_payment_instrument -> A008407 | shares_payment_instrument -> A017072 | shares_payment_instrument -> A018391 | shares_phone -> A019756 | shares_address -> A025226 | shares_phone -> A026188 | shares_payment_instrument -> A027371
+A005374,13,shares_device,1.0,4,2,1,shares_ip_prefix -> A000492 | shares_ip_prefix -> A002867 | shares_address -> A004037 | shares_coupon -> A010036 | shares_device -> A012418 | shares_phone -> A013392 | shares_address -> A017710 | shares_device -> A023578 | shares_device -> A025455 | shares_address -> A025485 | shares_address -> A026044 | shares_payment_instrument -> A026871 | shares_device -> A027200
+A005133,5,shares_phone,1.0,2,1,0,shares_address -> A000521 | shares_phone -> A002118 | shares_device -> A002469 | shares_ip_prefix -> A013561 | shares_device -> A027173
+A025586,4,shares_address,0.7,0,0,3,shares_coupon -> A002354 | shares_coupon -> A006805 | shares_address -> A024518 | shares_coupon -> A029770
+A027470,4,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A010391 | shares_device -> A022310 | shares_payment_instrument -> A023104 | shares_payment_instrument -> A025761
+A013812,3,shares_phone,1.0,0,0,0,shares_phone -> A003453 | shares_address -> A004172 | shares_phone -> A028987
+A017444,7,shares_payment_instrument,1.0,0,0,3,shares_payment_instrument -> A000457 | shares_payment_instrument -> A001771 | shares_address -> A007742 | shares_coupon -> A015175 | shares_coupon -> A019284 | shares_address -> A020347 | shares_coupon -> A026580
+A017072,10,shares_payment_instrument,1.0,1,0,0,shares_address -> A001063 | shares_payment_instrument -> A001771 | shares_payment_instrument -> A002760 | shares_payment_instrument -> A008407 | shares_device -> A011268 | shares_address -> A014187 | shares_phone -> A014651 | shares_payment_instrument -> A016054 | shares_address -> A025193 | shares_payment_instrument -> A027371
+A015511,3,shares_device,1.0,3,0,0,shares_device -> A017333 | shares_device -> A022400 | shares_device -> A028344
+A005122,9,shares_device,1.0,5,0,0,shares_device -> A002796 | shares_address -> A004629 | shares_device -> A010538 | shares_payment_instrument -> A017475 | shares_device -> A018975 | shares_device -> A019983 | shares_payment_instrument -> A024122 | shares_device -> A027918 | shares_payment_instrument -> A029996
+A020938,5,shares_phone,1.0,2,0,0,shares_phone -> A002516 | shares_device -> A004822 | shares_address -> A010246 | shares_phone -> A026494 | shares_device -> A028133
+A000457,10,shares_payment_instrument,1.0,0,0,2,shares_payment_instrument -> A001771 | shares_address -> A004046 | shares_address -> A006684 | shares_address -> A007742 | shares_payment_instrument -> A017444 | shares_phone -> A019878 | shares_address -> A020347 | shares_address -> A025122 | shares_coupon -> A028505 | shares_coupon -> A028584
+A008407,13,shares_payment_instrument,1.0,1,0,7,shares_payment_instrument -> A001771 | shares_coupon -> A005917 | shares_coupon -> A006035 | shares_coupon -> A006872 | shares_coupon -> A010243 | shares_device -> A010439 | shares_payment_instrument -> A016054 | shares_payment_instrument -> A017072 | shares_coupon -> A018527 | shares_coupon -> A025372 | shares_coupon -> A026500 | shares_payment_instrument -> A027371 | shares_payment_instrument -> A028883
+A024579,2,shares_address,0.7,0,0,1,shares_coupon -> A005611 | shares_address -> A019329
+A024263,7,shares_device,1.0,2,0,0,shares_address -> A007608 | shares_address -> A013310 | shares_device -> A019983 | shares_address -> A021874 | shares_address -> A022067 | shares_device -> A023305 | shares_payment_instrument -> A027334
+A019629,5,shares_payment_instrument,1.0,2,0,1,shares_address -> A002187 | shares_payment_instrument -> A004691 | shares_coupon -> A010649 | shares_device -> A015077 | shares_device -> A016313
+A027371,12,shares_payment_instrument,1.0,1,0,5,shares_coupon -> A001704 | shares_payment_instrument -> A001771 | shares_coupon -> A001839 | shares_device -> A003816 | shares_coupon -> A005269 | shares_coupon -> A006916 | shares_payment_instrument -> A008407 | shares_coupon -> A009248 | shares_phone -> A015837 | shares_payment_instrument -> A016054 | shares_payment_instrument -> A017072 | shares_payment_instrument -> A021001
+A013392,10,shares_phone,1.0,1,0,4,shares_phone -> A005374 | shares_phone -> A008316 | shares_coupon -> A008822 | shares_coupon -> A017400 | shares_device -> A020741 | shares_address -> A024913 | shares_payment_instrument -> A025327 | shares_phone -> A025455 | shares_coupon -> A026424 | shares_coupon -> A028925
+A012255,1,shares_address,0.7,0,0,0,shares_address -> A019680
+A014131,6,shares_payment_instrument,1.0,2,0,0,shares_payment_instrument -> A002441 | shares_address -> A004691 | shares_device -> A012846 | shares_address -> A015398 | shares_address -> A019085 | shares_device -> A028422
+A018975,16,shares_device,1.0,7,0,6,shares_device -> A002796 | shares_device -> A005122 | shares_device -> A010538 | shares_coupon -> A012847 | shares_address -> A015292 | shares_coupon -> A015688 | shares_coupon -> A015712 | shares_coupon -> A017766 | shares_device -> A019983 | shares_device -> A021826 | shares_payment_instrument -> A024122 | shares_coupon -> A027357 | shares_device -> A027918 | shares_coupon -> A029633 | shares_device -> A029663 | shares_payment_instrument -> A029996
+A016082,8,shares_payment_instrument,1.0,1,0,1,shares_address -> A000408 | shares_address -> A002124 | shares_payment_instrument -> A003831 | shares_coupon -> A010829 | shares_phone -> A012593 | shares_address -> A020085 | shares_address -> A025122 | shares_device -> A027509
+A025122,14,shares_device,1.0,6,0,4,shares_address -> A000457 | shares_device -> A002195 | shares_device -> A002265 | shares_coupon -> A002274 | shares_device -> A003283 | shares_device -> A007742 | shares_coupon -> A010855 | shares_coupon -> A011226 | shares_phone -> A011500 | shares_device -> A014967 | shares_address -> A016082 | shares_address -> A020347 | shares_device -> A020723 | shares_coupon -> A028686
+A011345,1,shares_phone,1.0,0,0,0,shares_phone -> A010269
+A023104,5,shares_payment_instrument,1.0,0,0,0,shares_address -> A007685 | shares_payment_instrument -> A010391 | shares_address -> A018792 | shares_payment_instrument -> A025761 | shares_payment_instrument -> A027470
+A027918,10,shares_device,1.0,6,0,4,shares_device -> A002796 | shares_device -> A005122 | shares_device -> A010538 | shares_coupon -> A013123 | shares_coupon -> A015435 | shares_device -> A016671 | shares_coupon -> A018477 | shares_device -> A018975 | shares_coupon -> A019618 | shares_device -> A019983
+A026812,6,shares_device,1.0,2,0,0,shares_device -> A000531 | shares_phone -> A019526 | shares_address -> A020114 | shares_phone -> A021516 | shares_device -> A021703 | shares_payment_instrument -> A023650
+A028951,8,shares_device,1.0,3,0,2,shares_device -> A001622 | shares_payment_instrument -> A003772 | shares_address -> A005081 | shares_device -> A008730 | shares_payment_instrument -> A010522 | shares_coupon -> A012260 | shares_device -> A016996 | shares_coupon -> A022261
+A023005,8,shares_phone,1.0,4,0,1,shares_address -> A002537 | shares_phone -> A004244 | shares_address -> A005686 | shares_device -> A005792 | shares_device -> A010391 | shares_device -> A021884 | shares_coupon -> A028878 | shares_device -> A029698
+A015077,4,shares_payment_instrument,1.0,2,0,0,shares_payment_instrument -> A004691 | shares_device -> A016914 | shares_device -> A019629 | shares_payment_instrument -> A024533
+A001636,10,shares_device,1.0,3,0,3,shares_device -> A004436 | shares_payment_instrument -> A007902 | shares_device -> A010394 | shares_phone -> A010536 | shares_device -> A019826 | shares_coupon -> A021189 | shares_payment_instrument -> A022782 | shares_coupon -> A028489 | shares_address -> A028658 | shares_coupon -> A029041
+A009701,2,shares_phone,1.0,0,0,0,shares_phone -> A009743 | shares_payment_instrument -> A021712
+A021432,7,shares_device,1.0,4,0,0,shares_device -> A000079 | shares_payment_instrument -> A000260 | shares_device -> A003226 | shares_payment_instrument -> A006600 | shares_device -> A012377 | shares_device -> A017547 | shares_payment_instrument -> A019058
+A000743,2,shares_payment_instrument,1.0,0,1,0,shares_ip_prefix -> A008410 | shares_payment_instrument -> A008785
+A015422,1,shares_device,1.0,1,0,0,shares_device -> A016017
+A007863,2,shares_device,1.0,1,0,0,shares_device -> A011502 | shares_address -> A013414
+A028228,9,shares_payment_instrument,1.0,1,0,3,shares_address -> A003514 | shares_payment_instrument -> A004832 | shares_coupon -> A006068 | shares_payment_instrument -> A006523 | shares_payment_instrument -> A007123 | shares_coupon -> A011899 | shares_device -> A019666 | shares_coupon -> A023246 | shares_payment_instrument -> A025558
+A016017,16,shares_device,1.0,3,0,6,shares_address -> A000441 | shares_address -> A004033 | shares_device -> A005008 | shares_payment_instrument -> A008458 | shares_coupon -> A010601 | shares_coupon -> A013382 | shares_address -> A013836 | shares_device -> A015422 | shares_coupon -> A015521 | shares_coupon -> A024039 | shares_device -> A024558 | shares_address -> A026083 | shares_coupon -> A026726 | shares_address -> A027146 | shares_phone -> A028548 | shares_coupon -> A029582
+A002796,7,shares_device,1.0,5,0,0,shares_device -> A005122 | shares_address -> A007892 | shares_device -> A010538 | shares_payment_instrument -> A018671 | shares_device -> A018975 | shares_device -> A019983 | shares_device -> A027918
+A011743,1,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A023860
+A023242,5,shares_device,1.0,1,0,0,shares_device -> A000516 | shares_address -> A007950 | shares_payment_instrument -> A009194 | shares_payment_instrument -> A010439 | shares_payment_instrument -> A013032
+A016914,7,shares_device,1.0,3,0,0,shares_device -> A003657 | shares_device -> A015077 | shares_device -> A015476 | shares_address -> A018030 | shares_address -> A027435 | shares_phone -> A027853 | shares_phone -> A029367
+A004508,8,shares_payment_instrument,1.0,1,0,1,shares_coupon -> A000677 | shares_payment_instrument -> A006610 | shares_device -> A008535 | shares_payment_instrument -> A012673 | shares_address -> A015779 | shares_payment_instrument -> A018096 | shares_payment_instrument -> A019291 | shares_payment_instrument -> A023643
+A015258,3,shares_phone,1.0,1,0,1,shares_phone -> A001179 | shares_device -> A010643 | shares_coupon -> A029891
+A015167,6,shares_device,1.0,2,0,0,shares_device -> A008644 | shares_device -> A011618 | shares_address -> A012832 | shares_phone -> A014146 | shares_address -> A014163 | shares_address -> A028717
+A017704,7,shares_device,1.0,3,0,0,shares_address -> A007646 | shares_device -> A008365 | shares_device -> A016176 | shares_address -> A021284 | shares_address -> A022062 | shares_payment_instrument -> A025430 | shares_device -> A029873
+A005757,5,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A000432 | shares_address -> A003988 | shares_payment_instrument -> A004226 | shares_payment_instrument -> A014248 | shares_payment_instrument -> A025724
+A014387,15,shares_phone,1.0,3,0,4,shares_phone -> A001227 | shares_coupon -> A003050 | shares_phone -> A007180 | shares_address -> A007215 | shares_coupon -> A008231 | shares_address -> A009160 | shares_payment_instrument -> A012633 | shares_address -> A013921 | shares_device -> A016189 | shares_device -> A017121 | shares_device -> A019329 | shares_coupon -> A021895 | shares_coupon -> A023708 | shares_address -> A024019 | shares_address -> A025498
+A003659,6,shares_phone,1.0,3,0,0,shares_phone -> A001193 | shares_device -> A006514 | shares_address -> A012723 | shares_device -> A014080 | shares_phone -> A022947 | shares_device -> A026662
+A019983,14,shares_phone,1.0,11,0,1,shares_phone -> A001590 | shares_address -> A002325 | shares_device -> A002796 | shares_device -> A005122 | shares_device -> A009081 | shares_device -> A010538 | shares_device -> A011215 | shares_coupon -> A015189 | shares_device -> A017758 | shares_device -> A018975 | shares_device -> A023474 | shares_device -> A024263 | shares_device -> A026877 | shares_device -> A027918
+A017445,5,shares_device,1.0,2,0,0,shares_device -> A005856 | shares_address -> A010783 | shares_address -> A019818 | shares_device -> A021748 | shares_address -> A026057
+A008783,5,shares_payment_instrument,1.0,0,0,0,shares_address -> A010123 | shares_address -> A012005 | shares_payment_instrument -> A015188 | shares_phone -> A018239 | shares_payment_instrument -> A026102
+A029873,3,shares_device,1.0,1,0,0,shares_address -> A008247 | shares_device -> A017704 | shares_address -> A022403
+A027981,2,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A014721 | shares_payment_instrument -> A021641
+A001133,3,shares_phone,1.0,0,0,2,shares_coupon -> A010018 | shares_coupon -> A017313 | shares_phone -> A021974
+A002799,8,shares_device,1.0,4,0,0,shares_address -> A005273 | shares_device -> A006332 | shares_device -> A006548 | shares_payment_instrument -> A008041 | shares_payment_instrument -> A015685 | shares_device -> A016965 | shares_phone -> A023576 | shares_device -> A026358
+A004876,8,shares_phone,1.0,2,0,1,shares_address -> A001745 | shares_address -> A006064 | shares_address -> A007278 | shares_coupon -> A010320 | shares_phone -> A012789 | shares_payment_instrument -> A013577 | shares_device -> A020473 | shares_device -> A020693
+A023766,5,shares_phone,1.0,0,0,0,shares_phone -> A006792 | shares_phone -> A008032 | shares_phone -> A014801 | shares_address -> A014899 | shares_address -> A023425
+A020911,4,shares_address,0.7,0,0,2,shares_coupon -> A001151 | shares_coupon -> A002192 | shares_address -> A008025 | shares_address -> A029281
+A011338,2,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A000484 | shares_device -> A006167
+A005792,6,shares_device,1.0,2,0,3,shares_coupon -> A007527 | shares_device -> A010391 | shares_coupon -> A014120 | shares_payment_instrument -> A016532 | shares_device -> A023005 | shares_coupon -> A026418
+A026367,4,shares_phone,1.0,0,0,0,shares_phone -> A005303 | shares_address -> A005873 | shares_address -> A009773 | shares_address -> A024648
+A021568,7,shares_device,1.0,5,0,0,shares_device -> A010212 | shares_device -> A013356 | shares_device -> A013386 | shares_device -> A020393 | shares_device -> A026631 | shares_address -> A029039 | shares_address -> A029150
+A009773,9,shares_phone,1.0,0,0,0,shares_phone -> A000550 | shares_address -> A000915 | shares_address -> A005873 | shares_payment_instrument -> A010652 | shares_address -> A011869 | shares_address -> A015442 | shares_phone -> A015901 | shares_phone -> A021824 | shares_address -> A026367
+A029561,9,shares_device,1.0,3,0,0,shares_address -> A004981 | shares_device -> A006782 | shares_address -> A010137 | shares_device -> A010795 | shares_device -> A012075 | shares_payment_instrument -> A015632 | shares_phone -> A016269 | shares_payment_instrument -> A018438 | shares_phone -> A027202
+A029491,6,shares_phone,1.0,0,0,1,shares_phone -> A000316 | shares_coupon -> A003321 | shares_address -> A009249 | shares_phone -> A019170 | shares_phone -> A023526 | shares_address -> A027396
+A028310,3,shares_payment_instrument,1.0,0,0,2,shares_payment_instrument -> A003483 | shares_coupon -> A006127 | shares_coupon -> A009145
+A012468,11,shares_device,1.0,5,0,2,shares_device -> A000515 | shares_device -> A004008 | shares_device -> A006230 | shares_coupon -> A008727 | shares_phone -> A014965 | shares_phone -> A015288 | shares_payment_instrument -> A016683 | shares_coupon -> A017122 | shares_device -> A023020 | shares_device -> A024396 | shares_payment_instrument -> A028103
+A002081,3,shares_phone,1.0,2,0,0,shares_phone -> A005923 | shares_device -> A009008 | shares_device -> A023551
+A002389,6,shares_device,1.0,3,1,0,shares_address -> A000062 | shares_device -> A002514 | shares_device -> A006769 | shares_device -> A010500 | shares_ip_prefix -> A011910 | shares_phone -> A022329
+A027153,3,shares_payment_instrument,1.0,0,0,1,shares_address -> A010942 | shares_payment_instrument -> A012897 | shares_coupon -> A029069
+A000688,5,shares_phone,1.0,4,0,0,shares_phone -> A001275 | shares_device -> A007490 | shares_device -> A010316 | shares_device -> A013642 | shares_device -> A023311
+A008047,14,shares_device,1.0,4,0,7,shares_address -> A001610 | shares_device -> A002291 | shares_device -> A002617 | shares_coupon -> A005100 | shares_coupon -> A006061 | shares_coupon -> A006513 | shares_payment_instrument -> A007035 | shares_coupon -> A007938 | shares_coupon -> A017458 | shares_payment_instrument -> A018618 | shares_coupon -> A018940 | shares_coupon -> A019200 | shares_device -> A023540 | shares_device -> A029040
+A017277,1,shares_address,0.7,0,0,0,shares_address -> A023406
+A024122,5,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A005122 | shares_payment_instrument -> A010538 | shares_device -> A012163 | shares_payment_instrument -> A018975 | shares_payment_instrument -> A029996
+A028863,5,shares_payment_instrument,1.0,0,0,0,shares_address -> A000349 | shares_payment_instrument -> A002902 | shares_phone -> A015362 | shares_phone -> A026058 | shares_payment_instrument -> A028906
+A016119,1,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A022116
+A021646,7,shares_phone,1.0,2,0,0,shares_address -> A004982 | shares_address -> A008475 | shares_phone -> A011143 | shares_address -> A014989 | shares_payment_instrument -> A023213 | shares_device -> A023901 | shares_device -> A025937
+A020425,3,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A000129 | shares_phone -> A005371 | shares_device -> A021310
+A004336,3,shares_phone,1.0,0,0,0,shares_phone -> A018668 | shares_phone -> A021577 | shares_phone -> A022275
+A004732,1,shares_device,1.0,1,0,0,shares_device -> A015596
+A014303,13,shares_device,1.0,2,2,5,shares_coupon -> A003030 | shares_device -> A005397 | shares_payment_instrument -> A006406 | shares_coupon -> A009717 | shares_ip_prefix -> A013171 | shares_ip_prefix -> A017747 | shares_coupon -> A019305 | shares_payment_instrument -> A021808 | shares_phone -> A022490 | shares_coupon -> A026188 | shares_device -> A027020 | shares_coupon -> A028261 | shares_payment_instrument -> A028506
+A017487,5,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A013737 | shares_payment_instrument -> A020774 | shares_payment_instrument -> A022935 | shares_address -> A024863 | shares_payment_instrument -> A027372
+A015775,0,,,0,0,0,
+A027968,3,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A005264 | shares_payment_instrument -> A009137 | shares_payment_instrument -> A023644
+A017486,3,shares_device,1.0,2,0,1,shares_coupon -> A000860 | shares_device -> A019321 | shares_device -> A025252
+A015398,6,shares_phone,1.0,0,0,0,shares_address -> A002981 | shares_phone -> A004433 | shares_address -> A004691 | shares_address -> A014131 | shares_address -> A019085 | shares_payment_instrument -> A023267
+A027749,5,shares_device,1.0,1,1,2,shares_coupon -> A000877 | shares_device -> A003943 | shares_ip_prefix -> A010889 | shares_payment_instrument -> A014043 | shares_coupon -> A023969
+A002532,5,shares_device,1.0,1,0,0,shares_device -> A002619 | shares_payment_instrument -> A014329 | shares_address -> A020984 | shares_payment_instrument -> A021330 | shares_address -> A027126
+A013661,14,shares_device,1.0,5,0,2,shares_address -> A002377 | shares_address -> A005276 | shares_address -> A008466 | shares_device -> A009216 | shares_address -> A010118 | shares_device -> A010512 | shares_device -> A013294 | shares_address -> A014630 | shares_coupon -> A015421 | shares_device -> A017121 | shares_address -> A022494 | shares_coupon -> A022983 | shares_device -> A023375 | shares_address -> A025011
+A022895,1,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A021052
+A027289,7,shares_device,1.0,1,0,1,shares_coupon -> A006907 | shares_device -> A008640 | shares_payment_instrument -> A010917 | shares_payment_instrument -> A011401 | shares_payment_instrument -> A011639 | shares_payment_instrument -> A012912 | shares_address -> A019215
+A000799,2,shares_payment_instrument,1.0,0,0,0,shares_address -> A007261 | shares_payment_instrument -> A016918
+A004078,1,shares_address,0.7,0,0,0,shares_address -> A022546
+A007178,2,shares_payment_instrument,1.0,0,0,0,shares_address -> A021523 | shares_payment_instrument -> A023675
+A008115,9,shares_payment_instrument,1.0,0,0,1,shares_payment_instrument -> A003463 | shares_address -> A006208 | shares_address -> A012861 | shares_payment_instrument -> A014239 | shares_phone -> A015510 | shares_coupon -> A016250 | shares_address -> A017136 | shares_phone -> A019787 | shares_payment_instrument -> A024523
+A006503,13,shares_payment_instrument,1.0,4,0,3,shares_coupon -> A000276 | shares_payment_instrument -> A008256 | shares_address -> A008525 | shares_device -> A012727 | shares_address -> A015062 | shares_device -> A016953 | shares_device -> A019501 | shares_address -> A020145 | shares_address -> A022136 | shares_coupon -> A022209 | shares_payment_instrument -> A023244 | shares_coupon -> A026048 | shares_device -> A026602
+A019787,9,shares_phone,1.0,2,0,0,shares_address -> A001844 | shares_address -> A005943 | shares_address -> A007433 | shares_phone -> A008115 | shares_device -> A010021 | shares_payment_instrument -> A014879 | shares_phone -> A015510 | shares_payment_instrument -> A022958 | shares_device -> A027037
+A007742,9,shares_device,1.0,5,0,0,shares_address -> A000457 | shares_address -> A001980 | shares_device -> A002265 | shares_device -> A003283 | shares_device -> A014967 | shares_address -> A017444 | shares_address -> A020347 | shares_device -> A025122 | shares_device -> A028445
+A013092,6,shares_device,1.0,2,0,0,shares_device -> A005548 | shares_device -> A005579 | shares_address -> A010588 | shares_payment_instrument -> A018942 | shares_address -> A019057 | shares_payment_instrument -> A027882
+A026868,13,shares_device,1.0,5,0,3,shares_address -> A003219 | shares_coupon -> A005350 | shares_address -> A005538 | shares_device -> A010115 | shares_device -> A011265 | shares_payment_instrument -> A011356 | shares_device -> A011890 | shares_address -> A014297 | shares_device -> A016898 | shares_coupon -> A018080 | shares_coupon -> A026674 | shares_device -> A029358 | shares_address -> A029968
+A028838,1,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A015607
+A005996,6,shares_payment_instrument,1.0,2,0,0,shares_payment_instrument -> A007520 | shares_phone -> A017372 | shares_payment_instrument -> A017784 | shares_payment_instrument -> A019231 | shares_device -> A024491 | shares_device -> A028782
+A012811,4,shares_payment_instrument,1.0,0,0,1,shares_coupon -> A021704 | shares_payment_instrument -> A023812 | shares_phone -> A024786 | shares_phone -> A027246
+A023643,3,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A004508 | shares_payment_instrument -> A019291 | shares_device -> A023140
+A012182,5,shares_payment_instrument,1.0,0,1,0,shares_payment_instrument -> A000293 | shares_payment_instrument -> A009160 | shares_address -> A019914 | shares_payment_instrument -> A021272 | shares_ip_prefix -> A026023
+A016639,7,shares_device,1.0,5,0,1,shares_device -> A004270 | shares_coupon -> A015830 | shares_device -> A024318 | shares_address -> A025983 | shares_device -> A026846 | shares_device -> A027294 | shares_device -> A027926
+A001405,10,shares_phone,1.0,4,0,1,shares_coupon -> A000738 | shares_phone -> A003278 | shares_address -> A004195 | shares_device -> A015345 | shares_device -> A015402 | shares_device -> A021293 | shares_address -> A024441 | shares_address -> A025463 | shares_payment_instrument -> A027656 | shares_device -> A027980
+A020715,5,shares_device,1.0,1,0,2,shares_device -> A000144 | shares_coupon -> A006504 | shares_address -> A012673 | shares_payment_instrument -> A017618 | shares_coupon -> A026596
+A005856,7,shares_device,1.0,4,0,1,shares_address -> A006089 | shares_coupon -> A010063 | shares_device -> A010190 | shares_device -> A011269 | shares_device -> A017445 | shares_device -> A021748 | shares_address -> A026250
+A024688,6,shares_device,1.0,3,0,0,shares_device -> A000604 | shares_address -> A010711 | shares_address -> A013146 | shares_device -> A018610 | shares_device -> A028470 | shares_address -> A029851
+A005750,4,shares_phone,1.0,0,0,1,shares_address -> A005950 | shares_coupon -> A007469 | shares_phone -> A009807 | shares_address -> A013438
+A017717,5,shares_phone,1.0,2,1,0,shares_phone -> A002388 | shares_device -> A005724 | shares_ip_prefix -> A006531 | shares_address -> A007676 | shares_device -> A027818
+A018370,6,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A004307 | shares_device -> A004796 | shares_payment_instrument -> A006657 | shares_phone -> A006876 | shares_payment_instrument -> A019679 | shares_address -> A029366
+A011749,3,shares_device,1.0,1,0,1,shares_coupon -> A002569 | shares_device -> A008416 | shares_payment_instrument -> A024636
+A011934,2,shares_coupon,0.2,0,0,2,shares_coupon -> A015607 | shares_coupon -> A017697
+A005572,3,shares_phone,1.0,0,0,0,shares_phone -> A009093 | shares_payment_instrument -> A020930 | shares_phone -> A022139
+A024518,6,shares_payment_instrument,1.0,1,0,1,shares_coupon -> A005290 | shares_payment_instrument -> A007112 | shares_payment_instrument -> A015582 | shares_payment_instrument -> A020587 | shares_device -> A025284 | shares_address -> A025586
+A029996,5,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A005122 | shares_payment_instrument -> A010538 | shares_payment_instrument -> A018975 | shares_address -> A023204 | shares_payment_instrument -> A024122
+A003450,4,shares_payment_instrument,1.0,2,0,1,shares_payment_instrument -> A008052 | shares_device -> A020571 | shares_coupon -> A028750 | shares_device -> A029995
+A006357,3,shares_device,1.0,1,0,0,shares_address -> A007120 | shares_device -> A014000 | shares_payment_instrument -> A024321
+A010507,5,shares_payment_instrument,1.0,0,0,0,shares_address -> A001573 | shares_payment_instrument -> A013005 | shares_payment_instrument -> A022616 | shares_address -> A025117 | shares_address -> A025391
+A025168,5,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A000872 | shares_device -> A002368 | shares_payment_instrument -> A003479 | shares_address -> A021397 | shares_phone -> A029242
+A026027,2,shares_device,1.0,1,0,0,shares_device -> A006554 | shares_payment_instrument -> A024130
+A007846,4,shares_payment_instrument,1.0,1,0,1,shares_payment_instrument -> A008562 | shares_coupon -> A009660 | shares_device -> A010866 | shares_payment_instrument -> A027525
+A012651,5,shares_phone,1.0,1,0,0,shares_address -> A001412 | shares_phone -> A004401 | shares_device -> A005529 | shares_phone -> A008226 | shares_address -> A025604
+A025415,8,shares_device,1.0,2,0,1,shares_address -> A000068 | shares_device -> A002765 | shares_address -> A004567 | shares_device -> A005315 | shares_coupon -> A011676 | shares_phone -> A022108 | shares_address -> A024673 | shares_phone -> A024866
+A018344,5,shares_payment_instrument,1.0,1,0,2,shares_coupon -> A001299 | shares_payment_instrument -> A013424 | shares_address -> A021348 | shares_coupon -> A028209 | shares_device -> A029481
+A002265,7,shares_device,1.0,5,1,0,shares_device -> A003283 | shares_address -> A005461 | shares_device -> A007742 | shares_ip_prefix -> A011323 | shares_device -> A014967 | shares_device -> A018338 | shares_device -> A025122
+A025915,4,shares_device,1.0,2,0,0,shares_device -> A002800 | shares_phone -> A005030 | shares_device -> A005962 | shares_payment_instrument -> A027390
+A006908,4,shares_device,1.0,1,0,0,shares_device -> A012471 | shares_payment_instrument -> A016662 | shares_address -> A019617 | shares_phone -> A029699
+A023744,1,shares_device,1.0,1,0,0,shares_device -> A014354
+A025192,1,shares_address,0.7,0,0,0,shares_address -> A018754
+A000899,1,shares_device,1.0,1,0,0,shares_device -> A021650
+A023305,10,shares_device,1.0,4,0,1,shares_device -> A000936 | shares_device -> A001753 | shares_payment_instrument -> A009079 | shares_address -> A010063 | shares_phone -> A011799 | shares_address -> A012052 | shares_coupon -> A018100 | shares_device -> A022830 | shares_device -> A024263 | shares_phone -> A028577
+A017825,5,shares_device,1.0,1,0,3,shares_coupon -> A002962 | shares_device -> A016292 | shares_payment_instrument -> A022689 | shares_coupon -> A023113 | shares_coupon -> A023975
+A022606,2,shares_device,1.0,2,0,0,shares_device -> A004984 | shares_device -> A008692
+A017371,2,shares_phone,1.0,1,0,0,shares_phone -> A001808 | shares_device -> A029654
+A019329,15,shares_payment_instrument,1.0,3,0,6,shares_coupon -> A000146 | shares_coupon -> A000745 | shares_payment_instrument -> A009916 | shares_coupon -> A011290 | shares_device -> A011785 | shares_payment_instrument -> A012323 | shares_device -> A014387 | shares_device -> A016189 | shares_coupon -> A021618 | shares_phone -> A022629 | shares_address -> A023520 | shares_address -> A024579 | shares_address -> A027261 | shares_coupon -> A027858 | shares_coupon -> A029158
+A023911,3,shares_device,1.0,1,0,0,shares_device -> A007411 | shares_phone -> A014391 | shares_address -> A014636
+A027913,2,shares_device,1.0,1,0,0,shares_device -> A021547 | shares_address -> A023023
+A014742,4,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A009487 | shares_payment_instrument -> A019738 | shares_device -> A028724 | shares_phone -> A028861
+A022659,4,shares_device,1.0,3,0,0,shares_device -> A001313 | shares_device -> A015175 | shares_device -> A023209 | shares_phone -> A025425
+A022196,7,shares_payment_instrument,1.0,1,0,2,shares_payment_instrument -> A000033 | shares_phone -> A002765 | shares_coupon -> A014867 | shares_address -> A017921 | shares_device -> A018754 | shares_coupon -> A022975 | shares_address -> A027365
+A019736,1,shares_address,0.7,0,0,0,shares_address -> A029541
+A021781,2,shares_phone,1.0,1,0,0,shares_phone -> A000731 | shares_device -> A021736
+A015434,2,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A004567 | shares_payment_instrument -> A008483
+A015917,4,shares_device,1.0,1,0,0,shares_address -> A001912 | shares_device -> A008136 | shares_address -> A009886 | shares_address -> A022102
+A016313,5,shares_payment_instrument,1.0,2,2,0,shares_payment_instrument -> A000485 | shares_device -> A009034 | shares_ip_prefix -> A016301 | shares_device -> A019629 | shares_ip_prefix -> A027473
+A022097,4,shares_payment_instrument,1.0,0,0,0,shares_address -> A001730 | shares_address -> A002853 | shares_payment_instrument -> A025150 | shares_phone -> A025735
+A023667,13,shares_payment_instrument,1.0,5,1,2,shares_coupon -> A001016 | shares_payment_instrument -> A001855 | shares_device -> A003147 | shares_address -> A006702 | shares_ip_prefix -> A008095 | shares_device -> A009604 | shares_phone -> A016921 | shares_coupon -> A018237 | shares_device -> A020181 | shares_phone -> A020393 | shares_phone -> A021563 | shares_device -> A021624 | shares_device -> A028400
+A005678,1,shares_address,0.7,0,0,0,shares_address -> A024685
+A016965,8,shares_device,1.0,3,0,3,shares_coupon -> A001047 | shares_device -> A002799 | shares_coupon -> A006173 | shares_device -> A006548 | shares_address -> A023019 | shares_device -> A026358 | shares_coupon -> A026536 | shares_address -> A028240
+A005834,3,shares_device,1.0,2,0,1,shares_coupon -> A003148 | shares_device -> A007620 | shares_device -> A017946
+A023345,8,shares_device,1.0,5,0,0,shares_device -> A000431 | shares_device -> A001684 | shares_device -> A006149 | shares_address -> A006798 | shares_device -> A010064 | shares_address -> A016221 | shares_device -> A023112 | shares_payment_instrument -> A023859
+A018021,7,shares_payment_instrument,1.0,3,0,0,shares_address -> A004433 | shares_payment_instrument -> A014484 | shares_device -> A015256 | shares_device -> A015413 | shares_payment_instrument -> A016444 | shares_phone -> A018176 | shares_device -> A027188
+A019086,6,shares_device,1.0,4,0,0,shares_device -> A002624 | shares_device -> A008161 | shares_address -> A011488 | shares_payment_instrument -> A014554 | shares_device -> A020202 | shares_device -> A026441
+A016851,7,shares_device,1.0,2,0,0,shares_device -> A006523 | shares_phone -> A009793 | shares_device -> A011763 | shares_payment_instrument -> A013439 | shares_address -> A015911 | shares_phone -> A016882 | shares_payment_instrument -> A022238
+A022214,6,shares_device,1.0,2,0,1,shares_address -> A000072 | shares_device -> A003873 | shares_phone -> A005245 | shares_address -> A014238 | shares_device -> A019159 | shares_coupon -> A023110
+A006728,2,shares_coupon,0.2,0,0,2,shares_coupon -> A003106 | shares_coupon -> A020343
+A011620,1,shares_coupon,0.2,0,0,1,shares_coupon -> A003552
+A007730,5,shares_payment_instrument,1.0,0,0,0,shares_address -> A000858 | shares_address -> A000875 | shares_payment_instrument -> A020227 | shares_address -> A021099 | shares_address -> A026833
+A017409,3,shares_device,1.0,1,1,0,shares_device -> A005546 | shares_payment_instrument -> A015413 | shares_ip_prefix -> A020214
+A028287,8,shares_device,1.0,2,1,2,shares_ip_prefix -> A001206 | shares_device -> A001280 | shares_address -> A002422 | shares_address -> A004076 | shares_address -> A005898 | shares_coupon -> A013135 | shares_device -> A029135 | shares_coupon -> A029862
+A025448,3,shares_device,1.0,1,0,0,shares_address -> A003082 | shares_device -> A008309 | shares_address -> A029344
+A001416,8,shares_device,1.0,1,0,0,shares_device -> A007857 | shares_address -> A009397 | shares_address -> A012430 | shares_address -> A015816 | shares_address -> A018020 | shares_address -> A021858 | shares_address -> A022004 | shares_address -> A023122
+A000329,5,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A000601 | shares_payment_instrument -> A012440 | shares_address -> A013116 | shares_payment_instrument -> A020400 | shares_phone -> A024097
+A005046,11,shares_device,1.0,3,0,3,shares_coupon -> A001361 | shares_device -> A001808 | shares_address -> A003267 | shares_address -> A003392 | shares_coupon -> A007252 | shares_address -> A011668 | shares_device -> A015605 | shares_address -> A018401 | shares_device -> A023400 | shares_phone -> A027164 | shares_coupon -> A028413
+A019065,8,shares_device,1.0,6,0,0,shares_device -> A004928 | shares_phone -> A006348 | shares_device -> A017135 | shares_device -> A020815 | shares_device -> A022183 | shares_address -> A023047 | shares_device -> A024149 | shares_device -> A025275
+A008247,2,shares_address,0.7,0,0,0,shares_address -> A022403 | shares_address -> A029873
+A007307,3,shares_address,0.7,0,0,2,shares_address -> A012730 | shares_coupon -> A013042 | shares_coupon -> A027762
+A011139,0,,,0,0,0,
+A005457,7,shares_device,1.0,1,0,4,shares_device -> A000873 | shares_coupon -> A002233 | shares_coupon -> A003791 | shares_coupon -> A007999 | shares_coupon -> A009613 | shares_address -> A012744 | shares_phone -> A028344
+A010551,6,shares_device,1.0,1,0,2,shares_coupon -> A000945 | shares_device -> A009908 | shares_phone -> A011223 | shares_coupon -> A011802 | shares_address -> A022999 | shares_address -> A025096
+A020388,8,shares_device,1.0,3,0,3,shares_coupon -> A001147 | shares_device -> A005723 | shares_device -> A007659 | shares_coupon -> A008450 | shares_device -> A016676 | shares_payment_instrument -> A019073 | shares_phone -> A026877 | shares_coupon -> A027932
+A014000,6,shares_device,1.0,2,0,1,shares_coupon -> A000514 | shares_device -> A004605 | shares_device -> A006357 | shares_phone -> A007131 | shares_phone -> A014106 | shares_address -> A020333
+A016189,6,shares_payment_instrument,1.0,3,0,0,shares_payment_instrument -> A001226 | shares_phone -> A005644 | shares_device -> A011785 | shares_device -> A014387 | shares_device -> A019329 | shares_address -> A020536
+A009621,8,shares_device,1.0,4,0,2,shares_coupon -> A001171 | shares_address -> A001718 | shares_device -> A004119 | shares_device -> A007455 | shares_address -> A009365 | shares_device -> A013787 | shares_coupon -> A020923 | shares_device -> A029887
+A002499,1,shares_address,0.7,0,0,0,shares_address -> A014897
+A004686,1,shares_phone,1.0,0,0,0,shares_phone -> A002153
+A004230,4,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A004676 | shares_payment_instrument -> A012103 | shares_payment_instrument -> A023215 | shares_device -> A025034
+A004425,4,shares_phone,1.0,2,0,0,shares_phone -> A001314 | shares_device -> A001507 | shares_device -> A010397 | shares_phone -> A027248
+A012369,1,shares_address,0.7,0,0,0,shares_address -> A019080
+A016122,4,shares_phone,1.0,1,0,0,shares_phone -> A008944 | shares_address -> A014174 | shares_payment_instrument -> A023711 | shares_device -> A029469
+A003283,7,shares_device,1.0,5,0,1,shares_device -> A002019 | shares_device -> A002265 | shares_address -> A006492 | shares_device -> A007742 | shares_device -> A014967 | shares_coupon -> A018800 | shares_device -> A025122
+A019734,15,shares_device,1.0,3,0,7,shares_coupon -> A003763 | shares_coupon -> A007526 | shares_device -> A008613 | shares_address -> A009296 | shares_payment_instrument -> A012464 | shares_payment_instrument -> A012681 | shares_coupon -> A013515 | shares_device -> A013911 | shares_coupon -> A014376 | shares_payment_instrument -> A014495 | shares_coupon -> A015802 | shares_coupon -> A021670 | shares_payment_instrument -> A021863 | shares_coupon -> A026431 | shares_device -> A027329
+A014147,7,shares_phone,1.0,2,0,0,shares_address -> A001510 | shares_address -> A002127 | shares_phone -> A007905 | shares_payment_instrument -> A016606 | shares_device -> A019652 | shares_payment_instrument -> A020065 | shares_device -> A021397
+A006985,6,shares_device,1.0,3,0,2,shares_device -> A002914 | shares_coupon -> A007000 | shares_phone -> A007791 | shares_device -> A012871 | shares_coupon -> A016560 | shares_device -> A022867
+A027735,6,shares_phone,1.0,0,0,3,shares_coupon -> A001131 | shares_address -> A005106 | shares_coupon -> A011080 | shares_address -> A013053 | shares_phone -> A022841 | shares_coupon -> A026251
+A022698,3,shares_device,1.0,1,0,0,shares_address -> A001101 | shares_device -> A013246 | shares_phone -> A014681
+A001771,26,shares_payment_instrument,1.0,2,0,6,shares_payment_instrument -> A000457 | shares_address -> A002017 | shares_coupon -> A002099 | shares_coupon -> A002680 | shares_coupon -> A005436 | shares_address -> A006279 | shares_device -> A006710 | shares_address -> A007453 | shares_payment_instrument -> A008407 | shares_address -> A009552 | shares_coupon -> A013669 | shares_address -> A014188 | shares_address -> A014195 | shares_payment_instrument -> A016054 | shares_phone -> A016227 | shares_payment_instrument -> A017072 | shares_payment_instrument -> A017444 | shares_coupon -> A018530 | shares_address -> A018566 | shares_address -> A019467 | shares_coupon -> A019512 | shares_address -> A020075 | shares_phone -> A020096 | shares_device -> A023504 | shares_address -> A027345 | shares_payment_instrument -> A027371
+A004806,2,shares_device,1.0,1,0,1,shares_coupon -> A015394 | shares_device -> A026187
+A013572,3,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A000421 | shares_address -> A001665 | shares_address -> A024285
+A006117,7,shares_phone,1.0,4,0,1,shares_coupon -> A000772 | shares_phone -> A011942 | shares_device -> A015028 | shares_device -> A017211 | shares_device -> A023037 | shares_address -> A026354 | shares_device -> A026985
+A016165,6,shares_phone,1.0,0,0,1,shares_address -> A000926 | shares_coupon -> A006413 | shares_address -> A009541 | shares_address -> A013796 | shares_phone -> A023316 | shares_address -> A029392
+A005873,10,shares_phone,1.0,1,2,0,shares_phone -> A003120 | shares_phone -> A003978 | shares_ip_prefix -> A006997 | shares_address -> A009773 | shares_ip_prefix -> A012302 | shares_address -> A013234 | shares_payment_instrument -> A018819 | shares_device -> A023419 | shares_address -> A026367 | shares_phone -> A027046
+A018691,7,shares_phone,1.0,0,0,2,shares_phone -> A002242 | shares_address -> A007443 | shares_coupon -> A009063 | shares_address -> A013462 | shares_coupon -> A016186 | shares_payment_instrument -> A019154 | shares_address -> A028631
+A021249,7,shares_address,0.7,0,0,6,shares_coupon -> A005391 | shares_coupon -> A005439 | shares_coupon -> A006800 | shares_coupon -> A010839 | shares_coupon -> A015605 | shares_coupon -> A018621 | shares_address -> A025486
+A005002,7,shares_payment_instrument,1.0,2,0,1,shares_payment_instrument -> A003879 | shares_device -> A015003 | shares_phone -> A015861 | shares_address -> A019593 | shares_phone -> A021823 | shares_coupon -> A023737 | shares_device -> A029886
+A008916,2,shares_phone,1.0,0,0,0,shares_address -> A014698 | shares_phone -> A019891
+A006741,13,shares_device,1.0,2,0,0,shares_address -> A001694 | shares_device -> A002308 | shares_phone -> A003605 | shares_address -> A007630 | shares_address -> A007699 | shares_phone -> A007983 | shares_address -> A008900 | shares_device -> A009145 | shares_phone -> A022782 | shares_payment_instrument -> A023467 | shares_address -> A023860 | shares_address -> A025638 | shares_phone -> A026985
+A020978,2,shares_device,1.0,1,0,1,shares_coupon -> A019589 | shares_device -> A029457
+A025351,1,shares_address,0.7,0,0,0,shares_address -> A023694
+A015100,5,shares_address,0.7,0,0,3,shares_coupon -> A003736 | shares_coupon -> A010295 | shares_address -> A014230 | shares_address -> A015695 | shares_coupon -> A024576
+A024781,18,shares_payment_instrument,1.0,7,0,4,shares_address -> A000123 | shares_address -> A000461 | shares_coupon -> A002223 | shares_address -> A002407 | shares_payment_instrument -> A004236 | shares_device -> A004980 | shares_phone -> A007677 | shares_device -> A008079 | shares_payment_instrument -> A011525 | shares_coupon -> A012057 | shares_device -> A015518 | shares_payment_instrument -> A018191 | shares_device -> A018487 | shares_coupon -> A020121 | shares_coupon -> A022167 | shares_device -> A023171 | shares_device -> A027480 | shares_device -> A028180
+A028005,7,shares_payment_instrument,1.0,1,0,2,shares_payment_instrument -> A000174 | shares_phone -> A002319 | shares_address -> A019679 | shares_device -> A023934 | shares_coupon -> A025352 | shares_coupon -> A026308 | shares_address -> A029382
+A002371,5,shares_phone,1.0,1,0,0,shares_address -> A002960 | shares_address -> A007408 | shares_phone -> A008384 | shares_device -> A023946 | shares_phone -> A025267
+A020145,7,shares_phone,1.0,0,0,0,shares_address -> A006503 | shares_address -> A008525 | shares_address -> A008802 | shares_phone -> A014793 | shares_address -> A015062 | shares_payment_instrument -> A016340 | shares_address -> A022136
+A002897,7,shares_payment_instrument,1.0,2,0,0,shares_payment_instrument -> A001571 | shares_payment_instrument -> A003825 | shares_device -> A009433 | shares_address -> A014785 | shares_address -> A016036 | shares_payment_instrument -> A016667 | shares_device -> A022727
+A029337,1,shares_device,1.0,1,0,0,shares_device -> A029236
+A020571,5,shares_payment_instrument,1.0,2,0,0,shares_payment_instrument -> A001201 | shares_device -> A003450 | shares_address -> A020245 | shares_payment_instrument -> A028823 | shares_device -> A029995
+A017470,1,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A027719
+A014269,8,shares_device,1.0,2,0,4,shares_coupon -> A000448 | shares_device -> A001430 | shares_address -> A008470 | shares_phone -> A009930 | shares_device -> A016684 | shares_coupon -> A019228 | shares_coupon -> A023083 | shares_coupon -> A026644
+A005546,6,shares_phone,1.0,1,1,0,shares_phone -> A003715 | shares_payment_instrument -> A011602 | shares_ip_prefix -> A017108 | shares_device -> A017409 | shares_address -> A019674 | shares_address -> A028547
+A003682,2,shares_device,1.0,1,0,0,shares_device -> A008575 | shares_address -> A020736
+A022101,1,shares_ip_prefix,0.3,0,1,0,shares_ip_prefix -> A006648
+A029829,5,shares_payment_instrument,1.0,3,0,0,shares_payment_instrument -> A004377 | shares_device -> A007570 | shares_device -> A010391 | shares_phone -> A024111 | shares_device -> A027268
+A022136,10,shares_payment_instrument,1.0,0,1,0,shares_address -> A000395 | shares_payment_instrument -> A006219 | shares_address -> A006503 | shares_phone -> A007065 | shares_address -> A015062 | shares_phone -> A018843 | shares_address -> A020145 | shares_phone -> A020951 | shares_address -> A022950 | shares_ip_prefix -> A024412
+A001768,2,shares_phone,1.0,0,0,1,shares_phone -> A024543 | shares_coupon -> A025800
+A017475,9,shares_payment_instrument,1.0,0,0,5,shares_coupon -> A001387 | shares_coupon -> A001902 | shares_payment_instrument -> A005122 | shares_coupon -> A011582 | shares_address -> A016344 | shares_coupon -> A017126 | shares_address -> A018639 | shares_address -> A023675 | shares_coupon -> A029423
+A007226,9,shares_device,1.0,2,0,3,shares_device -> A000242 | shares_device -> A003604 | shares_coupon -> A003809 | shares_phone -> A008174 | shares_coupon -> A009355 | shares_address -> A009775 | shares_address -> A010979 | shares_coupon -> A013466 | shares_address -> A024144
+A006734,6,shares_phone,1.0,1,0,0,shares_phone -> A000972 | shares_payment_instrument -> A006402 | shares_address -> A014679 | shares_device -> A020115 | shares_payment_instrument -> A021199 | shares_payment_instrument -> A029383
+A009487,10,shares_device,1.0,2,0,4,shares_coupon -> A001522 | shares_coupon -> A003998 | shares_address -> A006651 | shares_address -> A007172 | shares_device -> A011793 | shares_payment_instrument -> A014742 | shares_address -> A015080 | shares_device -> A019865 | shares_coupon -> A024795 | shares_coupon -> A025197
+A026214,4,shares_payment_instrument,1.0,0,0,3,shares_coupon -> A000158 | shares_coupon -> A011758 | shares_payment_instrument -> A025758 | shares_coupon -> A027862
+A022377,5,shares_payment_instrument,1.0,1,0,1,shares_payment_instrument -> A005022 | shares_coupon -> A005957 | shares_address -> A015803 | shares_payment_instrument -> A016088 | shares_device -> A023903
+A020156,0,,,0,0,0,
+A027296,8,shares_device,1.0,2,0,0,shares_address -> A000164 | shares_device -> A004423 | shares_phone -> A006629 | shares_payment_instrument -> A010140 | shares_address -> A010185 | shares_address -> A011881 | shares_device -> A021230 | shares_address -> A026041
+A020018,3,shares_address,0.7,0,0,0,shares_address -> A003585 | shares_address -> A011841 | shares_address -> A026425
+A012323,6,shares_phone,1.0,1,0,1,shares_address -> A010896 | shares_coupon -> A015406 | shares_phone -> A016780 | shares_payment_instrument -> A019329 | shares_device -> A023103 | shares_address -> A023609
+A014556,2,shares_device,1.0,1,0,0,shares_address -> A024672 | shares_device -> A024960
+A006548,8,shares_device,1.0,3,2,0,shares_device -> A002799 | shares_ip_prefix -> A004630 | shares_address -> A010846 | shares_device -> A016965 | shares_address -> A022477 | shares_ip_prefix -> A024340 | shares_address -> A025567 | shares_device -> A026358
+A012489,2,shares_phone,1.0,0,0,0,shares_phone -> A010129 | shares_address -> A019288
+A015582,2,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A007112 | shares_payment_instrument -> A024518
+A013858,5,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A008482 | shares_address -> A011823 | shares_payment_instrument -> A011927 | shares_phone -> A027198 | shares_address -> A029535
+A027070,3,shares_device,1.0,2,0,0,shares_address -> A012623 | shares_device -> A027998 | shares_device -> A029849
+A012438,7,shares_phone,1.0,0,0,0,shares_address -> A002957 | shares_phone -> A005096 | shares_address -> A005115 | shares_phone -> A013703 | shares_address -> A020247 | shares_address -> A023998 | shares_payment_instrument -> A026529
+A026071,7,shares_phone,1.0,1,0,2,shares_phone -> A001872 | shares_coupon -> A001919 | shares_address -> A006466 | shares_coupon -> A010617 | shares_address -> A018279 | shares_phone -> A023638 | shares_device -> A027013
+A027758,2,shares_coupon,0.2,0,0,2,shares_coupon -> A005431 | shares_coupon -> A009755
+A011536,2,shares_address,0.7,0,0,0,shares_address -> A003087 | shares_address -> A013487
+A014532,0,,,0,0,0,
+A014484,6,shares_device,1.0,2,0,1,shares_address -> A000821 | shares_device -> A008539 | shares_payment_instrument -> A016444 | shares_payment_instrument -> A018021 | shares_device -> A025901 | shares_coupon -> A026614
+A027435,6,shares_device,1.0,2,0,0,shares_device -> A001934 | shares_address -> A002552 | shares_device -> A009140 | shares_phone -> A009537 | shares_address -> A016914 | shares_address -> A018030
+A012846,2,shares_device,1.0,1,0,0,shares_device -> A014131 | shares_address -> A014320
+A012179,8,shares_device,1.0,4,0,0,shares_device -> A003642 | shares_address -> A003679 | shares_device -> A006271 | shares_phone -> A014096 | shares_device -> A019964 | shares_address -> A021487 | shares_device -> A023482 | shares_address -> A027456
+A021118,11,shares_payment_instrument,1.0,1,2,3,shares_ip_prefix -> A006865 | shares_coupon -> A007153 | shares_coupon -> A007194 | shares_coupon -> A012790 | shares_address -> A015078 | shares_payment_instrument -> A019366 | shares_ip_prefix -> A024821 | shares_address -> A026040 | shares_address -> A027135 | shares_device -> A027315 | shares_payment_instrument -> A027635
+A027414,3,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A007446 | shares_payment_instrument -> A028464 | shares_payment_instrument -> A029289
+A016215,1,shares_address,0.7,0,0,0,shares_address -> A007705
+A005417,7,shares_phone,1.0,0,0,0,shares_phone -> A001397 | shares_phone -> A014279 | shares_payment_instrument -> A014683 | shares_payment_instrument -> A015690 | shares_phone -> A025082 | shares_payment_instrument -> A026287 | shares_payment_instrument -> A026985
+A006657,13,shares_payment_instrument,1.0,5,0,3,shares_payment_instrument -> A004307 | shares_coupon -> A004782 | shares_coupon -> A009068 | shares_coupon -> A009651 | shares_payment_instrument -> A018370 | shares_payment_instrument -> A019679 | shares_device -> A020708 | shares_device -> A020860 | shares_address -> A022582 | shares_payment_instrument -> A024262 | shares_device -> A026505 | shares_device -> A028613 | shares_device -> A028650
+A023409,0,,,0,0,0,
+A002094,7,shares_payment_instrument,1.0,0,0,4,shares_coupon -> A002444 | shares_payment_instrument -> A010715 | shares_payment_instrument -> A016217 | shares_payment_instrument -> A018921 | shares_coupon -> A025191 | shares_coupon -> A025950 | shares_coupon -> A029770
+A004827,4,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A001058 | shares_address -> A023474 | shares_address -> A025925 | shares_phone -> A029981
+A025816,8,shares_device,1.0,4,0,1,shares_address -> A012868 | shares_coupon -> A013200 | shares_address -> A017477 | shares_device -> A017798 | shares_device -> A017826 | shares_device -> A020585 | shares_device -> A024300 | shares_payment_instrument -> A028766
+A025253,1,shares_phone,1.0,0,0,0,shares_phone -> A011346
+A029905,6,shares_phone,1.0,0,1,0,shares_address -> A002089 | shares_phone -> A004779 | shares_address -> A005402 | shares_ip_prefix -> A006437 | shares_address -> A008585 | shares_address -> A013466
+A004244,4,shares_phone,1.0,0,0,0,shares_address -> A010701 | shares_address -> A013678 | shares_address -> A017827 | shares_phone -> A023005
+A002995,3,shares_payment_instrument,1.0,1,0,0,shares_payment_instrument -> A004689 | shares_device -> A013050 | shares_address -> A017343
+A026850,2,shares_address,0.7,0,0,1,shares_address -> A000625 | shares_coupon -> A027145
+A003886,5,shares_payment_instrument,1.0,0,0,1,shares_payment_instrument -> A002083 | shares_coupon -> A004043 | shares_address -> A013627 | shares_address -> A018738 | shares_address -> A020859
+A010447,6,shares_device,1.0,3,0,0,shares_device -> A002892 | shares_device -> A009286 | shares_payment_instrument -> A017403 | shares_phone -> A020110 | shares_device -> A022817 | shares_payment_instrument -> A023390
+A008525,9,shares_device,1.0,2,0,2,shares_address -> A001704 | shares_coupon -> A004098 | shares_address -> A006503 | shares_address -> A007145 | shares_device -> A014239 | shares_address -> A015062 | shares_coupon -> A016232 | shares_device -> A018856 | shares_address -> A020145
+A029660,0,,,0,0,0,
+A013887,2,shares_phone,1.0,1,0,0,shares_phone -> A008420 | shares_device -> A021589
+A023210,2,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A001569 | shares_payment_instrument -> A029543
+A003610,2,shares_phone,1.0,0,0,0,shares_phone -> A020576 | shares_address -> A023286
+A012342,2,shares_payment_instrument,1.0,0,0,1,shares_payment_instrument -> A000777 | shares_coupon -> A015006
+A000915,5,shares_payment_instrument,1.0,0,0,0,shares_address -> A006776 | shares_address -> A009773 | shares_address -> A010037 | shares_address -> A014648 | shares_payment_instrument -> A029326
+A020081,6,shares_device,1.0,2,0,1,shares_address -> A012313 | shares_device -> A018269 | shares_address -> A020030 | shares_payment_instrument -> A020216 | shares_coupon -> A020897 | shares_device -> A027853
+A016707,5,shares_payment_instrument,1.0,0,0,0,shares_address -> A002591 | shares_payment_instrument -> A011235 | shares_address -> A015929 | shares_address -> A026196 | shares_address -> A029383
+A004564,9,shares_device,1.0,3,0,4,shares_coupon -> A001225 | shares_coupon -> A010019 | shares_coupon -> A013172 | shares_coupon -> A016218 | shares_device -> A018717 | shares_address -> A022835 | shares_address -> A025321 | shares_device -> A026321 | shares_device -> A029074
+A002943,6,shares_device,1.0,3,0,0,shares_device -> A002892 | shares_payment_instrument -> A009305 | shares_address -> A017050 | shares_device -> A022817 | shares_device -> A025456 | shares_address -> A026164
+A024306,11,shares_device,1.0,3,1,1,shares_device -> A002025 | shares_address -> A005310 | shares_phone -> A006164 | shares_coupon -> A007194 | shares_device -> A010131 | shares_ip_prefix -> A011329 | shares_device -> A015156 | shares_phone -> A017124 | shares_address -> A022387 | shares_address -> A027716 | shares_phone -> A028472
+A020488,0,,,0,0,0,
+A012982,1,shares_device,1.0,1,0,0,shares_device -> A019305
+A000843,1,shares_phone,1.0,0,0,0,shares_phone -> A023663
+A014711,4,shares_device,1.0,1,0,2,shares_coupon -> A016715 | shares_coupon -> A016743 | shares_address -> A018132 | shares_device -> A028715
+A026098,4,shares_device,1.0,1,0,2,shares_device -> A000127 | shares_phone -> A001265 | shares_coupon -> A003064 | shares_coupon -> A014993
+A029273,10,shares_device,1.0,3,0,0,shares_device -> A007452 | shares_phone -> A007965 | shares_phone -> A010736 | shares_address -> A010783 | shares_payment_instrument -> A011989 | shares_address -> A017783 | shares_device -> A019487 | shares_phone -> A024409 | shares_device -> A024905 | shares_payment_instrument -> A026323
+A010636,5,shares_payment_instrument,1.0,1,0,0,shares_address -> A000409 | shares_payment_instrument -> A002557 | shares_phone -> A009648 | shares_phone -> A012385 | shares_device -> A015813
+A022776,2,shares_device,1.0,2,0,0,shares_device -> A001318 | shares_device -> A002351
+A004754,3,shares_device,1.0,2,0,0,shares_address -> A002101 | shares_device -> A006093 | shares_device -> A022589
+A017091,6,shares_payment_instrument,1.0,0,0,0,shares_address -> A005973 | shares_address -> A008270 | shares_address -> A010795 | shares_payment_instrument -> A010919 | shares_address -> A018693 | shares_address -> A028495
+A000132,5,shares_phone,1.0,1,0,0,shares_address -> A000995 | shares_phone -> A001952 | shares_address -> A006104 | shares_device -> A018798 | shares_address -> A020109
+A024235,3,shares_device,1.0,1,0,0,shares_device -> A001265 | shares_payment_instrument -> A012898 | shares_phone -> A020574
+A004031,5,shares_payment_instrument,1.0,0,0,2,shares_address -> A002790 | shares_coupon -> A011529 | shares_payment_instrument -> A013464 | shares_coupon -> A016355 | shares_address -> A018445
+A023792,1,shares_device,1.0,1,0,0,shares_device -> A004779
+A021179,0,,,0,0,0,
+A023381,3,shares_payment_instrument,1.0,0,0,0,shares_payment_instrument -> A013691 | shares_payment_instrument -> A014927 | shares_phone -> A021379
+A010988,4,shares_payment_instrument,1.0,0,0,2,shares_payment_instrument -> A016696 | shares_coupon -> A017345 | shares_address -> A019720 | shares_coupon -> A028342
+A022347,1,shares_device,1.0,1,0,0,shares_device -> A008912

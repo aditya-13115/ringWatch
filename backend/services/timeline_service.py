@@ -59,5 +59,10 @@ class TimelineService:
                 }
             )
 
+        # Normalize all timestamps to pandas Timestamp before sorting
+        for event in events:
+            event["timestamp"] = pd.to_datetime(event["timestamp"])
+
         events.sort(key=lambda x: x["timestamp"])
+
         return events

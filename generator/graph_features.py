@@ -24,7 +24,6 @@ from .features_config import (
 
 T = pd.Timestamp(PREDICTION_CUTOFF)
 
-EXPECTED_ACCOUNT_COUNT = 1000
 
 FORBIDDEN_COLUMNS = [
     "population_type",
@@ -60,44 +59,102 @@ def load_day5_data():
     Load only the datasets required for Day 5 graph construction.
 
     Ground truth is deliberately NOT loaded here.
+
+    Datetime columns are explicitly normalized after CSV loading
+    because some source CSVs contain mixed-type values.
     """
 
-    features = pd.read_csv(FEATURES_PATH)
+    features = pd.read_csv(
+        FEATURES_PATH,
+        low_memory=False,
+    )
 
     accounts = pd.read_csv(
         PATHS["accounts"],
-        parse_dates=["account_created_at"],
+        low_memory=False,
     )
 
     orders = pd.read_csv(
         PATHS["orders"],
-        parse_dates=[
-            "order_timestamp",
-            "delivery_timestamp",
-            "return_timestamp",
-            "refund_timestamp",
-        ],
+        low_memory=False,
     )
 
     devices = pd.read_csv(
         PATHS["devices"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     addresses = pd.read_csv(
         PATHS["addresses"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     phones = pd.read_csv(
         PATHS["phones"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
 
     instruments = pd.read_csv(
         PATHS["payment_instruments"],
-        parse_dates=["first_seen_at"],
+        low_memory=False,
     )
+
+    # ========================================================
+    # EXPLICIT DATETIME NORMALIZATION
+    # ========================================================
+
+    datetime_columns = {
+        "accounts": [
+            "account_created_at",
+        ],
+        "orders": [
+            "order_timestamp",
+            "delivery_timestamp",
+            "return_timestamp",
+            "refund_timestamp",
+            "dispute_created_at",
+        ],
+        "devices": [
+            "first_seen_at",
+        ],
+        "addresses": [
+            "first_seen_at",
+        ],
+        "phones": [
+            "first_seen_at",
+        ],
+        "instruments": [
+            "first_seen_at",
+        ],
+    }
+
+    dataframes = {
+        "accounts": accounts,
+        "orders": orders,
+        "devices": devices,
+        "addresses": addresses,
+        "phones": phones,
+        "instruments": instruments,
+    }
+
+    for name, columns in datetime_columns.items():
+        df = dataframes[name]
+
+        for column in columns:
+            if column in df.columns:
+                df[column] = pd.to_datetime(
+                    df[column],
+                    errors="coerce",
+                )
+
+        dataframes[name] = df
+
+    accounts = dataframes["accounts"]
+    orders = dataframes["orders"]
+    devices = dataframes["devices"]
+    addresses = dataframes["addresses"]
+    phones = dataframes["phones"]
+    instruments = dataframes["instruments"]
 
     return (
         features,
@@ -120,9 +177,9 @@ def validate_day4_features(features):
     Validate the Day 4 feature matrix before using it.
     """
 
-    assert len(features) == EXPECTED_ACCOUNT_COUNT, (
-        f"Expected {EXPECTED_ACCOUNT_COUNT} Day 4 feature rows, " f"got {len(features)}"
-    )
+    assert features["account_id"].nunique() == len(
+        features
+    ), "Day 4 feature matrix must contain exactly one row per account."
 
     assert features[
         "account_id"
@@ -163,6 +220,37 @@ def filter_to_cutoff(
     Orders are retained based on order_timestamp.
     Entity tables are retained based on first_seen_at.
     """
+    # --------------------------------------------------------
+    # Datetime validation
+    # --------------------------------------------------------
+
+    required_datetime_columns = {
+        "orders": ["order_timestamp"],
+        "devices": ["first_seen_at"],
+        "addresses": ["first_seen_at"],
+        "phones": ["first_seen_at"],
+        "instruments": ["first_seen_at"],
+    }
+
+    dataframes = {
+        "orders": orders,
+        "devices": devices,
+        "addresses": addresses,
+        "phones": phones,
+        "instruments": instruments,
+    }
+
+    for name, columns in required_datetime_columns.items():
+        df = dataframes[name]
+
+        for column in columns:
+            if column not in df.columns:
+                raise KeyError(f"{name} is missing required datetime column: {column}")
+
+            if not pd.api.types.is_datetime64_any_dtype(df[column]):
+                raise TypeError(
+                    f"{name}[{column}] is not datetime dtype: " f"{df[column].dtype}"
+                )
 
     filtered_orders = orders[orders["order_timestamp"] <= T].copy()
 
@@ -272,12 +360,11 @@ def add_edge_candidate(
 # ============================================================
 
 
-def build_strong_edges(filtered_orders, edge_map):
+def build_strong_edges(filtered_orders, edge_map, max_hours=24 * 7):
     """
-    Build edges from shared device, payment instrument,
-    phone, and address.
+    Build edges from shared device, payment instrument, phone, and address.
+    Only connect accounts if they used the same entity within max_hours of each other.
     """
-
     edge_counts = {
         "shares_device": 0,
         "shares_payment_instrument": 0,
@@ -286,38 +373,40 @@ def build_strong_edges(filtered_orders, edge_map):
     }
 
     for entity_column, edge_type, weight in STRONG_EDGE_RULES:
-
         if entity_column not in filtered_orders.columns:
             raise KeyError(f"Missing required order column: {entity_column}")
 
         grouped = (
-            filtered_orders[["account_id", entity_column]]
+            filtered_orders[["account_id", entity_column, "order_timestamp"]]
             .dropna(subset=[entity_column])
-            .groupby(entity_column)["account_id"]
-            .apply(set)
+            .groupby(entity_column)
         )
 
-        for entity, accounts in grouped.items():
-
+        for entity, group in grouped:
             if pd.isna(entity):
                 continue
-
+            # For each pair of accounts in group, check if any order timestamps are within max_hours
+            accounts = group["account_id"].unique()
+            account_times = {
+                acc: group[group["account_id"] == acc]["order_timestamp"].tolist()
+                for acc in accounts
+            }
             account_list = sorted(accounts)
-
-            for account_a, account_b in combinations(
-                account_list,
-                2,
-            ):
-                add_edge_candidate(
-                    edge_map,
-                    account_a,
-                    account_b,
-                    edge_type,
-                    weight,
-                )
-
-                edge_counts[edge_type] += 1
-
+            for i in range(len(account_list)):
+                for j in range(i + 1, len(account_list)):
+                    a, b = account_list[i], account_list[j]
+                    # Check temporal proximity
+                    close = False
+                    for t_a in account_times[a]:
+                        for t_b in account_times[b]:
+                            if abs((t_a - t_b).total_seconds()) <= max_hours * 3600:
+                                close = True
+                                break
+                        if close:
+                            break
+                    if close:
+                        add_edge_candidate(edge_map, a, b, edge_type, weight)
+                        edge_counts[edge_type] += 1
     return edge_counts
 
 
@@ -673,7 +762,7 @@ def graph_integrity_report(graph):
     print(f"Connected components:   " f"{len(components):,}")
     print(f"Largest component:      " f"{largest_component:,}")
 
-    assert nodes == EXPECTED_ACCOUNT_COUNT
+    assert nodes > 0
     assert self_loops == 0
     assert edges > 0
 
@@ -752,7 +841,7 @@ def run_louvain(graph):
     # Validation
     # --------------------------------------------------------
 
-    assert len(community_df) == EXPECTED_ACCOUNT_COUNT
+    assert len(community_df) == graph.number_of_nodes()
     assert community_df["account_id"].is_unique
     assert community_df["community_id"].notna().all()
 
@@ -777,7 +866,7 @@ def run_louvain(graph):
     if number_of_communities == 1:
         print("WARNING: Louvain produced one community.")
 
-    if largest_community == EXPECTED_ACCOUNT_COUNT:
+    if largest_community == graph.number_of_nodes():
         print("WARNING: largest community contains all accounts.")
 
     return (
@@ -802,6 +891,16 @@ def compute_node_graph_features(graph):
         eigenvector_centrality = nx.eigenvector_centrality(
             graph,
             max_iter=1000,
+            weight="weight",
+        )
+        # PageRank centrality
+        pagerank = nx.pagerank(
+            graph,
+            weight="weight",
+        )
+
+        clustering = nx.clustering(
+            graph,
             weight="weight",
         )
     except nx.PowerIterationFailedConvergence as exc:
@@ -838,16 +937,39 @@ def compute_node_graph_features(graph):
             )
         )
 
+        edge_type_counts = {
+            "shares_device": 0,
+            "shares_payment_instrument": 0,
+            "shares_phone": 0,
+            "shares_address": 0,
+            "shares_ip_prefix": 0,
+            "shares_coupon": 0,
+        }
+        for neighbor in graph.neighbors(account_id):
+            edge_data = graph.get_edge_data(account_id, neighbor)
+            edge_type = edge_data.get("edge_type", "")
+            if edge_type in edge_type_counts:
+                edge_type_counts[edge_type] += 1
+
         records.append(
             {
                 "account_id": account_id,
                 "degree_centrality": float(degree_centrality[account_id]),
                 "eigenvector_centrality": float(eigenvector_centrality[account_id]),
+                "pagerank": float(pagerank[account_id]),
                 "triangle_count": int(triangle_counts[account_id]),
                 "clustering_coefficient": float(clustering[account_id]),
                 "connected_component_size": int(component_sizes[account_id]),
                 "shared_edge_count": int(shared_edge_count),
                 "shared_edge_weight_sum": float(shared_edge_weight_sum),
+                "edge_shares_device": int(edge_type_counts["shares_device"]),
+                "edge_shares_payment": int(
+                    edge_type_counts["shares_payment_instrument"]
+                ),
+                "edge_shares_phone": int(edge_type_counts["shares_phone"]),
+                "edge_shares_address": int(edge_type_counts["shares_address"]),
+                "edge_shares_ip": int(edge_type_counts["shares_ip_prefix"]),
+                "edge_shares_coupon": int(edge_type_counts["shares_coupon"]),
             }
         )
 
@@ -857,12 +979,13 @@ def compute_node_graph_features(graph):
     # Validation
     # --------------------------------------------------------
 
-    assert len(graph_features) == EXPECTED_ACCOUNT_COUNT
+    assert len(graph_features) == graph.number_of_nodes()
     assert graph_features["account_id"].is_unique
 
     numeric_columns = [
         "degree_centrality",
         "eigenvector_centrality",
+        "pagerank",
         "triangle_count",
         "clustering_coefficient",
         "connected_component_size",
@@ -875,6 +998,8 @@ def compute_node_graph_features(graph):
     assert (graph_features["degree_centrality"] >= 0).all()
 
     assert (graph_features["eigenvector_centrality"] >= 0).all()
+
+    assert (graph_features["pagerank"] >= 0).all()
 
     assert (graph_features["connected_component_size"] >= 1).all()
 
@@ -902,6 +1027,8 @@ def compute_community_features(
         "refund_rate",
         "avg_order_value",
         "total_orders",
+        "dispute_rate",
+        "coupon_usage_rate",
     ]
 
     missing = [column for column in required_columns if column not in features.columns]
@@ -944,6 +1071,18 @@ def compute_community_features(
                 "total_orders",
                 "sum",
             ),
+            community_avg_dispute_rate=(
+                "dispute_rate",
+                "mean",
+            ),
+            community_max_return_rate=(
+                "return_rate",
+                "max",
+            ),
+            community_avg_coupon_usage=(
+                "coupon_usage_rate",
+                "mean",
+            ),
         )
         .reset_index()
     )
@@ -973,6 +1112,7 @@ def build_final_features(
     features,
     graph_features,
     community_features,
+    graph,
 ):
     """
     Merge graph and community features with Day 4 features.
@@ -993,10 +1133,46 @@ def build_final_features(
     )
 
     # --------------------------------------------------------
+    # NEIGHBOR FEATURES
+    # --------------------------------------------------------
+
+    neighbor_avg_return = {}
+
+    return_rate_by_account = features.set_index("account_id")["return_rate"]
+
+    for node in graph.nodes():
+
+        neighbors = list(graph.neighbors(node))
+
+        if neighbors:
+            neighbor_rates = return_rate_by_account.reindex(neighbors)
+            neighbor_avg_return[node] = float(neighbor_rates.mean())
+        else:
+            neighbor_avg_return[node] = 0.0
+
+    final_features["neighbor_avg_return_rate"] = (
+        final_features["account_id"].map(neighbor_avg_return).fillna(0.0)
+    )
+
+    # --------------------------------------------------------
+    # HARD-NEGATIVE SPECIFIC FEATURES
+    # --------------------------------------------------------
+
+    final_features["looks_bargain"] = (
+        (final_features["coupon_usage_rate"] > 0.4)
+        & (final_features["return_rate"] < 0.2)
+    ).astype(int)
+
+    final_features["looks_office"] = (
+        (final_features["shared_address_count"] > 0)
+        & (final_features["return_rate"] < 0.1)
+    ).astype(int)
+
+    # --------------------------------------------------------
     # Validation
     # --------------------------------------------------------
 
-    assert len(final_features) == EXPECTED_ACCOUNT_COUNT
+    assert len(final_features) == len(features)
     assert final_features["account_id"].is_unique
 
     present_forbidden = [
@@ -1176,21 +1352,19 @@ def evaluate_baseline(
     # reporting, never as a model feature.
     # --------------------------------------------------------
 
-    accounts = pd.read_csv(PATHS["accounts"])
-
-    required_account_columns = {
-        "account_id",
-        "population_type",
-    }
-
-    missing = required_account_columns - set(accounts.columns)
-
-    if missing:
-        raise KeyError(f"accounts.csv missing columns: {sorted(missing)}")
+    private_accounts = pd.read_csv(
+        PATHS["accounts"].parent / "account_population_labels_private.csv"
+    )
+    required_private_columns = {"account_id", "population_type"}
+    missing_private = required_private_columns - set(private_accounts.columns)
+    if missing_private:
+        raise KeyError(
+            f"private labels file missing columns: {sorted(missing_private)}"
+        )
 
     hard_negative_ids = set(
-        accounts.loc[
-            accounts["population_type"] == "hard_negative",
+        private_accounts.loc[
+            private_accounts["population_type"] == "hard_negative",
             "account_id",
         ]
     )
@@ -1373,7 +1547,7 @@ def write_day5_leakage_report(
 
     graph_cutoff_safe = (
         all_cutoff_safe
-        and len(graph) == EXPECTED_ACCOUNT_COUNT
+        and len(graph) == len(features_graph)
         and len(forbidden_present) == 0
     )
 
@@ -1474,7 +1648,10 @@ def main():
 
     validate_day4_features(features)
 
-    assert len(accounts) == EXPECTED_ACCOUNT_COUNT
+    assert len(accounts) == len(features), (
+        f"Account table has {len(accounts):,} rows but Day 4 features have "
+        f"{len(features):,} rows."
+    )
     assert accounts["account_id"].is_unique
 
     # --------------------------------------------------------
@@ -1622,6 +1799,7 @@ def main():
         features,
         graph_features,
         community_features,
+        graph,
     )
 
     final_features.to_csv(
@@ -1693,7 +1871,7 @@ def main():
 
     stop_condition_passed = True
 
-    if len(final_features) != EXPECTED_ACCOUNT_COUNT:
+    if len(final_features) != len(features):
         stop_condition_passed = False
 
     if final_features.isna().sum().sum() != 0:

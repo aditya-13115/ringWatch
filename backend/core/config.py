@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 30.0
     llm_max_retries: int = 2
 
+    # Razorpay
+    razorpay_key_id: str | None = None
+    razorpay_key_secret: str | None = None
+
     # Anthropic
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-5"
@@ -27,34 +31,79 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_model: str = "llama-3.3-70b-versatile"
 
-    data_dir: Path = PROJECT_ROOT / "data"
-    processed_dir: Path = PROJECT_ROOT / "data" / "processed"
+    # Primary operational fraud model
+    # RingWatch uses the V4 Ensemble for production scoring.
+    # The ensemble is LightGBM B (tuned) + GNN.
+    primary_model: str = "Ensemble_LGBM_B_GNN"
 
-    explainability_dir: Path = PROJECT_ROOT / "data" / "processed" / "explainability"
+    # V4 Ensemble operating threshold
+    primary_model_threshold: float = 0.6831313131313131
 
-    model_dir: Path = PROJECT_ROOT / "data" / "processed" / "model"
+    # LightGBM A tuned is retained only for feature-ablation
+    # sensitivity analysis. It is NOT the primary operating model.
+    ablation_model_path: Path = (
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "model"
+        / "model_lgbm_A_tuned.pkl"
+    )
+
+    # V4 dataset
+    data_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k"
+
+    processed_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed"
+
+    explainability_dir: Path = (
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "explainability"
+    )
+
+    model_dir: Path = PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "model"
 
     model_predictions_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "model" / "model_predictions_test.csv"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "model"
+        / "model_predictions_test.csv"
     )
 
+    # V4 tuned benchmark metrics
     model_metrics_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "model" / "model_metrics.json"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "model"
+        / "model_metrics_tuned.json"
     )
 
+    # V4 feature matrices
     features_accounts_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "features_accounts.csv"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "features_accounts.csv"
     )
 
     features_graph_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "features_graph.csv"
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "features_graph.csv"
     )
 
+    # V4 graph
     account_graph_edges_path: Path = (
-        PROJECT_ROOT / "data" / "processed" / "account_graph_edges.csv"
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "account_graph_edges.csv"
     )
 
-    addresses_path: Path = PROJECT_ROOT / "data" / "addresses.csv"
+    # V4 addresses
+    addresses_path: Path = PROJECT_ROOT / "data" / "v4_realistic_30k" / "addresses.csv"
 
     model_config = SettingsConfigDict(
         env_file=".env",

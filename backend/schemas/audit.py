@@ -5,7 +5,7 @@ class AuditRecordResponse(BaseModel):
     timestamp: str
     account_id: str
     model_version: str
-    proba: float
+    proba: float | None = None
     rank: int
     risk_tier: str
     top_k_flag: bool

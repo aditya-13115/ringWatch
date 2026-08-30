@@ -3,6 +3,14 @@ from fastapi.testclient import TestClient
 from backend.main import app
 
 
+def get_first_account_id(client):
+    response = client.get("/api/queue")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["accounts"]) > 0
+    return data["accounts"][0]["account_id"]
+
+
 def test_health():
     with TestClient(app) as client:
         response = client.get("/health")
@@ -22,20 +30,13 @@ def test_queue():
         response = client.get("/api/queue")
         assert response.status_code == 200
         data = response.json()
-        assert data["total"] == 7
-        assert len(data["accounts"]) == 7
+        assert data["total"] > 0
+        assert len(data["accounts"]) == data["total"]
 
 
 def test_account_detail_valid():
     with TestClient(app) as client:
-        queue_response = client.get("/api/queue")
-        assert queue_response.status_code == 200
-
-        accounts = queue_response.json()["accounts"]
-        assert len(accounts) > 0
-
-        account_id = accounts[0]["account_id"]
-
+        account_id = get_first_account_id(client)
         response = client.get(f"/api/accounts/{account_id}")
         assert response.status_code == 200
         assert response.json()["account_id"] == account_id
@@ -49,7 +50,8 @@ def test_account_detail_not_found():
 
 def test_graph_valid():
     with TestClient(app) as client:
-        response = client.get("/api/accounts/A000529/graph")
+        account_id = get_first_account_id(client)
+        response = client.get(f"/api/accounts/{account_id}/graph")
         assert response.status_code == 200
         assert "nodes" in response.json()
         assert "edges" in response.json()
@@ -57,21 +59,24 @@ def test_graph_valid():
 
 def test_evidence_valid():
     with TestClient(app) as client:
-        response = client.get("/api/accounts/A000529/evidence")
+        account_id = get_first_account_id(client)
+        response = client.get(f"/api/accounts/{account_id}/evidence")
         assert response.status_code == 200
         assert "fields" in response.json()
 
 
 def test_report_valid():
     with TestClient(app) as client:
-        response = client.get("/api/accounts/A000529/report")
+        account_id = get_first_account_id(client)
+        response = client.get(f"/api/accounts/{account_id}/report")
         assert response.status_code == 200
         assert "case_report_text" in response.json()
 
 
 def test_action_valid():
     with TestClient(app) as client:
-        response = client.get("/api/accounts/A000529/action")
+        account_id = get_first_account_id(client)
+        response = client.get(f"/api/accounts/{account_id}/action")
         assert response.status_code == 200
         assert response.json()["risk_tier"] in {
             "CRITICAL",
@@ -114,7 +119,8 @@ def test_address_normalize_unresolved():
 
 def test_timeline_valid():
     with TestClient(app) as client:
-        response = client.get("/api/accounts/A000529/timeline")
+        account_id = get_first_account_id(client)
+        response = client.get(f"/api/accounts/{account_id}/timeline")
         assert response.status_code == 200
         data = response.json()
         assert "events" in data
@@ -123,10 +129,34 @@ def test_timeline_valid():
 
 def test_investigate_valid():
     with TestClient(app) as client:
-        response = client.post("/api/accounts/A000529/investigate")
+        account_id = get_first_account_id(client)
+        response = client.post(f"/api/accounts/{account_id}/investigate")
         assert response.status_code == 200
         data = response.json()
         assert "summary" in data
         assert "recommended_action" in data
-        # Source can be either "llm" or "deterministic" depending on API key
         assert data["source"] in ["llm", "deterministic"]
+
+
+def test_failure_demo_razorpay():
+    with TestClient(app) as client:
+        response = client.post("/api/failure-demo/razorpay-synthetic")
+
+        assert response.status_code == 200
+
+        data = response.json()
+
+        assert data["status"] == "GRACEFUL_FAILURE_HANDLED"
+        assert data["source"] == "razorpay_style_synthetic"
+
+        assert data["batch_size"] == 100
+        assert data["malformed_rows"] == 10
+        assert data["quarantined"] == 10
+        assert data["valid_processed"] == 90
+        assert data["human_review_routed"] == 10
+
+        assert data["safety"]["malformed_entered_investigation_pipeline"] is False
+
+        assert data["safety"]["quarantined_before_model_inference"] is True
+
+        assert data["safety"]["human_review_required"] is True

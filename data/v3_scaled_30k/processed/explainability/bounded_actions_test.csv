@@ -1,0 +1,237 @@
+account_id,rank,proba,risk_tier,recommended_action
+A024295,1,0.9999997367107664,CRITICAL,CRITICAL: recommend human review + soft-hold refunds
+A024090,2,0.9999997357238658,CRITICAL,CRITICAL: recommend human review + soft-hold refunds
+A024050,3,0.9999997353002472,CRITICAL,CRITICAL: recommend human review + soft-hold refunds
+A024289,4,0.999999735174394,CRITICAL,CRITICAL: recommend human review + soft-hold refunds
+A024156,5,0.9999997348659918,CRITICAL,CRITICAL: recommend human review + soft-hold refunds
+A024179,6,0.9999997348248656,HIGH,HIGH: recommend human review
+A024154,7,0.9999997347731332,HIGH,HIGH: recommend human review
+A024119,8,0.9999997346758986,HIGH,HIGH: recommend human review
+A024180,9,0.9999997346652454,HIGH,HIGH: recommend human review
+A024117,10,0.9999997343382164,HIGH,HIGH: recommend human review
+A024152,11,0.999999734309708,HIGH,HIGH: recommend human review
+A024619,12,0.9999997339466096,HIGH,HIGH: recommend human review
+A024178,13,0.9999997339270096,HIGH,HIGH: recommend human review
+A024116,14,0.9999997339009274,HIGH,HIGH: recommend human review
+A024290,15,0.9999997338771024,HIGH,HIGH: recommend human review
+A024340,16,0.9999997337057336,HIGH,HIGH: recommend human review
+A024344,17,0.999999733701218,HIGH,HIGH: recommend human review
+A024341,18,0.9999997337012142,HIGH,HIGH: recommend human review
+A024345,19,0.999999733701214,HIGH,HIGH: recommend human review
+A024356,20,0.9999997336992488,HIGH,HIGH: recommend human review
+A024346,21,0.9999997336992472,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024355,22,0.9999997336992464,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024519,23,0.9999997336857545,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024600,24,0.9999997336856988,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024461,25,0.999999733679814,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024510,26,0.9999997336798112,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024462,27,0.9999997336798108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024464,28,0.9999997336798102,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024478,29,0.9999997336792124,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024814,30,0.9999997336792124,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024813,31,0.9999997336792122,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024500,32,0.999999733679212,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024518,33,0.999999733679212,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024460,34,0.9999997336792118,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024476,35,0.9999997336792118,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024504,36,0.9999997336792118,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024811,37,0.9999997336792118,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024517,38,0.9999997336792116,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024613,39,0.9999997336792116,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024509,40,0.9999997336792114,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024800,41,0.9999997336792114,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024817,42,0.9999997336792114,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024804,43,0.9999997336792112,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024468,44,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024470,45,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024515,46,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024604,47,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024605,48,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024801,49,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024805,50,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024810,51,0.9999997336792108,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024807,52,0.9999997336783027,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024350,53,0.999999733677118,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024158,54,0.9999997336752148,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024816,55,0.9999997336576804,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024474,56,0.9999997336570812,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024466,57,0.9999997336570804,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024115,58,0.9999997336167016,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024607,59,0.999999733560966,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024601,60,0.9999997335609628,MEDIUM,MEDIUM: recommend step-up verification on refund
+A024092,61,0.9999997335418458,LOW,LOW: monitor — no immediate refund action
+A024176,62,0.9999997335219746,LOW,LOW: monitor — no immediate refund action
+A024351,63,0.9999997334688384,LOW,LOW: monitor — no immediate refund action
+A024501,64,0.9999997334474162,LOW,LOW: monitor — no immediate refund action
+A024294,65,0.999999733416442,LOW,LOW: monitor — no immediate refund action
+A024088,66,0.9999997333203332,LOW,LOW: monitor — no immediate refund action
+A024803,67,0.9999997331485438,LOW,LOW: monitor — no immediate refund action
+A024802,68,0.9999997331328696,LOW,LOW: monitor — no immediate refund action
+A024095,69,0.9999997330193324,LOW,LOW: monitor — no immediate refund action
+A024610,70,0.9999997329938703,LOW,LOW: monitor — no immediate refund action
+A024177,71,0.9999997329920456,LOW,LOW: monitor — no immediate refund action
+A024473,72,0.9999997328991992,LOW,LOW: monitor — no immediate refund action
+A024516,73,0.9999997328824488,LOW,LOW: monitor — no immediate refund action
+A024615,74,0.9999997327918154,LOW,LOW: monitor — no immediate refund action
+A024094,75,0.99999973262828,LOW,LOW: monitor — no immediate refund action
+A024292,76,0.9999997326226252,LOW,LOW: monitor — no immediate refund action
+A024183,77,0.9999997325136404,LOW,LOW: monitor — no immediate refund action
+A024093,78,0.9999997320588564,LOW,LOW: monitor — no immediate refund action
+A024155,79,0.9999997320383044,LOW,LOW: monitor — no immediate refund action
+A024809,80,0.9999997320062172,LOW,LOW: monitor — no immediate refund action
+A024053,81,0.9999997319330406,LOW,LOW: monitor — no immediate refund action
+A024808,82,0.9999997317764426,LOW,LOW: monitor — no immediate refund action
+A025232,83,0.9999997317660184,LOW,LOW: monitor — no immediate refund action
+A024052,84,0.9999997317629172,LOW,LOW: monitor — no immediate refund action
+A024055,85,0.9999997316127288,LOW,LOW: monitor — no immediate refund action
+A025237,86,0.9999997314954576,LOW,LOW: monitor — no immediate refund action
+A025230,87,0.999999731492214,LOW,LOW: monitor — no immediate refund action
+A024048,88,0.9999997312694682,LOW,LOW: monitor — no immediate refund action
+A024113,89,0.9999997311957552,LOW,LOW: monitor — no immediate refund action
+A024051,90,0.9999997311367504,LOW,LOW: monitor — no immediate refund action
+A024505,91,0.9999997308825456,LOW,LOW: monitor — no immediate refund action
+A024612,92,0.9999997308381956,LOW,LOW: monitor — no immediate refund action
+A024818,93,0.9999997307721772,LOW,LOW: monitor — no immediate refund action
+A024342,94,0.999999730761811,LOW,LOW: monitor — no immediate refund action
+A024511,95,0.9999997306490528,LOW,LOW: monitor — no immediate refund action
+A024089,96,0.9999997305534918,LOW,LOW: monitor — no immediate refund action
+A024819,97,0.9999997302757638,LOW,LOW: monitor — no immediate refund action
+A024806,98,0.9999997301794572,LOW,LOW: monitor — no immediate refund action
+A024815,99,0.9999997301794572,LOW,LOW: monitor — no immediate refund action
+A024293,100,0.9999997300275624,LOW,LOW: monitor — no immediate refund action
+A024291,101,0.9999997299913802,LOW,LOW: monitor — no immediate refund action
+A024054,102,0.9999997299225232,LOW,LOW: monitor — no immediate refund action
+A024467,103,0.9999997298061054,LOW,LOW: monitor — no immediate refund action
+A025126,104,0.9999997295423304,LOW,LOW: monitor — no immediate refund action
+A024153,105,0.9999997295355056,LOW,LOW: monitor — no immediate refund action
+A025123,106,0.999999728599988,LOW,LOW: monitor — no immediate refund action
+A024469,107,0.9999997282521336,LOW,LOW: monitor — no immediate refund action
+A025239,108,0.9999997275327418,LOW,LOW: monitor — no immediate refund action
+A024603,109,0.9999997273225334,LOW,LOW: monitor — no immediate refund action
+A024354,110,0.9999997270593692,LOW,LOW: monitor — no immediate refund action
+A024502,111,0.9999997269912216,LOW,LOW: monitor — no immediate refund action
+A024112,112,0.9999997267692028,LOW,LOW: monitor — no immediate refund action
+A024507,113,0.9999997261925478,LOW,LOW: monitor — no immediate refund action
+A024358,114,0.9999997261363234,LOW,LOW: monitor — no immediate refund action
+A024465,115,0.999999726089672,LOW,LOW: monitor — no immediate refund action
+A024611,116,0.9999997260469649,LOW,LOW: monitor — no immediate refund action
+A024513,117,0.9999997258660768,LOW,LOW: monitor — no immediate refund action
+A024353,118,0.9999997257065892,LOW,LOW: monitor — no immediate refund action
+A024514,119,0.9999997256990304,LOW,LOW: monitor — no immediate refund action
+A024602,120,0.999999725413794,LOW,LOW: monitor — no immediate refund action
+A024343,121,0.999999724998237,LOW,LOW: monitor — no immediate refund action
+A024359,122,0.9999997249907598,LOW,LOW: monitor — no immediate refund action
+A024352,123,0.9999997244430864,LOW,LOW: monitor — no immediate refund action
+A024616,124,0.999999724071992,LOW,LOW: monitor — no immediate refund action
+A024608,125,0.9999997240555158,LOW,LOW: monitor — no immediate refund action
+A024606,126,0.9999997237092366,LOW,LOW: monitor — no immediate refund action
+A024963,127,0.9999997235614302,LOW,LOW: monitor — no immediate refund action
+A024506,128,0.999999723533433,LOW,LOW: monitor — no immediate refund action
+A024348,129,0.9999997227232637,LOW,LOW: monitor — no immediate refund action
+A024508,130,0.9999997225259666,LOW,LOW: monitor — no immediate refund action
+A024967,131,0.9999997220648064,LOW,LOW: monitor — no immediate refund action
+A024966,132,0.9999997211754132,LOW,LOW: monitor — no immediate refund action
+A024617,133,0.9999997209803012,LOW,LOW: monitor — no immediate refund action
+A024812,134,0.9999997209802894,LOW,LOW: monitor — no immediate refund action
+A024512,135,0.999999720831076,LOW,LOW: monitor — no immediate refund action
+A024463,136,0.999999720807874,LOW,LOW: monitor — no immediate refund action
+A024964,137,0.999999720492696,LOW,LOW: monitor — no immediate refund action
+A025236,138,0.9999997183406764,LOW,LOW: monitor — no immediate refund action
+A024182,139,0.999999717138451,LOW,LOW: monitor — no immediate refund action
+A024285,140,0.999999716547096,LOW,LOW: monitor — no immediate refund action
+A024286,141,0.9999997157317084,LOW,LOW: monitor — no immediate refund action
+A024472,142,0.9999997146977672,LOW,LOW: monitor — no immediate refund action
+A024503,143,0.9999997145537464,LOW,LOW: monitor — no immediate refund action
+A024114,144,0.9999997125194976,LOW,LOW: monitor — no immediate refund action
+A024091,145,0.999999712045582,LOW,LOW: monitor — no immediate refund action
+A025235,146,0.9999997110938484,LOW,LOW: monitor — no immediate refund action
+A024288,147,0.9999997099381772,LOW,LOW: monitor — no immediate refund action
+A024965,148,0.9999997092346457,LOW,LOW: monitor — no immediate refund action
+A024049,149,0.9999997086553022,LOW,LOW: monitor — no immediate refund action
+A024181,150,0.9999997081498524,LOW,LOW: monitor — no immediate refund action
+A025233,151,0.999999698327806,LOW,LOW: monitor — no immediate refund action
+A025201,152,0.9999996909704492,LOW,LOW: monitor — no immediate refund action
+A025462,153,0.9999996905064886,LOW,LOW: monitor — no immediate refund action
+A024962,154,0.9999996891802478,LOW,LOW: monitor — no immediate refund action
+A025394,155,0.9999996858939934,LOW,LOW: monitor — no immediate refund action
+A025398,156,0.9999996852696372,LOW,LOW: monitor — no immediate refund action
+A025395,157,0.9999996849229033,LOW,LOW: monitor — no immediate refund action
+A025440,158,0.9999996822000728,LOW,LOW: monitor — no immediate refund action
+A025393,159,0.9999996802618488,LOW,LOW: monitor — no immediate refund action
+A025209,160,0.9999996800342936,LOW,LOW: monitor — no immediate refund action
+A025121,161,0.9999996768395728,LOW,LOW: monitor — no immediate refund action
+A025468,162,0.9999996763209048,LOW,LOW: monitor — no immediate refund action
+A025205,163,0.9999996761477956,LOW,LOW: monitor — no immediate refund action
+A025442,164,0.9999996754924708,LOW,LOW: monitor — no immediate refund action
+A025392,165,0.9999996717319828,LOW,LOW: monitor — no immediate refund action
+A024357,166,0.9999996711840906,LOW,LOW: monitor — no immediate refund action
+A025122,167,0.9999996677217096,LOW,LOW: monitor — no immediate refund action
+A024281,168,0.9999996650810984,LOW,LOW: monitor — no immediate refund action
+A025207,169,0.9999996647941596,LOW,LOW: monitor — no immediate refund action
+A025206,170,0.9999996646233694,LOW,LOW: monitor — no immediate refund action
+A025204,171,0.9999996625717588,LOW,LOW: monitor — no immediate refund action
+A025390,172,0.9999996570370656,LOW,LOW: monitor — no immediate refund action
+A025125,173,0.9999996535576208,LOW,LOW: monitor — no immediate refund action
+A024159,174,0.9999996502166228,LOW,LOW: monitor — no immediate refund action
+A025448,175,0.999999648952179,LOW,LOW: monitor — no immediate refund action
+A025124,176,0.9999996468538378,LOW,LOW: monitor — no immediate refund action
+A025391,177,0.9999996426889096,LOW,LOW: monitor — no immediate refund action
+A025460,178,0.9999996405302612,LOW,LOW: monitor — no immediate refund action
+A024614,179,0.9999996397415796,LOW,LOW: monitor — no immediate refund action
+A025464,180,0.9999996352453606,LOW,LOW: monitor — no immediate refund action
+A024347,181,0.9999996255883828,LOW,LOW: monitor — no immediate refund action
+A024349,182,0.9999996255746252,LOW,LOW: monitor — no immediate refund action
+A025120,183,0.9999996151712004,LOW,LOW: monitor — no immediate refund action
+A025203,184,0.9999996004528398,LOW,LOW: monitor — no immediate refund action
+A024479,185,0.9999995971558262,LOW,LOW: monitor — no immediate refund action
+A024618,186,0.9999995956636591,LOW,LOW: monitor — no immediate refund action
+A025234,187,0.9999995952910636,LOW,LOW: monitor — no immediate refund action
+A024475,188,0.999999594561587,LOW,LOW: monitor — no immediate refund action
+A024477,189,0.999999594561587,LOW,LOW: monitor — no immediate refund action
+A025208,190,0.9999995936314792,LOW,LOW: monitor — no immediate refund action
+A025200,191,0.9999995935976224,LOW,LOW: monitor — no immediate refund action
+A024471,192,0.9999995934668404,LOW,LOW: monitor — no immediate refund action
+A025127,193,0.9999995925447188,LOW,LOW: monitor — no immediate refund action
+A024945,194,0.999999588378672,LOW,LOW: monitor — no immediate refund action
+A025399,195,0.9999995869537304,LOW,LOW: monitor — no immediate refund action
+A025461,196,0.9999995857735974,LOW,LOW: monitor — no immediate refund action
+A025469,197,0.9999995844384544,LOW,LOW: monitor — no immediate refund action
+A024948,198,0.9999995824032548,LOW,LOW: monitor — no immediate refund action
+A024944,199,0.9999995814525712,LOW,LOW: monitor — no immediate refund action
+A025443,200,0.9999995730365718,LOW,LOW: monitor — no immediate refund action
+A025238,201,0.9999995727084484,LOW,LOW: monitor — no immediate refund action
+A024157,202,0.9999995671183832,LOW,LOW: monitor — no immediate refund action
+A025083,203,0.9999995628078197,LOW,LOW: monitor — no immediate refund action
+A025466,204,0.9999995573093188,LOW,LOW: monitor — no immediate refund action
+A024949,205,0.9999995533379,LOW,LOW: monitor — no immediate refund action
+A025444,206,0.999999544614074,LOW,LOW: monitor — no immediate refund action
+A025082,207,0.9999995431451388,LOW,LOW: monitor — no immediate refund action
+A024287,208,0.999999541904198,LOW,LOW: monitor — no immediate refund action
+A025086,209,0.999999536334052,LOW,LOW: monitor — no immediate refund action
+A025463,210,0.999999535232298,LOW,LOW: monitor — no immediate refund action
+A025231,211,0.9999995303324012,LOW,LOW: monitor — no immediate refund action
+A025129,212,0.9999995294633788,LOW,LOW: monitor — no immediate refund action
+A024284,213,0.999999513231915,LOW,LOW: monitor — no immediate refund action
+A025441,214,0.9999995120543528,LOW,LOW: monitor — no immediate refund action
+A025467,215,0.9999995092285278,LOW,LOW: monitor — no immediate refund action
+A025447,216,0.9999994981747417,LOW,LOW: monitor — no immediate refund action
+A025128,217,0.9999994895392512,LOW,LOW: monitor — no immediate refund action
+A025449,218,0.9999994777390888,LOW,LOW: monitor — no immediate refund action
+A024282,219,0.9999994775679028,LOW,LOW: monitor — no immediate refund action
+A025087,220,0.9999994369656948,LOW,LOW: monitor — no immediate refund action
+A025465,221,0.999999434634078,LOW,LOW: monitor — no immediate refund action
+A025084,222,0.9999994314349944,LOW,LOW: monitor — no immediate refund action
+A024946,223,0.9999994120658268,LOW,LOW: monitor — no immediate refund action
+A025085,224,0.9999994105669112,LOW,LOW: monitor — no immediate refund action
+A024947,225,0.999999409192067,LOW,LOW: monitor — no immediate refund action
+A025396,226,0.9999993913321532,LOW,LOW: monitor — no immediate refund action
+A024283,227,0.9999993531055724,LOW,LOW: monitor — no immediate refund action
+A025446,228,0.9999993434849171,LOW,LOW: monitor — no immediate refund action
+A025202,229,0.9999993342752468,LOW,LOW: monitor — no immediate refund action
+A025397,230,0.9999993143820612,LOW,LOW: monitor — no immediate refund action
+A025445,231,0.9999992628242956,LOW,LOW: monitor — no immediate refund action
+A024280,232,0.999999253318844,LOW,LOW: monitor — no immediate refund action
+A024118,233,0.9999991718240716,LOW,LOW: monitor — no immediate refund action
+A024609,234,0.9999980628187898,LOW,LOW: monitor — no immediate refund action
+A020721,235,0.0154041914272312,LOW,LOW: monitor — no immediate refund action
+A016447,236,0.0151453665018911,LOW,LOW: monitor — no immediate refund action

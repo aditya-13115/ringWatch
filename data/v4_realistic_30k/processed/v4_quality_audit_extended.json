@@ -1,0 +1,552 @@
+{
+  "cutoff": "2026-02-20 00:00:00",
+  "raw_signal_audit": [
+    {
+      "feature": "distinct_devices",
+      "single_feature_auc": 0.672263,
+      "unique_values": 4
+    },
+    {
+      "feature": "distinct_instruments",
+      "single_feature_auc": 0.650521,
+      "unique_values": 4
+    },
+    {
+      "feature": "distinct_addresses",
+      "single_feature_auc": 0.647819,
+      "unique_values": 4
+    },
+    {
+      "feature": "total_orders",
+      "single_feature_auc": 0.64335,
+      "unique_values": 17
+    },
+    {
+      "feature": "total_amount",
+      "single_feature_auc": 0.627554,
+      "unique_values": 5440
+    },
+    {
+      "feature": "distinct_phones",
+      "single_feature_auc": 0.604545,
+      "unique_values": 3
+    },
+    {
+      "feature": "avg_order_value",
+      "single_feature_auc": 0.587949,
+      "unique_values": 8107
+    },
+    {
+      "feature": "return_rate",
+      "single_feature_auc": 0.574833,
+      "unique_values": 51
+    },
+    {
+      "feature": "refund_rate",
+      "single_feature_auc": 0.564132,
+      "unique_values": 51
+    },
+    {
+      "feature": "coupon_usage_rate",
+      "single_feature_auc": 0.542624,
+      "unique_values": 54
+    },
+    {
+      "feature": "dispute_rate",
+      "single_feature_auc": 0.507394,
+      "unique_values": 23
+    }
+  ],
+  "day4_feature_audit": [
+    {
+      "feature": "orders_last_7d",
+      "single_feature_auc": 0.656663,
+      "unique_values": 11
+    },
+    {
+      "feature": "distinct_devices",
+      "single_feature_auc": 0.643464,
+      "unique_values": 4
+    },
+    {
+      "feature": "orders_last_30d",
+      "single_feature_auc": 0.640162,
+      "unique_values": 17
+    },
+    {
+      "feature": "total_orders",
+      "single_feature_auc": 0.630035,
+      "unique_values": 18
+    },
+    {
+      "feature": "distinct_payment_instruments",
+      "single_feature_auc": 0.619729,
+      "unique_values": 4
+    },
+    {
+      "feature": "distinct_addresses",
+      "single_feature_auc": 0.619054,
+      "unique_values": 4
+    },
+    {
+      "feature": "shared_device_count",
+      "single_feature_auc": 0.616186,
+      "unique_values": 16
+    },
+    {
+      "feature": "total_amount",
+      "single_feature_auc": 0.612445,
+      "unique_values": 5415
+    },
+    {
+      "feature": "shared_instrument_count",
+      "single_feature_auc": 0.606234,
+      "unique_values": 14
+    },
+    {
+      "feature": "accounts_per_instrument",
+      "single_feature_auc": 0.603742,
+      "unique_values": 23
+    },
+    {
+      "feature": "total_delivered_orders",
+      "single_feature_auc": 0.597589,
+      "unique_values": 17
+    },
+    {
+      "feature": "accounts_per_device",
+      "single_feature_auc": 0.59222,
+      "unique_values": 28
+    },
+    {
+      "feature": "shared_address_count",
+      "single_feature_auc": 0.589295,
+      "unique_values": 16
+    },
+    {
+      "feature": "total_pending_orders",
+      "single_feature_auc": 0.573682,
+      "unique_values": 6
+    },
+    {
+      "feature": "distinct_phones",
+      "single_feature_auc": 0.571928,
+      "unique_values": 3
+    },
+    {
+      "feature": "accounts_per_address",
+      "single_feature_auc": 0.562865,
+      "unique_values": 29
+    },
+    {
+      "feature": "avg_order_value",
+      "single_feature_auc": 0.562657,
+      "unique_values": 8066
+    },
+    {
+      "feature": "shared_ip_prefix_count",
+      "single_feature_auc": 0.555461,
+      "unique_values": 10
+    },
+    {
+      "feature": "transaction_burst_score",
+      "single_feature_auc": 0.548325,
+      "unique_values": 5
+    },
+    {
+      "feature": "orders_last_24h",
+      "single_feature_auc": 0.548325,
+      "unique_values": 5
+    },
+    {
+      "feature": "discount_dependency_score",
+      "single_feature_auc": 0.542781,
+      "unique_values": 9476
+    },
+    {
+      "feature": "accounts_per_phone",
+      "single_feature_auc": 0.537153,
+      "unique_values": 11
+    },
+    {
+      "feature": "coupon_usage_rate",
+      "single_feature_auc": 0.535805,
+      "unique_values": 55
+    },
+    {
+      "feature": "refunds_last_7d",
+      "single_feature_auc": 0.532281,
+      "unique_values": 6
+    },
+    {
+      "feature": "shared_phone_count",
+      "single_feature_auc": 0.527515,
+      "unique_values": 7
+    },
+    {
+      "feature": "total_returns",
+      "single_feature_auc": 0.521536,
+      "unique_values": 8
+    },
+    {
+      "feature": "avg_return_lag_hours",
+      "single_feature_auc": 0.520929,
+      "unique_values": 37
+    },
+    {
+      "feature": "return_rate_last_30d",
+      "single_feature_auc": 0.518089,
+      "unique_values": 47
+    },
+    {
+      "feature": "refunds_last_30d",
+      "single_feature_auc": 0.517195,
+      "unique_values": 8
+    },
+    {
+      "feature": "total_refund_amount",
+      "single_feature_auc": 0.517018,
+      "unique_values": 2181
+    },
+    {
+      "feature": "return_rate",
+      "single_feature_auc": 0.515674,
+      "unique_values": 52
+    },
+    {
+      "feature": "total_refunds",
+      "single_feature_auc": 0.515597,
+      "unique_values": 8
+    },
+    {
+      "feature": "account_creation_burst_score",
+      "single_feature_auc": 0.510266,
+      "unique_values": 273
+    },
+    {
+      "feature": "refund_rate",
+      "single_feature_auc": 0.509524,
+      "unique_values": 52
+    },
+    {
+      "feature": "refund_burst_score",
+      "single_feature_auc": 0.508962,
+      "unique_values": 4
+    },
+    {
+      "feature": "refunds_last_24h",
+      "single_feature_auc": 0.508962,
+      "unique_values": 4
+    },
+    {
+      "feature": "account_age_days",
+      "single_feature_auc": 0.508384,
+      "unique_values": 19884
+    },
+    {
+      "feature": "dispute_rate",
+      "single_feature_auc": 0.500696,
+      "unique_values": 21
+    },
+    {
+      "feature": "total_disputes",
+      "single_feature_auc": 0.500675,
+      "unique_values": 4
+    }
+  ],
+  "day5_feature_audit": [
+    {
+      "feature": "orders_last_7d",
+      "single_feature_auc": 0.656663,
+      "unique_values": 11
+    },
+    {
+      "feature": "distinct_devices",
+      "single_feature_auc": 0.643464,
+      "unique_values": 4
+    },
+    {
+      "feature": "orders_last_30d",
+      "single_feature_auc": 0.640162,
+      "unique_values": 17
+    },
+    {
+      "feature": "shared_edge_weight_sum",
+      "single_feature_auc": 0.637202,
+      "unique_values": 175
+    },
+    {
+      "feature": "total_orders",
+      "single_feature_auc": 0.630035,
+      "unique_values": 18
+    },
+    {
+      "feature": "degree_centrality",
+      "single_feature_auc": 0.628409,
+      "unique_values": 27
+    },
+    {
+      "feature": "shared_edge_count",
+      "single_feature_auc": 0.628409,
+      "unique_values": 27
+    },
+    {
+      "feature": "eigenvector_centrality",
+      "single_feature_auc": 0.621696,
+      "unique_values": 23382
+    },
+    {
+      "feature": "distinct_payment_instruments",
+      "single_feature_auc": 0.619729,
+      "unique_values": 4
+    },
+    {
+      "feature": "distinct_addresses",
+      "single_feature_auc": 0.619054,
+      "unique_values": 4
+    },
+    {
+      "feature": "shared_device_count",
+      "single_feature_auc": 0.616186,
+      "unique_values": 16
+    },
+    {
+      "feature": "total_amount",
+      "single_feature_auc": 0.612445,
+      "unique_values": 5415
+    },
+    {
+      "feature": "shared_instrument_count",
+      "single_feature_auc": 0.606234,
+      "unique_values": 14
+    },
+    {
+      "feature": "accounts_per_instrument",
+      "single_feature_auc": 0.603742,
+      "unique_values": 23
+    },
+    {
+      "feature": "total_delivered_orders",
+      "single_feature_auc": 0.597589,
+      "unique_values": 17
+    },
+    {
+      "feature": "edge_shares_device",
+      "single_feature_auc": 0.595876,
+      "unique_values": 13
+    },
+    {
+      "feature": "triangle_count",
+      "single_feature_auc": 0.594279,
+      "unique_values": 48
+    },
+    {
+      "feature": "accounts_per_device",
+      "single_feature_auc": 0.59222,
+      "unique_values": 28
+    },
+    {
+      "feature": "edge_shares_payment",
+      "single_feature_auc": 0.589378,
+      "unique_values": 9
+    },
+    {
+      "feature": "shared_address_count",
+      "single_feature_auc": 0.589295,
+      "unique_values": 16
+    },
+    {
+      "feature": "edge_shares_address",
+      "single_feature_auc": 0.574224,
+      "unique_values": 13
+    },
+    {
+      "feature": "total_pending_orders",
+      "single_feature_auc": 0.573682,
+      "unique_values": 6
+    },
+    {
+      "feature": "distinct_phones",
+      "single_feature_auc": 0.571928,
+      "unique_values": 3
+    },
+    {
+      "feature": "clustering_coefficient",
+      "single_feature_auc": 0.571158,
+      "unique_values": 2274
+    },
+    {
+      "feature": "accounts_per_address",
+      "single_feature_auc": 0.562865,
+      "unique_values": 29
+    },
+    {
+      "feature": "avg_order_value",
+      "single_feature_auc": 0.562657,
+      "unique_values": 8066
+    },
+    {
+      "feature": "connected_component_size",
+      "single_feature_auc": 0.562254,
+      "unique_values": 5
+    },
+    {
+      "feature": "community_id",
+      "single_feature_auc": 0.560907,
+      "unique_values": 6459
+    },
+    {
+      "feature": "community_total_orders",
+      "single_feature_auc": 0.560874,
+      "unique_values": 109
+    },
+    {
+      "feature": "community_avg_order_value",
+      "single_feature_auc": 0.560841,
+      "unique_values": 1208
+    },
+    {
+      "feature": "community_size",
+      "single_feature_auc": 0.560361,
+      "unique_values": 82
+    },
+    {
+      "feature": "shared_ip_prefix_count",
+      "single_feature_auc": 0.555461,
+      "unique_values": 10
+    },
+    {
+      "feature": "community_refund_rate",
+      "single_feature_auc": 0.549108,
+      "unique_values": 120
+    },
+    {
+      "feature": "transaction_burst_score",
+      "single_feature_auc": 0.548325,
+      "unique_values": 5
+    },
+    {
+      "feature": "orders_last_24h",
+      "single_feature_auc": 0.548325,
+      "unique_values": 5
+    },
+    {
+      "feature": "community_return_rate",
+      "single_feature_auc": 0.546689,
+      "unique_values": 122
+    },
+    {
+      "feature": "discount_dependency_score",
+      "single_feature_auc": 0.542781,
+      "unique_values": 9476
+    },
+    {
+      "feature": "accounts_per_phone",
+      "single_feature_auc": 0.537153,
+      "unique_values": 11
+    },
+    {
+      "feature": "coupon_usage_rate",
+      "single_feature_auc": 0.535805,
+      "unique_values": 55
+    },
+    {
+      "feature": "edge_shares_coupon",
+      "single_feature_auc": 0.533862,
+      "unique_values": 18
+    },
+    {
+      "feature": "refunds_last_7d",
+      "single_feature_auc": 0.532281,
+      "unique_values": 6
+    },
+    {
+      "feature": "edge_shares_phone",
+      "single_feature_auc": 0.531363,
+      "unique_values": 7
+    },
+    {
+      "feature": "shared_phone_count",
+      "single_feature_auc": 0.527515,
+      "unique_values": 7
+    },
+    {
+      "feature": "total_returns",
+      "single_feature_auc": 0.521536,
+      "unique_values": 8
+    },
+    {
+      "feature": "avg_return_lag_hours",
+      "single_feature_auc": 0.520929,
+      "unique_values": 37
+    },
+    {
+      "feature": "return_rate_last_30d",
+      "single_feature_auc": 0.518089,
+      "unique_values": 47
+    },
+    {
+      "feature": "refunds_last_30d",
+      "single_feature_auc": 0.517195,
+      "unique_values": 8
+    },
+    {
+      "feature": "total_refund_amount",
+      "single_feature_auc": 0.517018,
+      "unique_values": 2181
+    },
+    {
+      "feature": "return_rate",
+      "single_feature_auc": 0.515674,
+      "unique_values": 52
+    },
+    {
+      "feature": "total_refunds",
+      "single_feature_auc": 0.515597,
+      "unique_values": 8
+    },
+    {
+      "feature": "edge_shares_ip",
+      "single_feature_auc": 0.514282,
+      "unique_values": 7
+    },
+    {
+      "feature": "account_creation_burst_score",
+      "single_feature_auc": 0.510266,
+      "unique_values": 273
+    },
+    {
+      "feature": "refund_rate",
+      "single_feature_auc": 0.509524,
+      "unique_values": 52
+    },
+    {
+      "feature": "refunds_last_24h",
+      "single_feature_auc": 0.508962,
+      "unique_values": 4
+    },
+    {
+      "feature": "refund_burst_score",
+      "single_feature_auc": 0.508962,
+      "unique_values": 4
+    },
+    {
+      "feature": "account_age_days",
+      "single_feature_auc": 0.508384,
+      "unique_values": 19884
+    },
+    {
+      "feature": "dispute_rate",
+      "single_feature_auc": 0.500696,
+      "unique_values": 21
+    },
+    {
+      "feature": "total_disputes",
+      "single_feature_auc": 0.500675,
+      "unique_values": 4
+    }
+  ],
+  "max_single_feature_auc": 0.672263,
+  "threshold": 0.8,
+  "anti_shortcut_passed": true
+}

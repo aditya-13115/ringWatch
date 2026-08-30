@@ -3,6 +3,15 @@ import pandas as pd
 from backend.domain.graph import AccountGraph, GraphNode, GraphEdge
 from backend.repositories.explainability_repository import ExplainabilityRepository
 
+EDGE_WEIGHTS = {
+    "shares_device": 1.0,
+    "shares_phone": 1.0,
+    "shares_payment_instrument": 1.0,
+    "shares_address": 0.7,
+    "shares_ip_prefix": 0.3,
+    "shares_coupon": 0.2,
+}
+
 
 class GraphService:
     def __init__(self, explainability_repo: ExplainabilityRepository):
@@ -69,7 +78,7 @@ class GraphService:
                     source=account_id,
                     target=linked,
                     edge_type=link["edge_type"],
-                    weight=1.0,  # could use strongest_edge_weight if available
+                    weight=float(EDGE_WEIGHTS.get(link["edge_type"], 0.0)),
                 )
             )
 
@@ -106,7 +115,7 @@ class GraphService:
                         source=account_id,
                         target=linked,
                         edge_type=link["edge_type"],
-                        weight=1.0,  # You can later use actual edge weight if available
+                        weight=float(EDGE_WEIGHTS.get(link["edge_type"], 0.0)),
                     )
                 )
 

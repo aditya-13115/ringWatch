@@ -1,3 +1,4 @@
+import Logo from "../components/Logo";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -27,14 +28,25 @@ export default function Landing() {
       </div>
 
       <div className="container mx-auto px-6 py-24 text-center">
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="flex justify-center"
+        >
+          <Logo size="xl" showName={false} />
+        </motion.div>
+
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-5xl md:text-7xl font-bold tracking-tight"
+          transition={{ delay: 0.1, duration: 0.6 }}
+          className="mt-6 text-5xl md:text-7xl font-bold tracking-tight"
         >
           RingWatch
         </motion.h1>
+
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -43,6 +55,7 @@ export default function Landing() {
         >
           Post-delivery refund abuse detection through cross-account graph analysis.
         </motion.p>
+
         <div className="mt-8 flex gap-4 justify-center">
           <Link
             to="/dashboard"
@@ -50,6 +63,7 @@ export default function Landing() {
           >
             Open Dashboard
           </Link>
+
           <Link
             to="/about"
             className="rounded-md border border-border px-6 py-3 text-sm font-medium hover:bg-accent"
@@ -57,6 +71,7 @@ export default function Landing() {
             Learn More
           </Link>
         </div>
+
       </div>
     </div>
   );

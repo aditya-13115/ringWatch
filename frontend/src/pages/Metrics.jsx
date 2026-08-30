@@ -4,8 +4,42 @@ import Card from "../components/Card";
 import LineChart from "../components/LineChart";
 import { Link } from "react-router-dom";
 
-const formatPct = (val) => `${(val * 100).toFixed(1)}%`;
-const formatCost = (val) => `₹${Math.round(val).toLocaleString()}`;
+const formatPct = (value) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return "—";
+  }
+
+  return `${(Number(value) * 100).toFixed(1)}%`;
+};
+
+const formatCost = (value) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return "—";
+  }
+
+  return `₹${Math.round(Number(value)).toLocaleString("en-IN")}`;
+};
+
+const formatThreshold = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    Number.isNaN(Number(value))
+  ) {
+    return "—";
+  }
+
+  return Number(value).toFixed(3);
+};
+
+function MetricCell({ value, highlight = false }) {
+  return (
+    <td className={`px-4 py-2 ${highlight ? "font-semibold" : ""}`}>
+      {value}
+      {highlight ? " ★" : ""}
+    </td>
+  );
+}
 
 export default function Metrics() {
   const [metrics, setMetrics] = useState(null);
@@ -14,254 +48,826 @@ export default function Metrics() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    Promise.all([getMetrics(), getCurves()])
-      .then(([m, c]) => {
-        setMetrics(m);
-        setCurves(c);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    async function load() {
+      try {
+        const [metricsResponse, curvesResponse] = await Promise.all([
+          getMetrics(),
+          getCurves().catch(() => null),
+        ]);
+
+        if (!mounted) return;
+
+        setMetrics(metricsResponse);
+        setCurves(curvesResponse);
+      } catch (err) {
+        if (!mounted) return;
+        setError(err.message || "Failed to load metrics");
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  if (loading) return <div className="p-6">Loading metrics…</div>;
-  if (error) return <div className="p-6 text-destructive">{error}</div>;
+  if (loading) {
+    return (
+      <div className="p-6">
+        Loading model evaluation…
+      </div>
+    );
+  }
 
-  const modelB = metrics.model_metrics.model_B;
-  const modelA = metrics.model_metrics.model_A;
-  const baseline = metrics.model_metrics.baseline;
+  if (error) {
+    return (
+      <div className="p-6 text-destructive">
+        {error}
+      </div>
+    );
+  }
 
-  // Compute cost reduction
-  const costReduction = modelA.cost - modelB.cost;
-  const costReductionPct = (costReduction / modelA.cost) * 100;
+  if (!metrics) {
+    return (
+      <div className="p-6">
+        No metrics available.
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------
+  // New API structure
+  // ---------------------------------------------------------
+
+  const models = metrics.models || {};
+
+  const baseline = {
+  precision: 0.05520969855832241,
+  recall: 0.22466666666666665,
+  f1: 0.08863755917937928,
+
+  // Baseline is rule-based and does not produce
+  // probability scores, so these remain unavailable.
+  pr_auc: null,
+  roc_auc: null,
+
+  // FP * COST_FP + FN * COST_FN
+  // 5767 * 2000 + 1163 * 15000
+  cost: 28979000,
+
+  tp: 337,
+  fp: 5767,
+  tn: 22733,
+  fn: 1163,
+  };
+  const modelA = models.model_A || {};
+  const modelB = models.model_B || {};
+  const gnn = models.gnn || {};
+  const ensemble = models.ensemble || {};
+
+  const operatingModel =
+    metrics.operating_model || {};
+
+  const operatingThreshold =
+    operatingModel.threshold ??
+    ensemble.threshold;
+
+  // ---------------------------------------------------------
+  // Model collection for cards/table
+  // ---------------------------------------------------------
+
+  const comparisonModels = [
+    {
+      key: "baseline",
+      name: "Baseline",
+      data: baseline,
+    },
+    {
+      key: "model_A",
+      name: "LightGBM A (Tuned)",
+      data: modelA,
+    },
+    {
+      key: "model_B",
+      name: "LightGBM B (Tuned)",
+      data: modelB,
+    },
+    {
+      key: "gnn",
+      name: "GNN",
+      data: gnn,
+    },
+    {
+      key: "ensemble",
+      name: "V4 Ensemble",
+      data: ensemble,
+    },
+  ];
+
+  // ---------------------------------------------------------
+  // Cost bars
+  // ---------------------------------------------------------
+
+  const costs = comparisonModels
+    .map((model) => Number(model.data.cost || 0))
+    .filter((value) => value > 0);
+
+  const maxCost = Math.max(...costs, 1);
+
+  // ---------------------------------------------------------
+  // Curves
+  // ---------------------------------------------------------
+
+  const hasCurves =
+    curves &&
+    Object.keys(curves).some(
+      (key) =>
+        curves[key]?.precision?.length ||
+        curves[key]?.recall?.length ||
+        curves[key]?.cost?.length
+    );
+
+  const curveModels = [
+    {
+      key: "baseline",
+      label: "Baseline",
+    },
+    {
+      key: "model_A",
+      label: "LightGBM A (Tuned)",
+    },
+    {
+      key: "model_B",
+      label: "LightGBM B (Tuned)",
+    },
+    {
+      key: "gnn",
+      label: "GNN",
+    },
+    {
+      key: "ensemble",
+      label: "V4 Ensemble",
+    },
+  ].filter((model) => curves?.[model.key]);
+
+  // ---------------------------------------------------------
+  // Best model by F1
+  // ---------------------------------------------------------
+
+  const bestModel = comparisonModels
+    .filter(
+      (model) =>
+        model.key !== "baseline" &&
+        model.data.f1 !== null &&
+        model.data.f1 !== undefined
+    )
+    .sort(
+      (a, b) =>
+        Number(b.data.f1 || 0) -
+        Number(a.data.f1 || 0)
+    )[0];
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
       <div>
-        <h2 className="text-2xl font-semibold">Model Evaluation</h2>
+        <h2 className="text-2xl font-semibold">
+          Model Evaluation
+        </h2>
+
         <p className="text-sm text-muted-foreground">
-          Held-out R004 ring · Model selection and operating tradeoff
+          V4 realistic 30K test set · LightGBM + GNN + Ensemble
         </p>
       </div>
 
-      {/* Decision banner */}
+      {/* =====================================================
+          CURRENT OPERATING MODEL
+      ===================================================== */}
+
       <Card className="p-6 border-black">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
           <div>
-            <p className="text-sm font-medium">✓ CURRENT OPERATING MODEL</p>
-            <h3 className="text-xl font-semibold mt-1">LightGBM Model B</h3>
+            <p className="text-sm font-medium">
+              ✓ CURRENT OPERATING MODEL
+            </p>
+
+            <h3 className="text-xl font-semibold mt-1">
+              {operatingModel.name || "V4 Ensemble"}
+            </h3>
+
             <p className="text-sm text-muted-foreground mt-1">
-              Selected for the current investigation capacity because it provides
-              a substantially better precision/cost tradeoff than Model A.
+              {operatingModel.description ||
+                "Current RingWatch production scoring configuration."}
             </p>
           </div>
+
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Operating K</p>
-            <p className="text-2xl font-semibold">7</p>
+            <p className="text-xs text-muted-foreground">
+              Operating Threshold
+            </p>
+
+            <p className="text-2xl font-semibold">
+              {formatThreshold(operatingThreshold)}
+            </p>
           </div>
+
         </div>
       </Card>
 
-      {/* Performance comparison table */}
+      {/* =====================================================
+          MODEL COMPARISON
+      ===================================================== */}
+
       <Card>
         <div className="overflow-x-auto">
+
           <table className="w-full text-sm">
+
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
-                <th className="px-4 py-2">Metric</th>
-                <th className="px-4 py-2">Baseline</th>
-                <th className="px-4 py-2">Model A</th>
-                <th className="px-4 py-2">Model B</th>
+                <th className="px-4 py-2">
+                  Metric
+                </th>
+
+                <th className="px-4 py-2">
+                  Baseline
+                </th>
+
+                <th className="px-4 py-2">
+                  LightGBM A (Tuned)
+                </th>
+
+                <th className="px-4 py-2">
+                  LightGBM B (Tuned)
+                </th>
+
+                <th className="px-4 py-2">
+                  GNN
+                </th>
+
+                <th className="px-4 py-2">
+                  V4 Ensemble
+                </th>
               </tr>
             </thead>
+
             <tbody>
+
               <tr className="border-b border-border">
-                <td className="px-4 py-2 font-medium">Precision</td>
-                <td className="px-4 py-2">{formatPct(baseline.precision)}</td>
-                <td className="px-4 py-2">{formatPct(modelA.precision)}</td>
-                <td className="px-4 py-2 font-semibold">{formatPct(modelB.precision)} ★</td>
+                <td className="px-4 py-2 font-medium">
+                  Precision
+                </td>
+
+                <MetricCell value={formatPct(baseline.precision)} />
+                <MetricCell value={formatPct(modelA.precision)} />
+                <MetricCell value={formatPct(modelB.precision)} />
+                <MetricCell value={formatPct(gnn.precision)} />
+                <MetricCell
+                  value={formatPct(ensemble.precision)}
+                  highlight
+                />
               </tr>
+
               <tr className="border-b border-border">
-                <td className="px-4 py-2 font-medium">Recall</td>
-                <td className="px-4 py-2">{formatPct(baseline.recall)}</td>
-                <td className="px-4 py-2 font-semibold">{formatPct(modelA.recall)} ★</td>
-                <td className="px-4 py-2">{formatPct(modelB.recall)}</td>
+                <td className="px-4 py-2 font-medium">
+                  Recall
+                </td>
+
+                <MetricCell value={formatPct(baseline.recall)} />
+                <MetricCell value={formatPct(modelA.recall)} />
+                <MetricCell value={formatPct(modelB.recall)} />
+                <MetricCell value={formatPct(gnn.recall)} />
+                <MetricCell
+                  value={formatPct(ensemble.recall)}
+                  highlight
+                />
               </tr>
+
               <tr className="border-b border-border">
-                <td className="px-4 py-2 font-medium">F1</td>
-                <td className="px-4 py-2 font-semibold">{formatPct(baseline.f1)} ★</td>
-                <td className="px-4 py-2">{formatPct(modelA.f1)}</td>
-                <td className="px-4 py-2">{formatPct(modelB.f1)}</td>
+                <td className="px-4 py-2 font-medium">
+                  F1
+                </td>
+
+                <MetricCell value={formatPct(baseline.f1)} />
+                <MetricCell value={formatPct(modelA.f1)} />
+                <MetricCell value={formatPct(modelB.f1)} />
+                <MetricCell value={formatPct(gnn.f1)} />
+                <MetricCell
+                  value={formatPct(ensemble.f1)}
+                  highlight
+                />
               </tr>
+
               <tr className="border-b border-border">
-                <td className="px-4 py-2 font-medium">PR-AUC</td>
-                <td className="px-4 py-2">—</td>
-                <td className="px-4 py-2 font-semibold">{formatPct(modelA.pr_auc)} ★</td>
-                <td className="px-4 py-2">{formatPct(modelB.pr_auc)}</td>
+                <td className="px-4 py-2 font-medium">
+                  PR-AUC
+                </td>
+
+                <MetricCell value="—" />
+                <MetricCell value={formatPct(modelA.pr_auc)} />
+                <MetricCell value={formatPct(modelB.pr_auc)} />
+                <MetricCell value={formatPct(gnn.pr_auc)} />
+                <MetricCell
+                  value={formatPct(ensemble.pr_auc)}
+                  highlight
+                />
               </tr>
+
+              <tr className="border-b border-border">
+                <td className="px-4 py-2 font-medium">
+                  ROC-AUC
+                </td>
+
+                <MetricCell value="—" />
+                <MetricCell value={formatPct(modelA.roc_auc)} />
+                <MetricCell value={formatPct(modelB.roc_auc)} />
+                <MetricCell value={formatPct(gnn.roc_auc)} />
+                <MetricCell
+                  value={formatPct(ensemble.roc_auc)}
+                  highlight
+                />
+              </tr>
+
               <tr>
-                <td className="px-4 py-2 font-medium">Estimated cost</td>
-                <td className="px-4 py-2">{formatCost(baseline.cost)}</td>
-                <td className="px-4 py-2">{formatCost(modelA.cost)}</td>
-                <td className="px-4 py-2 font-semibold">{formatCost(modelB.cost)} ★</td>
+                <td className="px-4 py-2 font-medium">
+                  Estimated cost
+                </td>
+
+                <MetricCell
+                  value={formatCost(baseline.cost)}
+                />
+
+                <MetricCell
+                  value={formatCost(modelA.cost)}
+                />
+
+                <MetricCell
+                  value={formatCost(modelB.cost)}
+                />
+
+                <MetricCell
+                  value={formatCost(gnn.cost)}
+                />
+
+                <MetricCell
+                  value={formatCost(ensemble.cost)}
+                  highlight
+                />
               </tr>
+
             </tbody>
+
           </table>
         </div>
       </Card>
 
-      {/* What does this mean */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* =====================================================
+          MODEL SUMMARY CARDS
+      ===================================================== */}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
         <Card className="p-4">
-          <h3 className="text-sm font-medium mb-2">Model A — High recall, poor precision</h3>
+          <h3 className="text-sm font-medium mb-2">
+            LightGBM A (Tuned)
+          </h3>
+
           <p className="text-sm text-muted-foreground">
-            Catches all observed abuse but flags too many accounts. Cost: {formatCost(modelA.cost)}.
+            F1: {formatPct(modelA.f1)}
+          </p>
+
+          <p className="text-sm text-muted-foreground">
+            PR-AUC: {formatPct(modelA.pr_auc)}
           </p>
         </Card>
+
         <Card className="p-4">
-          <h3 className="text-sm font-medium mb-2">Model B — More selective</h3>
+          <h3 className="text-sm font-medium mb-2">
+            LightGBM B (Tuned)
+          </h3>
+
           <p className="text-sm text-muted-foreground">
-            Higher precision, lower recall. Cost: {formatCost(modelB.cost)}. Chosen for
-            current investigation capacity.
+            F1: {formatPct(modelB.f1)}
+          </p>
+
+          <p className="text-sm text-muted-foreground">
+            PR-AUC: {formatPct(modelB.pr_auc)}
           </p>
         </Card>
+
         <Card className="p-4">
-          <h3 className="text-sm font-medium mb-2">Baseline</h3>
+          <h3 className="text-sm font-medium mb-2">
+            GNN
+          </h3>
+
           <p className="text-sm text-muted-foreground">
-            Reference point for evaluating model improvement.
+            F1: {formatPct(gnn.f1)}
+          </p>
+
+          <p className="text-sm text-muted-foreground">
+            PR-AUC: {formatPct(gnn.pr_auc)}
           </p>
         </Card>
+
+        <Card className="p-4 border-black">
+          <h3 className="text-sm font-medium mb-2">
+            V4 Ensemble
+          </h3>
+
+          <p className="text-sm font-semibold">
+            F1: {formatPct(ensemble.f1)}
+          </p>
+
+          <p className="text-sm text-muted-foreground">
+            PR-AUC: {formatPct(ensemble.pr_auc)}
+          </p>
+        </Card>
+
       </div>
 
-      {/* Cost reduction visual */}
+      {/* =====================================================
+          COST
+      ===================================================== */}
+
       <Card className="p-4">
-        <h3 className="text-sm font-medium mb-3">Estimated Intervention Cost</h3>
-        <div className="space-y-2">
-          <div>
-            <p className="text-sm">Model A</p>
-            <div className="w-full bg-muted rounded h-2">
-              <div className="bg-black h-2 rounded" style={{ width: "100%" }} />
-            </div>
-            <p className="text-sm mt-1">{formatCost(modelA.cost)}</p>
-          </div>
-          <div>
-            <p className="text-sm">Model B</p>
-            <div className="w-full bg-muted rounded h-2">
-              <div className="bg-black h-2 rounded" style={{ width: `${(modelB.cost / modelA.cost) * 100}%` }} />
-            </div>
-            <p className="text-sm mt-1">{formatCost(modelB.cost)}</p>
-          </div>
+
+        <h3 className="text-sm font-medium mb-4">
+          Estimated Intervention Cost
+        </h3>
+
+        <div className="space-y-4">
+
+          {comparisonModels
+            .filter((model) => Number(model.data.cost || 0) > 0)
+            .map((model) => {
+
+              const cost = Number(model.data.cost || 0);
+
+              return (
+                <div key={model.key}>
+
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>
+                      {model.name}
+                    </span>
+
+                    <span>
+                      {formatCost(cost)}
+                    </span>
+                  </div>
+
+                  <div className="w-full bg-muted rounded h-2">
+                    <div
+                      className="bg-black h-2 rounded"
+                      style={{
+                        width: `${(cost / maxCost) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                </div>
+              );
+            })}
+
         </div>
-        <p className="text-sm font-medium mt-3">
-          Model B cost is ~{costReductionPct.toFixed(0)}% lower than Model A
-          ({formatCost(costReduction)} saved).
-        </p>
+
       </Card>
 
-      {/* Precision-Recall scatter plot */}
+      {/* =====================================================
+          PRECISION / RECALL SCATTER
+      ===================================================== */}
+
       <Card className="p-4">
-        <h3 className="text-sm font-medium mb-3">Precision / Recall Tradeoff</h3>
+
+        <h3 className="text-sm font-medium mb-3">
+          Precision / Recall Tradeoff
+        </h3>
+
         <ScatterPlot
-          points={[
-            { name: "Baseline", precision: baseline.precision, recall: baseline.recall },
-            { name: "Model A", precision: modelA.precision, recall: modelA.recall },
-            { name: "Model B", precision: modelB.precision, recall: modelB.recall },
-          ]}
+          points={comparisonModels
+            .filter(
+              (model) =>
+                model.data.precision !== null &&
+                model.data.precision !== undefined &&
+                model.data.recall !== null &&
+                model.data.recall !== undefined
+            )
+            .map((model) => ({
+              name: model.name,
+              precision: Number(model.data.precision),
+              recall: Number(model.data.recall),
+            }))}
         />
+
       </Card>
 
-      {/* Why Model B */}
-      <Card className="p-4">
-        <h3 className="text-sm font-medium mb-2">Why Model B?</h3>
-        <ul className="space-y-1 text-sm">
-          <li>✓ Highest precision: {formatPct(modelB.precision)}</li>
-          <li>✓ Cost: {formatCost(modelB.cost)}</li>
-          <li>✓ Operating K = 7 matches investigation capacity</li>
-          <li>⚠ Recall: {formatPct(modelB.recall)} — some abuse may be missed</li>
-        </ul>
-      </Card>
+      {/* =====================================================
+          BEST MODEL
+      ===================================================== */}
 
-      {/* Connect to dashboard */}
-      <Card className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-sm font-medium mb-1">Current Operating Configuration</h3>
-          <p className="text-sm text-muted-foreground">
-            LightGBM Model B → 7 accounts → Investigation Queue → Risk-tier actions
+      {bestModel && (
+        <Card className="p-4">
+
+          <h3 className="text-sm font-medium mb-2">
+            Current Evaluation Summary
+          </h3>
+
+          <p className="text-sm">
+            Best F1 among evaluated models:{" "}
+            <strong>
+              {bestModel.name}
+            </strong>
           </p>
+
+          <p className="text-sm text-muted-foreground mt-1">
+            F1: {formatPct(bestModel.data.f1)}
+            {" · "}
+            Precision: {formatPct(bestModel.data.precision)}
+            {" · "}
+            Recall: {formatPct(bestModel.data.recall)}
+          </p>
+
+          <p className="text-xs text-muted-foreground mt-2">
+            The operating model is determined independently by
+            the configured RingWatch production pipeline.
+          </p>
+
+        </Card>
+      )}
+
+      {/* =====================================================
+          CURRENT CONFIGURATION
+      ===================================================== */}
+
+      <Card className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+        <div>
+
+          <h3 className="text-sm font-medium mb-1">
+            Current Operating Configuration
+          </h3>
+
+          <p className="text-sm text-muted-foreground">
+            {operatingModel.name || "V4 Ensemble"}
+            {" → "}
+            threshold{" "}
+            {formatThreshold(operatingThreshold)}
+            {" → "}
+            Investigation Queue
+          </p>
+
         </div>
+
         <Link
           to="/dashboard"
           className="inline-block bg-black text-white px-4 py-2 rounded-md text-sm"
         >
           View Investigation Queue →
         </Link>
+
       </Card>
 
-      {/* Curves (existing) */}
-      {curves && (
+      {/* =====================================================
+          CURVES
+      ===================================================== */}
+
+      {hasCurves && (
         <div className="space-y-6">
+
+          {/* Precision / Recall Curves */}
           <Card className="p-4">
-            <h3 className="text-sm font-medium mb-3">Precision-Recall Tradeoff</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <LineChart
-                title="Model A Precision & Recall"
-                data={curves?.model_A?.precision || []}
-                yLabel="Precision"
-              />
-              <LineChart
-                title="Model B Precision & Recall"
-                data={curves?.model_B?.precision || []}
-                yLabel="Precision"
-              />
+
+            <h3 className="text-sm font-medium mb-3">
+              Precision / Recall vs Top-K
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+              {curveModels.map((model) => (
+                <div key={`${model.key}-precision`}>
+
+                  <LineChart
+                    title={`${model.label} Precision`}
+                    data={curves?.[model.key]?.precision || []}
+                    yLabel="Precision"
+                  />
+
+                </div>
+              ))}
+
             </div>
+
           </Card>
 
+
+          {/* Recall Curves */}
           <Card className="p-4">
-            <h3 className="text-sm font-medium mb-3">Cost Curve</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <LineChart
-                title="Model A Cost"
-                data={curves?.model_A?.cost || []}
-                yLabel="Cost"
-              />
-              <LineChart
-                title="Model B Cost"
-                data={curves?.model_B?.cost || []}
-                yLabel="Cost"
-              />
+
+            <h3 className="text-sm font-medium mb-3">
+              Recall vs Top-K
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+              {curveModels.map((model) => (
+                <div key={`${model.key}-recall`}>
+
+                  <LineChart
+                    title={`${model.label} Recall`}
+                    data={curves?.[model.key]?.recall || []}
+                    yLabel="Recall"
+                  />
+
+                </div>
+              ))}
+
             </div>
+
           </Card>
+
+
+          {/* Cost Curves */}
+          <Card className="p-4">
+
+            <h3 className="text-sm font-medium mb-3">
+              Intervention Cost vs Top-K
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+              {curveModels.map((model) => (
+                <div key={`${model.key}-cost`}>
+
+                  <LineChart
+                    title={`${model.label} Cost`}
+                    data={curves?.[model.key]?.cost || []}
+                    yLabel="Cost"
+                  />
+
+                </div>
+              ))}
+
+            </div>
+
+          </Card>
+
         </div>
       )}
+
     </div>
   );
 }
 
-// Simple scatter plot component
 function ScatterPlot({ points }) {
-  const width = 600;
-  const height = 300;
-  const margin = { top: 20, right: 20, bottom: 40, left: 50 };
-  const innerWidth = width - margin.left - margin.right;
-  const innerHeight = height - margin.top - margin.bottom;
+  const width = 700;
+  const height = 400;
 
-  const x = (recall) => margin.left + (recall * innerWidth);
-  const y = (precision) => margin.top + innerHeight - (precision * innerHeight);
+  const margin = {
+    top: 40,
+    right: 40,
+    bottom: 60,
+    left: 60,
+  };
+
+  const innerWidth =
+    width - margin.left - margin.right;
+
+  const innerHeight =
+    height - margin.top - margin.bottom;
+
+  const x = (recall) =>
+    margin.left + recall * innerWidth;
+
+  const y = (precision) =>
+    margin.top +
+    innerHeight -
+    precision * innerHeight;
+
+  const modelColors = {
+    Baseline: "#6B7280",
+    "LightGBM A": "#2563EB",
+    "LightGBM B": "#16A34A",
+    GNN: "#9333EA",
+    "V4 Ensemble": "#DC2626",
+  };
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
-      <line x1={margin.left} y1={margin.top + innerHeight} x2={width - margin.right} y2={margin.top + innerHeight} stroke="black" strokeWidth="1" />
-      <line x1={margin.left} y1={margin.top} x2={margin.left} y2={margin.top + innerHeight} stroke="black" strokeWidth="1" />
-      {points.map((p, i) => (
-        <g key={i}>
-          <circle cx={x(p.recall)} cy={y(p.precision)} r={6} fill="black" />
-          <text x={x(p.recall)} y={y(p.precision) - 10} textAnchor="middle" fontSize="10" fill="black">
-            {p.name}
-          </text>
-        </g>
-      ))}
-      <text x={width / 2} y={height - 5} textAnchor="middle" fontSize="12" fill="black">Recall</text>
-      <text x={15} y={height / 2} textAnchor="middle" fontSize="12" fill="black" transform={`rotate(-90, 15, ${height / 2})`}>Precision</text>
-    </svg>
+    <div className="w-full">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full"
+      >
+        {/* X axis */}
+        <line
+          x1={margin.left}
+          y1={margin.top + innerHeight}
+          x2={width - margin.right}
+          y2={margin.top + innerHeight}
+          stroke="black"
+          strokeWidth="1"
+        />
+
+        {/* Y axis */}
+        <line
+          x1={margin.left}
+          y1={margin.top}
+          x2={margin.left}
+          y2={margin.top + innerHeight}
+          stroke="black"
+          strokeWidth="1"
+        />
+
+        {/* Data points */}
+        {points.map((point, index) => {
+          const cx = x(
+            Math.max(
+              0,
+              Math.min(1, point.recall)
+            )
+          );
+
+          const cy = y(
+            Math.max(
+              0,
+              Math.min(1, point.precision)
+            )
+          );
+
+          const color =
+            modelColors[point.name] || "#000000";
+
+          return (
+            <g
+              key={`${point.name}-${index}`}
+            >
+              {/* Point */}
+              <circle
+                cx={cx}
+                cy={cy}
+                r={5}
+                fill={color}
+                stroke="black"
+                strokeWidth="0.8"
+              />
+
+              {/* Label */}
+              <text
+                x={cx}
+                y={
+                  cy -
+                  12 -
+                  (index % 3) * 13
+                }
+                textAnchor="middle"
+                fontSize="9"
+                fontWeight={
+                  point.name === "V4 Ensemble"
+                    ? "600"
+                    : "400"
+                }
+                fill={color}
+              >
+                {point.name}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* X-axis label */}
+        <text
+          x={width / 2}
+          y={height - 12}
+          textAnchor="middle"
+          fontSize="13"
+          fill="black"
+        >
+          Recall
+        </text>
+
+        {/* Y-axis label */}
+        <text
+          x={18}
+          y={height / 2}
+          textAnchor="middle"
+          fontSize="13"
+          fill="black"
+          transform={`rotate(-90, 18, ${height / 2})`}
+        >
+          Precision
+        </text>
+      </svg>
+    </div>
   );
 }

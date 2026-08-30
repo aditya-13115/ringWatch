@@ -1,0 +1,30 @@
+{
+  "model_A": {
+    "best_params": {
+      "n_estimators": 700,
+      "learning_rate": 0.012243688884778602,
+      "num_leaves": 39,
+      "max_depth": 5,
+      "subsample": 0.6275949886060314,
+      "colsample_bytree": 0.9186174952810806,
+      "reg_alpha": 0.00014429856197955253,
+      "reg_lambda": 4.560100012073522e-05,
+      "min_child_samples": 46
+    },
+    "cv_pr_auc": 0.4252056749260829
+  },
+  "model_B": {
+    "best_params": {
+      "n_estimators": 400,
+      "learning_rate": 0.014506302612916529,
+      "num_leaves": 24,
+      "max_depth": 10,
+      "subsample": 0.8758697700847069,
+      "colsample_bytree": 0.7309962350571283,
+      "reg_alpha": 0.4577523193148918,
+      "reg_lambda": 9.907160017111647,
+      "min_child_samples": 50
+    },
+    "cv_pr_auc": 0.41677263288381994
+  }
+}

@@ -41,7 +41,6 @@ def apply_normal_behavior(
     orders,
     accounts,
 ):
-
     population = accounts[
         [
             "account_id",
@@ -55,10 +54,26 @@ def apply_normal_behavior(
         how="left",
     )
 
+    # --------------------------------------------------------
+    # Normalize timestamp columns
+    # --------------------------------------------------------
+    timestamp_columns = [
+        "order_timestamp",
+        "delivery_timestamp",
+        "return_timestamp",
+        "refund_timestamp",
+        "dispute_created_at",
+    ]
+
+    for column in timestamp_columns:
+        if column in orders.columns:
+            orders[column] = pd.to_datetime(
+                orders[column],
+                errors="coerce",
+            )
+
     normal_mask = orders["population_type"] == "normal"
-
     delivered_mask = orders["delivery_status"] == "delivered"
-
     eligible = normal_mask & delivered_mask
 
     # --------------------------------------------------------
@@ -75,11 +90,14 @@ def apply_normal_behavior(
     return_indices = orders.index[return_mask]
 
     for idx in return_indices:
-
         delivery_time = orders.loc[
             idx,
             "delivery_timestamp",
         ]
+
+        # Safety check
+        if pd.isna(delivery_time):
+            continue
 
         return_time = delivery_time + pd.Timedelta(days=int(rng.integers(2, 6)))
 
@@ -137,22 +155,23 @@ def apply_normal_behavior(
     dispute_indices = orders.index[dispute_mask]
 
     for idx in dispute_indices:
-
         refund_time = orders.loc[
             idx,
             "refund_timestamp",
         ]
 
         if pd.notna(refund_time):
-
             dispute_time = refund_time + pd.Timedelta(days=int(rng.integers(1, 4)))
-
         else:
-
-            dispute_time = orders.loc[
+            delivery_time = orders.loc[
                 idx,
                 "delivery_timestamp",
-            ] + pd.Timedelta(days=int(rng.integers(2, 5)))
+            ]
+
+            if pd.isna(delivery_time):
+                continue
+
+            dispute_time = delivery_time + pd.Timedelta(days=int(rng.integers(2, 5)))
 
         orders.loc[
             idx,

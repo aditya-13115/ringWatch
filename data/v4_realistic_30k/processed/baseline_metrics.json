@@ -1,0 +1,20 @@
+{
+  "cutoff": "2026-02-20 00:00:00",
+  "rules": [
+    "R1: return_rate > 0.5 AND total_orders >= 2",
+    "R2: shared_device_count >= 1 AND return_rate > 0.3",
+    "R3: account_creation_burst_score >= 5 AND coupon_usage_rate > 0.5",
+    "R4: community_size >= 4 AND community_return_rate > 0.4",
+    "R5: dispute_rate > 0.3"
+  ],
+  "TP": 337,
+  "FP": 5767,
+  "TN": 22733,
+  "FN": 1163,
+  "precision": 0.05520969855832241,
+  "recall": 0.22466666666666665,
+  "f1": 0.08863755917937928,
+  "total_flagged": 6104,
+  "true_ring_members_caught": 337,
+  "hard_negative_false_positives": 1334
+}

@@ -1,0 +1,39 @@
+RingWatch — Day 6 Model Leakage Report
+========================================
+
+Ground truth used for training:
+YES — target labels only.
+
+Ground truth used for feature generation:
+NO
+
+population_type used for features:
+NO
+
+abuse_ring_id used for:
+SPLITTING ONLY.
+
+ring_type used for:
+SPLITTING/VALIDATION ONLY.
+
+community_id used for:
+EXCLUDED FROM MODEL FEATURES.
+
+Ring-aware split:
+YES — every abuse ring kept together.
+
+Split strategy:
+Train:        70% of rings + proportional non-ring accounts
+Validation:   15% of rings + proportional non-ring accounts
+Test:         15% of rings + proportional non-ring accounts
+
+Threshold selection:
+YES — validation set only.
+
+Test set used for:
+FINAL EVALUATION ONLY.
+
+Test labels used for:
+METRICS ONLY.
+
+LEAKAGE CHECK: PASSED

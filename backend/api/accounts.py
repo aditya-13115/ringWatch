@@ -8,6 +8,30 @@ from backend.dependencies import get_account_service
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
 
+@router.get("/{account_id}/feature-ablation")
+async def get_feature_ablation(
+    account_id: str,
+    account_service: AccountService = Depends(get_account_service),
+):
+    try:
+        return await account_service.get_feature_ablation(account_id)
+    except KeyError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e),
+        )
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
 @router.get("/{account_id}", response_model=AccountDetailResponse)
 async def get_account(
     account_id: str,

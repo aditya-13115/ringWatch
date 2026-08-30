@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
 from typing import Any
+from dataclasses import dataclass
 
 
 @dataclass
@@ -15,7 +15,7 @@ class AccountRisk:
 class AccountDetail:
     account_id: str
     rank: int
-    proba: float
+    model_score: float
     risk_tier: str
     recommended_action: str
     observed_facts: dict[str, Any]

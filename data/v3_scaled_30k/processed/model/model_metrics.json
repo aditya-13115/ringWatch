@@ -1,0 +1,60 @@
+{
+  "split": {
+    "train": 20954,
+    "validation": 4537,
+    "test": 4509
+  },
+  "artifacts": {
+    "model_a": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_lgbm_A.pkl",
+    "model_b": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_lgbm_B.pkl",
+    "model_a_feature_importance": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_a_feature_importance.csv",
+    "model_b_feature_importance": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_b_feature_importance.csv",
+    "test_predictions": "D:\\CODIN PLAYGROUND\\ML-AI\\RingWatch\\data\\v3_scaled_30k\\processed\\model\\model_predictions_test.csv"
+  },
+  "model_A": {
+    "scale_pos_weight": 19.87051792828685,
+    "threshold": 0.01,
+    "validation_cost": 0.0,
+    "test": {
+      "threshold": 0.01,
+      "precision": 0.9915254237288136,
+      "recall": 1.0,
+      "f1": 0.9957446808510638,
+      "roc_auc": 1.0,
+      "pr_auc": 0.9999999999999999,
+      "tp": 234,
+      "fp": 2,
+      "tn": 4273,
+      "fn": 0,
+      "cost": 4000.0
+    }
+  },
+  "model_B": {
+    "scale_pos_weight": 19.87051792828685,
+    "threshold": 0.01,
+    "validation_cost": 2000.0,
+    "test": {
+      "threshold": 0.01,
+      "precision": 0.9831223628691983,
+      "recall": 0.9957264957264957,
+      "f1": 0.9893842887473461,
+      "roc_auc": 0.9999360223921627,
+      "pr_auc": 0.9986658543612376,
+      "tp": 233,
+      "fp": 4,
+      "tn": 4271,
+      "fn": 1,
+      "cost": 23000.0
+    }
+  },
+  "baseline_test": {
+    "precision": 0.571830985915493,
+    "recall": 0.8675213675213675,
+    "f1": 0.6893039049235993,
+    "tp": 203,
+    "fp": 152,
+    "tn": 4123,
+    "fn": 31,
+    "cost": 769000.0
+  }
+}
