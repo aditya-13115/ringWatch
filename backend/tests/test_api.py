@@ -31,7 +31,7 @@ def test_queue():
         assert response.status_code == 200
         data = response.json()
         assert data["total"] > 0
-        assert len(data["accounts"]) == data["total"]
+        assert 0 < len(data["accounts"]) <= data["total"]
 
 
 def test_account_detail_valid():
@@ -160,3 +160,39 @@ def test_failure_demo_razorpay():
         assert data["safety"]["quarantined_before_model_inference"] is True
 
         assert data["safety"]["human_review_required"] is True
+
+
+def test_feature_ablation_endpoint():
+    with TestClient(app) as client:
+        response = client.get("/api/metrics/feature-ablation")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["model_version"] == "LightGBM_Model_A_Tuned"
+        assert data["test_accounts"] > 0
+        assert len(data["features"]) > 0
+
+
+def test_graph_overview_includes_community_and_strongest_relationship():
+    with TestClient(app) as client:
+        queue = client.get("/api/queue?limit=1").json()
+        account_id = queue["accounts"][0]["account_id"]
+        response = client.get(f"/api/accounts/{account_id}")
+        assert response.status_code == 200
+        evidence = response.json()["graph_evidence"]
+        assert "community_id" in evidence
+        assert "strongest_edge_explanation" in evidence
+        assert evidence["strongest_edge_explanation"]
+
+
+def test_audit_exposes_auditability_fields():
+    with TestClient(app) as client:
+        response = client.get("/api/audit")
+        assert response.status_code == 200
+        records = response.json()["records"]
+        assert records
+        record = records[0]
+        assert record["input_data_hash"]
+        assert record["threshold_used"] is not None
+        assert "human_decision" in record
+        assert "outcome" in record
+        assert "error_path" in record

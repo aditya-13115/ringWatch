@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMetrics, getCurves } from "../api/metrics";
+import { getMetrics, getCurves, getFeatureAblation } from "../api/metrics";
 import Card from "../components/Card";
 import LineChart from "../components/LineChart";
 import { Link } from "react-router-dom";
@@ -44,6 +44,7 @@ function MetricCell({ value, highlight = false }) {
 export default function Metrics() {
   const [metrics, setMetrics] = useState(null);
   const [curves, setCurves] = useState(null);
+  const [featureAblation, setFeatureAblation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -52,15 +53,17 @@ export default function Metrics() {
 
     async function load() {
       try {
-        const [metricsResponse, curvesResponse] = await Promise.all([
+        const [metricsResponse, curvesResponse, ablationResponse] = await Promise.all([
           getMetrics(),
           getCurves().catch(() => null),
+          getFeatureAblation().catch(() => null),
         ]);
 
         if (!mounted) return;
 
         setMetrics(metricsResponse);
         setCurves(curvesResponse);
+        setFeatureAblation(ablationResponse);
       } catch (err) {
         if (!mounted) return;
         setError(err.message || "Failed to load metrics");
@@ -108,25 +111,7 @@ export default function Metrics() {
 
   const models = metrics.models || {};
 
-  const baseline = {
-  precision: 0.05520969855832241,
-  recall: 0.22466666666666665,
-  f1: 0.08863755917937928,
-
-  // Baseline is rule-based and does not produce
-  // probability scores, so these remain unavailable.
-  pr_auc: null,
-  roc_auc: null,
-
-  // FP * COST_FP + FN * COST_FN
-  // 5767 * 2000 + 1163 * 15000
-  cost: 28979000,
-
-  tp: 337,
-  fp: 5767,
-  tn: 22733,
-  fn: 1163,
-  };
+  const baseline = models.baseline || {};
   const modelA = models.model_A || {};
   const modelB = models.model_B || {};
   const gnn = models.gnn || {};
@@ -233,6 +218,12 @@ export default function Metrics() {
         Number(b.data.f1 || 0) -
         Number(a.data.f1 || 0)
     )[0];
+
+  const baselineCost = Number(baseline.cost || 0);
+  const ensembleCost = Number(ensemble.cost || 0);
+  const costReduction = baselineCost > 0
+    ? ((baselineCost - ensembleCost) / baselineCost) * 100
+    : null;
 
   return (
     <div className="space-y-8">
@@ -607,6 +598,18 @@ export default function Metrics() {
         </Card>
       )}
 
+      {costReduction !== null && (
+        <Card className="p-4 border-black">
+          <h3 className="text-sm font-medium mb-2">Merchant Loss View</h3>
+          <p className="text-sm">
+            The V4 Ensemble reduces modeled intervention cost by <strong>{costReduction.toFixed(1)}%</strong> versus the persisted rule baseline on the held-out test set.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Baseline: {formatCost(baselineCost)} · V4 Ensemble: {formatCost(ensembleCost)} · FP cost ₹2,000 · FN cost ₹15,000.
+          </p>
+        </Card>
+      )}
+
       {/* =====================================================
           CURRENT CONFIGURATION
       ===================================================== */}
@@ -638,6 +641,54 @@ export default function Metrics() {
         </Link>
 
       </Card>
+
+      {/* =====================================================
+          FEATURE ABLATION
+      ===================================================== */}
+      {featureAblation?.features?.length > 0 && (
+        <Card className="p-4">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-sm font-medium">Held-out Feature Ablation</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                LightGBM A sensitivity on the same held-out test accounts. One feature is replaced with the population median and the model is rescored; this is not a causal claim.
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {featureAblation.test_accounts?.toLocaleString("en-IN")} test accounts
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="px-3 py-2">Feature</th>
+                  <th className="px-3 py-2">Mean |SHAP|</th>
+                  <th className="px-3 py-2">Δ F1</th>
+                  <th className="px-3 py-2">Δ Cost</th>
+                  <th className="px-3 py-2">Ablated recall</th>
+                </tr>
+              </thead>
+              <tbody>
+                {featureAblation.features.slice(0, 8).map((item) => {
+                  const deltaF1 = Number(item.f1) - Number(featureAblation.baseline?.f1 || 0);
+                  const deltaCost = Number(item.cost) - Number(featureAblation.baseline?.cost || 0);
+                  return (
+                    <tr key={item.feature} className="border-b border-border last:border-0">
+                      <td className="px-3 py-2 font-medium">{item.feature}</td>
+                      <td className="px-3 py-2">{Number(item.mean_abs_shap).toFixed(3)}</td>
+                      <td className={`px-3 py-2 ${deltaF1 < 0 ? "text-destructive" : ""}`}>{deltaF1 >= 0 ? "+" : ""}{(deltaF1 * 100).toFixed(1)} pp</td>
+                      <td className={`px-3 py-2 ${deltaCost > 0 ? "text-destructive" : ""}`}>{deltaCost >= 0 ? "+" : "−"}{formatCost(Math.abs(deltaCost))}</td>
+                      <td className="px-3 py-2">{formatPct(item.recall)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {/* =====================================================
           CURVES

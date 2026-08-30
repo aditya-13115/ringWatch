@@ -81,9 +81,11 @@ class ExplainabilityRepository:
         existing = existing.reindex(columns=all_columns)
         new_row = new_row.reindex(columns=all_columns)
 
-        combined = pd.concat(
-            [existing, new_row],
-            ignore_index=True,
-        )
+        # Append through .loc instead of concatenating an all-NA column set.
+        # This keeps legacy CSV columns stable and avoids pandas' dtype warning
+        # when investigation-only fields are absent from historical rows.
+        row_values = [new_row.iloc[0].get(column, pd.NA) for column in all_columns]
+        existing = existing.astype(object)
+        existing.loc[len(existing), all_columns] = row_values
 
-        combined.to_csv(self.audit_path, index=False)
+        existing.to_csv(self.audit_path, index=False)

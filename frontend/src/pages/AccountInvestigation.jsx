@@ -800,13 +800,9 @@ export default function AccountInvestigation() {
                                 Score change
                               </span>
 
-                              <span className="font-medium">
-                                {item.score_delta >= 0
-                                  ? "+"
-                                  : ""}
-                                {Number(
-                                  item.score_delta
-                                ).toFixed(6)}
+                              <span className={`font-medium ${Number(item.score_delta) < 0 ? "text-destructive" : ""}`}>
+                                {Number(item.score_delta) >= 0 ? "+" : "−"}
+                                {(Math.abs(Number(item.score_delta)) * 100).toFixed(2)} pp
                               </span>
                             </div>
                           </div>
@@ -924,8 +920,16 @@ export default function AccountInvestigation() {
                       </div>
                     ))}
                   </div>
+                  {graphEvidence.strongest_edge_explanation && (
+                    <div className="mt-3 rounded-md border border-border bg-muted/20 p-3">
+                      <p className="text-xs font-medium">Why this relationship is surfaced</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {graphEvidence.strongest_edge_explanation}
+                      </p>
+                    </div>
+                  )}
                   <p className="text-[11px] text-muted-foreground mt-2">
-                    Relationship weights are heuristic evidence strength, not proof of coordinated abuse.
+                    Relationship weights are evidence-prioritization heuristics, not proof of coordinated abuse.
                   </p>
                 </div>
                 )}

@@ -55,3 +55,17 @@ async def generate_razorpay_synthetic_batch(
             status_code=500,
             detail=f"Synthetic failure demo failed: {exc}",
         ) from exc
+
+
+@router.post("")
+async def simulate_failure_compatibility(
+    failure_service: FailureDemoService = Depends(get_failure_service),
+):
+    """Backward-compatible alias for the synthetic malformed-batch demo."""
+    try:
+        return await failure_service.simulate_malformed_batch()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Synthetic failure demo failed: {exc}",
+        ) from exc

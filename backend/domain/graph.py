@@ -6,6 +6,7 @@ class GraphNode:
     id: str
     label: str
     is_focus: bool = False
+    community_id: int | str | None = None
 
 
 @dataclass

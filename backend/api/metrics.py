@@ -13,6 +13,13 @@ async def get_metrics(
     return await metrics_service.get_metrics()
 
 
+@router.get("/feature-ablation")
+async def get_feature_ablation(
+    metrics_service: MetricsService = Depends(get_metrics_service),
+):
+    return await metrics_service.get_feature_ablation()
+
+
 @router.get("/curves")
 async def get_curves(
     metrics_service: MetricsService = Depends(get_metrics_service),

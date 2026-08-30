@@ -4,7 +4,11 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 import pandas as pd
-from groq import AsyncGroq
+
+try:
+    from groq import AsyncGroq
+except ImportError:  # Optional at test/runtime when no LLM integration is configured.
+    AsyncGroq = None
 
 from backend.core.config import get_settings
 from backend.core.concurrency import ADDRESS_LLM_SEMAPHORE
@@ -14,7 +18,11 @@ class AddressNormalizerService:
     def __init__(self, addresses_path: Path):
         self.addresses = pd.read_csv(addresses_path)
         self.settings = get_settings()
-        self.client = AsyncGroq(api_key=self.settings.groq_api_key)
+        self.client = (
+            AsyncGroq(api_key=self.settings.groq_api_key)
+            if AsyncGroq is not None and self.settings.groq_api_key
+            else None
+        )
 
     async def normalize(self, raw_address: str) -> dict:
         async with ADDRESS_LLM_SEMAPHORE:
@@ -129,7 +137,7 @@ class AddressNormalizerService:
         return best_id, best_score
 
     async def _safe_llm_parse(self, raw_address: str) -> dict | None:
-        if not self.settings.groq_api_key:
+        if not self.settings.groq_api_key or self.client is None:
             return None
 
         prompt = (

@@ -27,6 +27,7 @@ class MetricsService:
         self.ensemble_metrics_path = self.model_dir / "ensemble_metrics.json"
 
         self.gnn_metrics_path = self.model_dir / "gnn_metrics.json"
+        self.feature_ablation_path = Path(self.settings.feature_ablation_path)
 
     # ---------------------------------------------------------
     # Helpers
@@ -71,6 +72,7 @@ class MetricsService:
 
         # Existing tuned LightGBM metrics.
         model_metrics = self._load_json(self.model_metrics_path)
+        baseline_metrics = self._load_json(self.settings.baseline_metrics_path)
 
         # New V4 artifacts.
         ensemble_metrics = self._load_json(self.ensemble_metrics_path)
@@ -111,8 +113,27 @@ class MetricsService:
         model_b_test = model_b.get("test", model_b)
 
         baseline = (
-            model_metrics.get("baseline_test") or model_metrics.get("baseline") or {}
+            model_metrics.get("baseline_test")
+            or model_metrics.get("baseline")
+            or baseline_metrics
         )
+        if baseline:
+            # The persisted rule baseline stores uppercase confusion-matrix keys.
+            baseline = {
+                **baseline,
+                "tp": baseline.get("tp", baseline.get("TP")),
+                "fp": baseline.get("fp", baseline.get("FP")),
+                "tn": baseline.get("tn", baseline.get("TN")),
+                "fn": baseline.get("fn", baseline.get("FN")),
+            }
+            if (
+                "cost" not in baseline
+                and baseline.get("fp") is not None
+                and baseline.get("fn") is not None
+            ):
+                baseline["cost"] = float(
+                    baseline["fp"] * COST_FP + baseline["fn"] * COST_FN
+                )
 
         # -----------------------------------------------------
         # Normalize ensemble metrics
@@ -184,7 +205,12 @@ class MetricsService:
             "ensemble_metrics": ensemble_metrics,
             "gnn_metrics": gnn_metrics,
             "investigation_summary": investigation_summary,
+            "feature_ablation": self._load_json(self.feature_ablation_path),
         }
+
+    async def get_feature_ablation(self) -> dict:
+        """Return the reproducible held-out feature-sensitivity benchmark."""
+        return self._load_json(self.feature_ablation_path)
 
     # ---------------------------------------------------------
     # Curves

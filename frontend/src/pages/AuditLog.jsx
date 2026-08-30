@@ -292,6 +292,39 @@ export default function AuditLog() {
                                 Generated
                               </p>
                             )}
+
+                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="rounded-md border border-border p-3">
+                                <p className="text-xs text-muted-foreground">Input snapshot hash</p>
+                                <p className="text-xs font-mono mt-1 break-all">{record.input_data_hash || "—"}</p>
+                              </div>
+                              <div className="rounded-md border border-border p-3">
+                                <p className="text-xs text-muted-foreground">Threshold used</p>
+                                <p className="text-sm font-medium mt-1">{record.threshold_used != null ? Number(record.threshold_used).toFixed(6) : "—"}</p>
+                              </div>
+                              <div className="rounded-md border border-border p-3">
+                                <p className="text-xs text-muted-foreground">Human decision</p>
+                                <p className="text-sm font-medium mt-1">{record.human_decision || "NOT_RECORDED"}</p>
+                              </div>
+                              <div className="rounded-md border border-border p-3">
+                                <p className="text-xs text-muted-foreground">Outcome</p>
+                                <p className="text-sm font-medium mt-1">{record.outcome || "—"}</p>
+                              </div>
+                            </div>
+
+                            {record.feature_snapshot && (
+                              <details className="mt-3">
+                                <summary className="cursor-pointer text-xs font-medium">Recorded decision snapshot</summary>
+                                <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted p-3 text-[11px]">{record.feature_snapshot}</pre>
+                              </details>
+                            )}
+
+                            {record.evidence_subgraph && (
+                              <details className="mt-3">
+                                <summary className="cursor-pointer text-xs font-medium">Evidence subgraph reference</summary>
+                                <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted p-3 text-[11px]">{record.evidence_subgraph}</pre>
+                              </details>
+                            )}
                           </div>
                         </td>
                       </tr>

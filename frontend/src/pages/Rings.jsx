@@ -49,6 +49,7 @@ export default function Rings() {
   const [highlightId, setHighlightId] = useState(null);
   const [queue, setQueue] = useState([]);
   const [communityLimit, setCommunityLimit] = useState(3);
+  const [selectedCommunityIndex, setSelectedCommunityIndex] = useState(0);
 
   const fgRef = useRef();
   const initialFitDone = useRef(false);
@@ -79,194 +80,134 @@ export default function Rings() {
   }, []);
 
   /*
-   * Build communities from the graph.
-   *
-   * Existing behavior is preserved:
-   * communities are connected components and are sorted
-   * by highest-risk member probability.
+   * Build communities from the backend-provided community_id when available.
+   * This keeps the UI aligned with the persisted community assignments instead
+   * of silently recomputing a different connected-component definition.
+   * A connected-component fallback is retained for older artifacts.
    */
   const communities = useMemo(() => {
-  const adjacency = new Map();
+    const queueById = new Map(
+      queue.map((account) => [account.account_id, account])
+    );
 
-  graph.nodes.forEach((node) => {
-    adjacency.set(node.id, new Set());
-  });
+    const hasCommunityAssignments = graph.nodes.some(
+      (node) => node.community_id !== null && node.community_id !== undefined
+    );
 
-  graph.links.forEach((link) => {
-    const source =
-      typeof link.source === "object"
-        ? link.source.id
-        : link.source;
+    const groups = new Map();
 
-    const target =
-      typeof link.target === "object"
-        ? link.target.id
-        : link.target;
+    if (hasCommunityAssignments) {
+      graph.nodes.forEach((node) => {
+        const key = String(node.community_id ?? `node:${node.id}`);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(node.id);
+      });
+    } else {
+      const adjacency = new Map();
+      graph.nodes.forEach((node) => adjacency.set(node.id, new Set()));
+      graph.links.forEach((link) => {
+        const source = typeof link.source === "object" ? link.source.id : link.source;
+        const target = typeof link.target === "object" ? link.target.id : link.target;
+        if (!adjacency.has(source)) adjacency.set(source, new Set());
+        if (!adjacency.has(target)) adjacency.set(target, new Set());
+        adjacency.get(source).add(target);
+        adjacency.get(target).add(source);
+      });
 
-    if (!adjacency.has(source)) {
-      adjacency.set(source, new Set());
+      const visited = new Set();
+      graph.nodes.forEach((node) => {
+        if (visited.has(node.id)) return;
+        const stack = [node.id];
+        const members = [];
+        visited.add(node.id);
+        while (stack.length) {
+          const current = stack.pop();
+          members.push(current);
+          for (const next of adjacency.get(current) || []) {
+            if (!visited.has(next)) {
+              visited.add(next);
+              stack.push(next);
+            }
+          }
+        }
+        groups.set(`component:${node.id}`, members);
+      });
     }
 
-    if (!adjacency.has(target)) {
-      adjacency.set(target, new Set());
+    const result = [];
+
+    for (const [communityId, members] of groups.entries()) {
+      const memberSet = new Set(members);
+      const flaggedMembers = members.map((id) => queueById.get(id)).filter(Boolean);
+      const peak = flaggedMembers.reduce(
+        (best, item) =>
+          !best || Number(item.proba) > Number(best.proba) ? item : best,
+        null
+      );
+
+      const internalLinks = graph.links.filter((link) => {
+        const source = typeof link.source === "object" ? link.source.id : link.source;
+        const target = typeof link.target === "object" ? link.target.id : link.target;
+        return memberSet.has(source) && memberSet.has(target);
+      });
+
+      const edgeCounts = {};
+      internalLinks.forEach((link) => {
+        edgeCounts[link.edge_type] = (edgeCounts[link.edge_type] || 0) + 1;
+      });
+
+      const strongestEdge = internalLinks.reduce((strongest, link) => {
+        const weight = Number(link.weight || 0);
+        if (!strongest || weight > Number(strongest.weight || 0)) {
+          return {
+            ...link,
+            source: typeof link.source === "object" ? link.source.id : link.source,
+            target: typeof link.target === "object" ? link.target.id : link.target,
+          };
+        }
+        return strongest;
+      }, null);
+
+      result.push({
+        communityId,
+        members,
+        flaggedMembers,
+        peak,
+        memberLinks: internalLinks.length,
+        edgeCounts,
+        strongestEdge,
+      });
     }
 
-    adjacency.get(source).add(target);
-    adjacency.get(target).add(source);
-  });
+    return result
+      .filter((community) => community.members.length > 1 || community.flaggedMembers.length > 0)
+      .sort((a, b) => Number(b.peak?.proba || 0) - Number(a.peak?.proba || 0));
+  }, [graph.nodes, graph.links, queue]);
 
-  const queueById = new Map(
-    queue.map((account) => [
-      account.account_id,
-      account,
-    ])
+  useEffect(() => {
+    if (selectedCommunityIndex >= communities.length) {
+      setSelectedCommunityIndex(0);
+    }
+  }, [communities.length, selectedCommunityIndex]);
+
+  const highlightedCommunities = useMemo(
+    () => communities.slice(0, communityLimit),
+    [communities, communityLimit]
   );
 
-  const visited = new Set();
-  const result = [];
+  const selectedCommunity =
+    highlightedCommunities[selectedCommunityIndex] || highlightedCommunities[0] || null;
 
-  for (const node of graph.nodes) {
-    if (visited.has(node.id)) continue;
+  const selectedMemberSet = useMemo(
+    () => new Set(selectedCommunity?.members || []),
+    [selectedCommunity]
+  );
 
-    const stack = [node.id];
-    const members = [];
-
-    visited.add(node.id);
-
-    while (stack.length) {
-      const current = stack.pop();
-
-      members.push(current);
-
-      for (const next of adjacency.get(current) || []) {
-        if (!visited.has(next)) {
-          visited.add(next);
-          stack.push(next);
-        }
-      }
-    }
-
-    const memberSet = new Set(members);
-
-    const flaggedMembers = members
-      .map((id) => queueById.get(id))
-      .filter(Boolean);
-
-    const peak = flaggedMembers.reduce(
-      (best, item) =>
-        !best ||
-        Number(item.proba) > Number(best.proba)
-          ? item
-          : best,
-      null
-    );
-
-    const internalLinks = graph.links.filter((link) => {
-      const source =
-        typeof link.source === "object"
-          ? link.source.id
-          : link.source;
-
-      const target =
-        typeof link.target === "object"
-          ? link.target.id
-          : link.target;
-
-      return (
-        memberSet.has(source) &&
-        memberSet.has(target)
-      );
-    });
-
-    const edgeCounts = {};
-
-    internalLinks.forEach((link) => {
-      edgeCounts[link.edge_type] =
-        (edgeCounts[link.edge_type] || 0) + 1;
-    });
-
-    const strongestEdge =
-      internalLinks.length > 0
-        ? internalLinks.reduce(
-            (strongest, link) => {
-              const weight = Number(link.weight || 0);
-
-              if (
-                !strongest ||
-                weight > Number(strongest.weight || 0)
-              ) {
-                return {
-                  ...link,
-                  source:
-                    typeof link.source === "object"
-                      ? link.source.id
-                      : link.source,
-                  target:
-                    typeof link.target === "object"
-                      ? link.target.id
-                      : link.target,
-                };
-              }
-
-              return strongest;
-            },
-            null
-          )
-        : null;
-
-    result.push({
-      members,
-      flaggedMembers,
-      peak,
-      memberLinks: internalLinks.length,
-      edgeCounts,
-      strongestEdge,
-    });
-  }
-
-  return result
-    .filter(
-      (community) =>
-        community.members.length > 1 ||
-        community.flaggedMembers.length > 0
-    )
-    .sort(
-      (a, b) =>
-        Number(b.peak?.proba || 0) -
-        Number(a.peak?.proba || 0)
-    );
-}, [graph.nodes, graph.links, queue]);
-
-  /*
-   * Only the currently selected top N communities are highlighted.
-   *
-   * 3  -> top 3
-   * 6  -> top 6
-   * 15 -> top 15
-   */
-  const highlightedCommunities = useMemo(() => {
-    return communities.slice(0, communityLimit);
-  }, [communities, communityLimit]);
-
-  /*
-   * Map every node to the highlighted community it belongs to.
-   *
-   * Example:
-   * A001 -> community 0
-   * A002 -> community 0
-   * A010 -> community 1
-   *
-   * Nodes outside the selected communities get null.
-   */
   const communityByNode = useMemo(() => {
     const map = new Map();
-
     highlightedCommunities.forEach((community, communityIndex) => {
-      community.members.forEach((memberId) => {
-        map.set(memberId, communityIndex);
-      });
+      community.members.forEach((memberId) => map.set(memberId, communityIndex));
     });
-
     return map;
   }, [highlightedCommunities]);
 
@@ -587,8 +528,21 @@ export default function Rings() {
 
               return (
                 <div
-                  key={`${community.members[0]}-${index}`}
-                  className="rounded-lg border border-border bg-card p-4"
+                  key={`${community.communityId}-${index}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedCommunityIndex(index)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedCommunityIndex(index);
+                    }
+                  }}
+                  className={`w-full text-left rounded-lg border bg-card p-4 transition-colors cursor-pointer ${
+                    selectedCommunityIndex === index
+                      ? "border-black dark:border-white ring-1 ring-black/10 dark:ring-white/10"
+                      : "border-border hover:bg-accent"
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -724,6 +678,48 @@ export default function Rings() {
               <option value={6}>6 communities</option>
               <option value={15}>15 communities</option>
             </select>
+          </div>
+        )}
+
+        {selectedCommunity && (
+          <div className="mt-4 rounded-lg border border-border bg-muted/20 p-4">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Selected ring
+                </p>
+                <h3 className="text-base font-semibold mt-1">
+                  Community #{selectedCommunityIndex + 1} · {selectedCommunity.members.length} accounts
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedCommunity.flaggedMembers.length} flagged members · {selectedCommunity.memberLinks} internal relationships
+                </p>
+              </div>
+              {selectedCommunity.peak && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/investigations/${selectedCommunity.peak.account_id}`)}
+                  className="border border-border rounded-md px-3 py-2 text-xs hover:bg-accent whitespace-nowrap"
+                >
+                  Investigate highest-risk member →
+                </button>
+              )}
+            </div>
+
+            {selectedCommunity.strongestEdge && (
+              <div className="mt-3 rounded-md border border-border bg-background p-3">
+                <p className="text-xs font-medium">Strongest configured relationship</p>
+                <p className="text-sm font-semibold mt-1">
+                  {EDGE_LABELS[selectedCommunity.strongestEdge.edge_type] || selectedCommunity.strongestEdge.edge_type}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedCommunity.strongestEdge.source} → {selectedCommunity.strongestEdge.target} · weight {Number(selectedCommunity.strongestEdge.weight || 0).toFixed(2)}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  This is the strongest configured relationship weight in the selected ring; it prioritizes evidence for review and does not establish abuse by itself.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -902,9 +898,7 @@ export default function Rings() {
                     COMMUNITY_COLORS.length
                 ];
             } else {
-              nodeFill = node.is_focus
-                ? primary
-                : muted;
+              nodeFill = node.is_focus ? primary : muted;
             }
 
             /*
@@ -940,9 +934,13 @@ export default function Rings() {
               false
             );
 
+            const isSelected = selectedMemberSet.has(node.id);
+            const isHighlighted = communityIndex != null;
+            ctx.globalAlpha = isSelected ? 1 : isHighlighted ? 0.38 : 0.22;
             ctx.fillStyle = nodeFill;
 
             ctx.fill();
+            ctx.globalAlpha = 1;
 
             /*
              * Border
@@ -1016,6 +1014,12 @@ export default function Rings() {
             );
           }}
 
+          linkLineDash={(link) => {
+            const source = typeof link.source === "object" ? link.source.id : link.source;
+            const target = typeof link.target === "object" ? link.target.id : link.target;
+            return selectedMemberSet.has(source) && selectedMemberSet.has(target) ? [] : [3, 3];
+          }}
+
           linkWidth={(link) => {
             const source =
               typeof link.source === "object"
@@ -1037,10 +1041,11 @@ export default function Rings() {
               highlightId === source ||
               highlightId === target;
 
+            const selectedEdge = selectedMemberSet.has(source) && selectedMemberSet.has(target);
+
             if (hovered) return 2.5;
-
+            if (selectedEdge) return 2.6;
             if (sameCommunity) return 1.5;
-
             return 1;
           }}
 

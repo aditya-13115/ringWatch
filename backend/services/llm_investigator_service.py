@@ -4,7 +4,11 @@ from datetime import datetime, timezone
 from typing import Any
 import time
 import pandas as pd
-from groq import AsyncGroq
+
+try:
+    from groq import AsyncGroq
+except ImportError:  # Optional at test/runtime when no LLM integration is configured.
+    AsyncGroq = None
 
 from backend.core.config import get_settings
 from backend.core.concurrency import LLM_SEMAPHORE
@@ -27,7 +31,11 @@ class LLMInvestigatorService:
         self.event_repo = event_repo
         self.action_service = action_service
         self.settings = get_settings()
-        self.client = AsyncGroq(api_key=self.settings.groq_api_key)
+        self.client = (
+            AsyncGroq(api_key=self.settings.groq_api_key)
+            if AsyncGroq is not None and self.settings.groq_api_key
+            else None
+        )
         self.executed_tools: set[str] = set()
 
     async def investigate(self, account_id: str) -> dict:
@@ -61,7 +69,7 @@ class LLMInvestigatorService:
                     }
 
     async def _run_investigation(self, account_id: str, start_time: float) -> dict:
-        if not self.settings.groq_api_key:
+        if not self.settings.groq_api_key or self.client is None:
             return await self._fallback_deterministic(
                 account_id,
                 error="Groq API key not configured",

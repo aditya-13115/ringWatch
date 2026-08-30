@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.schemas.audit import AuditResponse, AuditRecordResponse
 from backend.services.audit_service import AuditService
 
-print("AUDIT SCHEMA:", AuditRecordResponse.model_fields["proba"])
 from backend.dependencies import get_audit_service
 
 router = APIRouter(prefix="/audit", tags=["audit"])

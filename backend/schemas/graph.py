@@ -5,6 +5,7 @@ class GraphNodeSchema(BaseModel):
     id: str
     label: str
     is_focus: bool = False
+    community_id: int | str | None = None
 
 
 class GraphEdgeSchema(BaseModel):

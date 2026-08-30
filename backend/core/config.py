@@ -70,6 +70,23 @@ class Settings(BaseSettings):
         / "model_predictions_test.csv"
     )
 
+    baseline_metrics_path: Path = (
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "baseline_metrics.json"
+    )
+
+    feature_ablation_path: Path = (
+        PROJECT_ROOT
+        / "data"
+        / "v4_realistic_30k"
+        / "processed"
+        / "model"
+        / "feature_ablation_test.json"
+    )
+
     # V4 tuned benchmark metrics
     model_metrics_path: Path = (
         PROJECT_ROOT
@@ -91,6 +108,11 @@ class Settings(BaseSettings):
 
     features_graph_path: Path = (
         PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "features_graph.csv"
+    )
+
+    # V4 community assignments
+    communities_path: Path = (
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "communities.csv"
     )
 
     # V4 graph

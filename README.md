@@ -6,148 +6,156 @@
 
 ### Explainable Detection and Investigation of Coordinated Refund Abuse Rings
 
-A defense-oriented fraud investigation platform combining behavioral signals, identity relationships, machine learning, graph analysis, SHAP explainability, evidence gaps, bounded actions, and audit trails.
-
-<br />
+A defense-only risk investigation platform that combines behavioral signals, identity relationships, machine learning, graph analysis, SHAP explainability, evidence gaps, bounded actions, Razorpay Test Mode data, and audit trails.
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue?style=flat-square)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square)
 ![React](https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square)
 ![Vite](https://img.shields.io/badge/Vite-Build%20Tool-646CFF?style=flat-square)
 ![LightGBM](https://img.shields.io/badge/ML-LightGBM-green?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Active-success?style=flat-square)
 
 </div>
 
 ---
 
-## Overview
+## Razorpay Buildathon — Track 02: AI Risk Manager
 
-RingWatch is an explainable, defense-only fraud investigation system designed to detect coordinated post-delivery refund and return abuse.
+**Project:** RingWatch  
+**Loss class:** Coordinated post-delivery refund/return abuse  
+**Mode:** Defense-only, human-in-the-loop
 
-Instead of treating fraud detection as a simple binary classification problem, RingWatch is designed around the workflow an investigator actually needs:
+RingWatch is designed to answer a practical merchant question:
+
+> **Which accounts should an investigator review before refund/return abuse becomes a larger loss, and what evidence supports that review?**
+
+The system is intentionally not an autonomous punishment engine. Model output is a prioritization signal; consequential actions remain bounded and reviewable.
+
+---
+
+## What it solves
+
+Single-account fraud scoring misses coordinated behavior. RingWatch combines account behavior with relationships between accounts that share strong identifiers such as devices, phones, payment instruments, addresses, IP prefixes, and rare coupons.
+
+The investigation workflow is:
 
 ```text
-Data
-  |
-  v
-Cutoff-safe Features
-  |
-  v
-Behavioral + Identity Signals
-  |
-  v
-LightGBM Model A
-  |
-  v
-Ranked Investigation Queue
-  |
-  +-------------------+
-  |                   |
-  v                   v
-SHAP Explanation     Graph Evidence
-  |                   |
-  +---------+---------+
-            |
-            v
-       Evidence Gaps
-            |
-            v
-       Case Report
-            |
-            v
-     Bounded Action
-            |
-            v
-        Audit Trail
+Data / Razorpay Test Mode
+        |
+        v
+Cutoff-safe feature preparation
+        |
+        +----------------------+
+        |                      |
+        v                      v
+Behavioral + identity      Account graph
+signals                    + communities
+        |                      |
+        +----------+-----------+
+                   v
+             V4 Ensemble
+        LightGBM B + GNN
+                   |
+                   v
+          Ranked investigation queue
+                   |
+          +--------+--------+---------+
+          |                 |         |
+          v                 v         v
+        SHAP             Graph     Evidence
+     explanation        context      gaps
+          |                 |         |
+          +--------+--------+---------+
+                   |
+                   v
+            AI investigation
+                   |
+                   v
+          Deterministic policy
+                   |
+                   v
+       Bounded recommendation
+                   |
+                   v
+              Audit trail
 ```
 
-The system is intentionally designed to support **human investigation rather than automatic punitive decisions**.
+### AI judgment
+
+The risk score is produced by the trained model. The investigator layer is used for evidence gathering and case synthesis, not as the primary fraud classifier. The final action remains controlled by deterministic policy and human review.
 
 ---
 
-## Key Features
+# Current operating model
 
-- Behavioral risk detection using LightGBM
-- Identity and account relationship features
-- Synthetic 30K-account investigation dataset
-- Account-level investigation queue
-- Risk tiers:
-  - CRITICAL
-  - HIGH
-  - MEDIUM
-  - LOW
-- Risk scores displayed as percentages
-- SHAP-based explanations
-- Account relationship graphs
-- Graph evidence and community information
-- Evidence-gap detection
-- Investigation case reports
-- Bounded action recommendations
-- Human review workflow
-- Audit logging
-- Failure/quarantine demonstration
-- Address normalization workflow
-- Model evaluation and metrics dashboard
-- Leakage and data-quality validation
-- Ring-aware evaluation
-- Hard-negative accounts for more realistic evaluation
-
----
-
-# Project Goals
-
-RingWatch is designed around five major questions:
-
-### 1. Why was this account flagged?
-
-The model provides a ranked risk score and SHAP-based feature explanations.
-
-### 2. What relationships does the account have?
-
-The investigation layer exposes relationships through devices, addresses, phones, payment instruments, IP prefixes, and graph-derived evidence.
-
-### 3. What evidence is actually available?
-
-The evidence layer identifies missing or incomplete evidence rather than assuming that a suspicious model score is sufficient.
-
-### 4. What should an investigator do?
-
-The system provides bounded recommendations rather than irreversible automated enforcement.
-
-### 5. What happened during the investigation?
-
-Actions and investigation events can be represented through the audit trail.
-
----
-
-# Current Modeling Decision
-
-RingWatch contains two LightGBM models:
+The current production/demo scoring configuration is the **V4 Ensemble**:
 
 ```text
-Model A
-Behavioral + Identity features
-
-Model B
-Behavioral + Identity + Graph features
+LightGBM B (tuned)
+        +
+GNN (FraudSAGE)
+        |
+        v
+Average probability
+        |
+        v
+Validation-selected threshold
+        |
+        v
+Investigation queue
 ```
 
-The project currently uses **Model A as the operational model**.
+The tested operating threshold is **0.6831**.
 
-Model B remains available for evaluation and comparison.
+LightGBM A (tuned) is retained for feature-sensitivity/ablation analysis. Graph analysis remains independently useful for investigation even where graph features are not the dominant predictive signal.
 
-The reason is empirical: the behavioral and identity representation already provides extremely strong predictive performance on the validated synthetic dataset, while the tested graph-enhanced model did not provide sufficient incremental predictive value to justify making it the primary operational model.
+---
 
-The project therefore keeps graph analysis primarily as an **investigation and evidence mechanism**, rather than forcing graph features into the operational model.
+# Held-out evaluation
+
+The final V4 evaluation uses a **4,499-account held-out test set**. The split keeps complete abuse rings together rather than allowing members of the same ring to leak across train/validation/test.
+
+### V4 Ensemble test results
+
+| Metric | Result |
+|---|---:|
+| Precision | **35.64%** |
+| Recall | **48.21%** |
+| F1 | **40.99%** |
+| PR-AUC | **44.43%** |
+| ROC-AUC | **84.06%** |
+| False positives | **195** |
+| False negatives | **116** |
+| True positives | **108** |
+| True negatives | **4,080** |
+| Modeled intervention cost | **₹21.30 lakh** |
+
+The cost model uses:
+
+```text
+False positive cost = ₹2,000
+False negative cost = ₹15,000
+```
+
+The persisted rule baseline is:
+
+| Metric | Rule baseline |
+|---|---:|
+| Precision | 5.52% |
+| Recall | 22.47% |
+| F1 | 8.86% |
+| False positives | 5,767 |
+| False negatives | 1,163 |
+| Modeled intervention cost | ₹2.90 crore |
+
+That corresponds to approximately **92.6% lower modeled intervention cost** for the V4 Ensemble than the current persisted rule baseline.
+
+> These are measured synthetic-data results. RingWatch does not claim that synthetic performance transfers directly to production.
 
 ---
 
 # Dataset
 
-RingWatch uses a synthetic relational dataset designed to model coordinated refund/return abuse.
-
-The final dataset contains:
+The final synthetic environment contains:
 
 | Property | Value |
 |---|---:|
@@ -163,7 +171,11 @@ The final dataset contains:
 | Hard-negative accounts | 4,500 |
 | Hard-negative orders | 18,000 |
 
-Validation results:
+The generated environment includes several abuse families, including wardrobing, promotion/refund farming, friendly-fraud-like behavior, and subtle distributed patterns.
+
+Validation checks include schema integrity, timestamps, foreign keys, graph structure, missing values, forbidden columns, cutoff boundaries, ground-truth isolation, and leakage checks.
+
+Current validation results include:
 
 ```text
 Foreign-key failures: 0
@@ -171,65 +183,21 @@ Duplicate IDs:        0
 Timestamp violations: 0
 ```
 
-The project originally used a 1K dataset as a development/debug checkpoint before scaling to the final 30K dataset.
-
-The 1K dataset is retained as development history and is not the final modeling dataset.
-
 ---
 
-# Data Model
+# Feature engineering
 
-The raw dataset contains multiple relational entities:
+Features are cutoff-aware: a prediction at time `T` can only use information that would have been available at `T`.
 
-```text
-accounts
-addresses
-devices
-disputes
-orders
-payment_instruments
-phones
-refunds
-ring_ground_truth
-```
+### Behavioral signals
 
-These entities are used to construct behavioral and identity relationships.
-
-The generator is responsible for creating the synthetic dataset and remains the source of truth for dataset generation.
-
----
-
-# Feature Engineering
-
-RingWatch uses cutoff-aware features.
-
-A feature is not simply:
-
-```text
-return_rate
-```
-
-It is:
-
-```text
-return_rate as known at prediction time T
-```
-
-This distinction prevents future information from leaking into the model.
-
-The feature pipeline includes:
-
-### Behavioral features
-
-Examples include:
+Examples:
 
 ```text
 total_orders
 total_amount
 avg_order_value
 total_delivered_orders
-total_failed_orders
-total_pending_orders
 orders_last_24h
 orders_last_7d
 orders_last_30d
@@ -239,11 +207,10 @@ dispute_rate
 discount_dependency_score
 transaction_burst_score
 refund_burst_score
+account_creation_burst_score
 ```
 
-### Identity features
-
-Examples include:
+### Identity / relationship signals
 
 ```text
 distinct_devices
@@ -261,9 +228,7 @@ shared_instrument_count
 shared_ip_prefix_count
 ```
 
-### Graph features
-
-The graph pipeline produces additional structural information such as:
+### Graph signals
 
 ```text
 degree_centrality
@@ -278,382 +243,357 @@ community_size
 community_return_rate
 community_refund_rate
 community_avg_order_value
-community_total_orders
 ```
 
 ---
 
-# Machine Learning
+# Ring / community investigation
 
-RingWatch uses LightGBM for supervised classification.
+RingWatch keeps persisted community assignments from the processed graph artifact and exposes the community ID on graph nodes. The Rings page uses those assignments when available and falls back to connected components only for older artifacts.
 
-## Model A
+The UI supports:
+
+- top **3 / 6 / 15** community highlighting
+- selecting an individual community
+- selected-ring emphasis in the graph
+- highest-risk member navigation
+- flagged-member count
+- internal relationship count
+- strongest configured relationship
+- strongest-edge weight
+- relationship-type filters
+- account search
+- zoom/reset controls
+
+The selected-ring panel explicitly explains that relationship weights are evidence-prioritization heuristics, not proof of coordinated abuse.
+
+---
+
+# Strongest-edge explanation
+
+For each investigated account, RingWatch surfaces the strongest configured relationship and the linked account when available.
+
+Example:
 
 ```text
-Behavioral features
-        +
-Identity features
-        |
-        v
-     LightGBM
-        |
-        v
-Risk score
+Strongest configured relationship
+shared device
+
+A025455 → A005374
+weight 1.00
+
+The weight is an evidence-prioritization heuristic,
+not proof of abuse.
 ```
 
-Model A is the current operational model.
-
-## Model B
-
-```text
-Behavioral features
-        +
-Identity features
-        +
-Graph features
-        |
-        v
-     LightGBM
-```
-
-Model B is retained for comparison and ablation analysis.
+This keeps the graph explanation concrete without turning a heuristic relationship weight into a causal claim.
 
 ---
 
 # Explainability
 
-The explainability pipeline produces account-level investigation artifacts.
+RingWatch uses SHAP for account-level model attribution.
 
 ```text
-Model Prediction
+Model prediction
       |
       v
      SHAP
       |
-      +-------------------+
-      |                   |
-      v                   v
-Top Features        SHAP Summary
+      +----> Top contributing features
       |
-      v
-Investigator
+      +----> Investigation explanation
 ```
 
-Generated artifacts include:
-
-```text
-shap_values_test.csv
-shap_summary.png
-```
-
-The SHAP layer helps answer:
-
-> Which model features contributed most to this account's score?
-
-The system does not treat SHAP explanations as causal explanations. They are model-attribution signals intended to support investigation.
+The application explicitly treats SHAP as model attribution, not causal explanation.
 
 ---
 
-# Investigation Layer
+# Feature ablation
 
-The investigation workflow combines multiple forms of evidence.
+A reproducible held-out feature-sensitivity benchmark is stored at:
 
 ```text
-                    Account
-                       |
-       +---------------+---------------+
-       |               |               |
-       v               v               v
-   Model Score       SHAP           Graph
-       |               |               |
-       +---------------+---------------+
-                       |
-                       v
-                Evidence Status
-                       |
-                       v
-                  Case Report
-                       |
-                       v
-                Bounded Action
-                       |
-                       v
-                   Audit Log
+data/v4_realistic_30k/processed/model/feature_ablation_test.json
 ```
 
-This makes the application more than a model prediction dashboard.
+It uses the tuned LightGBM A component, keeps the same held-out accounts, replaces one feature at a time with its population median, and rescoreds the same model.
+
+The benchmark is exposed through:
+
+```text
+GET /api/metrics/feature-ablation
+```
+
+The account investigation page also shows top-feature sensitivity for the selected account.
+
+**Important:** feature ablation measures model sensitivity. It is not a causal claim and is not the V4 Ensemble's score.
+
+To regenerate the global benchmark:
+
+```powershell
+uv run python -m generator.feature_ablation
+```
 
 ---
 
-# Risk Tiers
+# Evidence gaps
 
-RingWatch exposes four operational risk tiers:
+RingWatch uses Razorpay-aligned evidence names where applicable:
+
+```text
+proof_of_service
+explanation_letter
+refund_confirmation
+access_activity_log
+refund_cancellation_policy
+terms_and_conditions
+```
+
+The system distinguishes:
+
+```text
+AVAILABLE
+MISSING
+NO_DISPUTE_YET
+```
+
+A missing evidence field is not presented as actionable when no dispute existed at the prediction cutoff.
+
+---
+
+# AI Investigator
+
+The investigator is a bounded evidence-gathering layer.
+
+```text
+Account ID
+   |
+   v
+Pre-execute guaranteed evidence tools
+   |
+   v
+Evidence packet
+   |
+   v
+LLM investigator (optional)
+   |
+   v
+Structured investigation result
+   |
+   v
+Deterministic action policy
+   |
+   v
+Audit trail
+```
+
+Implemented investigation tools include:
+
+| Tool | Source |
+|---|---|
+| `get_related_accounts` | Graph evidence |
+| `get_shared_attributes` | Feature repository |
+| `check_evidence_availability` | Evidence artifact |
+| `calculate_financial_exposure` | Feature repository |
+| `get_account_timeline` | Event repository |
+| `get_merchant_policy` | Merchant policy map |
+
+If an LLM is unavailable, RingWatch falls back to a deterministic investigation path rather than failing the case entirely.
+
+---
+
+# Bounded actions / defense-only behavior
+
+RingWatch does not autonomously ban customers, seize funds, permanently block accounts, or automatically deny legitimate refunds.
+
+The intended policy flow is:
 
 ```text
 CRITICAL
+  → priority human investigation
+  → evidence review
+  → temporary defensive controls where appropriate
+
 HIGH
+  → human review
+  → evidence verification
+
 MEDIUM
+  → step-up verification / evidence collection
+
 LOW
+  → monitor / continue normal processing
 ```
 
-Risk scores are displayed to users as percentages.
-
-For example:
-
-```text
-0.8734
-```
-
-is presented as:
-
-```text
-87.34%
-```
-
-The frontend does not invent independent probability ranges to classify the account.
-
-The risk tier and model score are treated as separate pieces of information.
+The AI investigator is advisory. The deterministic policy layer remains the action authority.
 
 ---
 
-# Bounded Actions
+# Audit trail
 
-RingWatch is intentionally human-in-the-loop.
+The audit UI records both prediction and investigation context.
 
-The system should not automatically:
-
-```text
-Ban an account
-Block an account
-Deny a legitimate refund
-Seize funds
-Automatically reject a customer
-```
-
-Instead, recommendations are designed to support investigation and controlled review.
-
-Examples of the intended workflow include:
+In addition to the original decision fields, the API exposes auditability references including:
 
 ```text
-CRITICAL
-    |
-    v
-Priority human investigation
-    +
-Evidence review
-    +
-Temporary defensive controls where appropriate
-
-HIGH
-    |
-    v
-Human review
-    +
-Evidence verification
-
-MEDIUM
-    |
-    v
-Additional monitoring / evidence collection
-
-LOW
-    |
-    v
-Continue normal processing
+input_data_hash
+threshold_used
+feature_snapshot
+evidence_subgraph
+human_decision
+outcome
+error_path
 ```
 
-The exact recommendation is generated by the bounded-action layer.
+The `input_data_hash` is a stable SHA-256 reference of the recorded decision context; it is not a replacement for a production event-store hash.
+
+Human decisions are explicitly shown as `NOT_RECORDED` when no real human decision has been entered, rather than being fabricated by the system.
+
+---
+
+# Razorpay integration
+
+RingWatch includes a Test Mode Razorpay fetch path.
+
+```text
+Razorpay Test API
+       |
+       v
+Original Test Mode payment records
+       |
+       v
+Displayed unchanged in the demo
+```
+
+The failure demo is intentionally separated from the original-record display path. Synthetic malformed records are used to demonstrate quarantine behavior.
+
+Current Razorpay mapping used by the project includes:
+
+```text
+order.created / order.paid       → order data
+payment.captured                 → amount
+refund.processed                 → refund information
+dispute.created / updated        → dispute lifecycle
+merchant metadata                → device/address relationship fields
+```
+
+Full live webhook ingestion is **not required for the Track 02 detector bar** and is not part of the current demo path.
+
+---
+
+# Failure / quarantine demo
+
+The synthetic failure path demonstrates controlled degradation:
+
+```text
+Synthetic Razorpay-shaped batch
+        |
+        v
+Controlled malformed rows
+        |
+        v
+Validation
+        |
+   +----+----+
+   |         |
+   v         v
+Quarantine  Valid rows
+   |         |
+   v         v
+Human       Continue
+review      processing
+   \         /
+    \       /
+     v     v
+       Audit
+```
+
+The original Razorpay Test Mode fetch path never injects faults into the returned records.
+
+A backward-compatible `POST /api/failure-demo` alias is also retained for older demo scripts; the explicit endpoints are:
+
+```text
+POST /api/failure-demo/razorpay
+POST /api/failure-demo/razorpay-synthetic
+```
 
 ---
 
 # Architecture
 
-RingWatch follows a layered backend architecture.
+A standalone diagram is also available at [`docs/architecture.md`](docs/architecture.md).
+
+
+### Backend
 
 ```text
-                    FastAPI
-                       |
-              +--------+--------+
-              |                 |
-            API Layer        Middleware
-              |
-              v
-          Services
-              |
-       +------+------+
-       |             |
-       v             v
- Repositories      Domain
-       |             |
-       +------+------+
-              |
-              v
-        Processed Data
-```
-
-## Backend layers
-
-### API
-
-HTTP endpoints and request/response handling.
-
-```text
-backend/api/
-```
-
-### Core
-
-Application configuration, middleware, logging, exceptions, and concurrency utilities.
-
-```text
-backend/core/
-```
-
-### Domain
-
-Domain-level models and concepts.
-
-```text
-backend/domain/
-```
-
-### Repositories
-
-Access to processed datasets and explainability artifacts.
-
-```text
-backend/repositories/
-```
-
-### Schemas
-
-Pydantic request/response models.
-
-```text
-backend/schemas/
-```
-
-### Services
-
-Application/business logic.
-
-```text
-backend/services/
-```
-
-### Tests
-
-Backend API and normalization tests.
-
-```text
-backend/tests/
-```
-
----
-
-# Frontend
-
-The frontend is implemented using React and Vite.
-
-```text
-React
+FastAPI
+  |
+  +--> API routers
+  |
+  +--> Services
+  |      |
+  |      +--> queue / account / graph / evidence
+  |      +--> investigator / actions / reports
+  |      +--> audit / metrics / failure / address
+  |
+  +--> Repositories
+  |      |
+  |      +--> features
+  |      +--> events
+  |      +--> explainability artifacts
   |
   v
-Pages
-  |
-  +-------------------------------+
-  |               |               |
-  v               v               v
-Components       API Layer       Utilities
-  |               |
-  |               v
-  |             FastAPI
-  |
-  v
-Investigation UI
+Processed V4 artifacts
 ```
 
-## Main pages
+### End-to-end risk flow
 
 ```text
-Landing
-Dashboard
-Account Investigation
-Human Review Queue
-Rings
-Metrics
-Audit Log
-Failure Demo
-Address Normalization
-About
-Verification Workflow
-```
-
-## Main components
-
-```text
-ActionWorkflow
-Badge
-Card
-ErrorBoundary
-GraphView
-Layout
-LineChart
+Razorpay / synthetic records
+          |
+          v
+Canonical account/event data
+          |
+          +------------------+
+          |                  |
+          v                  v
+   Behavioral features   Relationship graph
+          |                  |
+          +--------+---------+
+                   v
+          V4 Ensemble scoring
+                   |
+                   v
+         Investigation queue
+                   |
+        +----------+----------+
+        |          |          |
+        v          v          v
+       SHAP      Graph      Evidence
+        |          |          |
+        +----------+----------+
+                   |
+                   v
+            AI Investigator
+                   |
+                   v
+         Deterministic Policy
+                   |
+                   v
+          Human-review action
+                   |
+                   v
+              Audit log
 ```
 
 ---
 
-# Frontend API Layer
-
-The frontend has dedicated API modules:
-
-```text
-frontend/src/api/
-
-account.js
-address.js
-audit.js
-client.js
-failure.js
-graph.js
-metrics.js
-queue.js
-```
-
-The API client uses:
-
-```javascript
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-```
-
-This means the default backend address is:
-
-```text
-http://localhost:8000
-```
-
-A different backend URL can be configured through:
-
-```text
-frontend/.env
-```
-
-with:
-
-```env
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-After changing the environment variable, restart the Vite development server.
-
----
-
-# Repository Structure
+# Repository structure
 
 ```text
 RingWatch/
-│
 ├── backend/
 │   ├── api/
 │   ├── core/
@@ -662,215 +602,63 @@ RingWatch/
 │   ├── schemas/
 │   ├── services/
 │   ├── tests/
-│   ├── dependencies.py
 │   └── main.py
 │
 ├── data/
-│   ├── v1_1k/
-│   │   └── ...
-│   │
-│   └── v3_scaled_30k/
-│       ├── accounts.csv
-│       ├── addresses.csv
-│       ├── devices.csv
-│       ├── disputes.csv
-│       ├── orders.csv
-│       ├── payment_instruments.csv
-│       ├── phones.csv
-│       ├── refunds.csv
-│       ├── ring_ground_truth.csv
-│       │
+│   └── v4_realistic_30k/
+│       ├── *.csv
 │       └── processed/
-│           ├── explainability/
 │           ├── model/
-│           ├── account_graph_edges.csv
-│           ├── baseline_metrics.json
-│           ├── communities.csv
-│           ├── features_accounts.csv
-│           ├── features_graph.csv
-│           └── leakage reports
+│           └── explainability/
 │
 ├── frontend/
 │   ├── public/
 │   ├── src/
 │   │   ├── api/
-│   │   ├── assets/
 │   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── pages/
-│   │   └── utils/
+│   │   └── pages/
 │   ├── package.json
-│   ├── package-lock.json
 │   ├── vite.config.js
-│   └── tailwind.config.js
+│   ├── tailwind.config.js
+│   └── postcss.config.js
 │
 ├── generator/
-│   ├── address_utils.py
-│   ├── config.py
-│   ├── entities.py
-│   ├── features_config.py
+│   ├── feature_ablation.py
 │   ├── features.py
-│   ├── generate_dataset.py
 │   ├── graph_features.py
-│   ├── ground_truth.py
-│   ├── hard_negatives.py
-│   ├── ids.py
-│   ├── lightgbm.py
-│   ├── normal_orders.py
-│   ├── refunds_disputes.py
-│   ├── ring_ablation.py
 │   ├── rings.py
+│   ├── lightgbm.py
+│   ├── lightgbm_tuned.py
+│   ├── ensemble.py
 │   └── validate.py
 │
 ├── notebooks/
-│   ├── day6_7_lightgbm_evaluation.ipynb
-│   ├── day8_9_explainability.ipynb
-│   └── ringwatch_30k_model_investigation.ipynb
-│
-├── .env
-├── example.env
-├── .gitignore
-├── .python-version
-├── main.py
+├── scripts/
 ├── pyproject.toml
 ├── README.md
-└── uv.lock
+└── razorpay_test_batch.json
 ```
 
 ---
 
-# Prerequisites
+# Setup
 
-Install the following before running RingWatch:
+## Backend
 
-- Python
-- `uv`
-- Node.js
-- npm
-
-The repository includes:
-
-```text
-.python-version
-pyproject.toml
-uv.lock
-package.json
-package-lock.json
-```
-
-so the Python and frontend environments can be reproduced from the repository configuration.
-
----
-
-# Backend Setup
-
-Open a terminal in the RingWatch project root.
+From the repository root:
 
 ```powershell
-cd RingWatch
-```
-
-Install/synchronize the Python environment:
-
-```powershell
-uv sync
-```
-
-Then start FastAPI:
-
-```powershell
-uv run uvicorn backend.main:app --reload
-```
-
-The backend runs by default at:
-
-```text
-http://127.0.0.1:8000
-```
-
-Keep this terminal running.
-
----
-
-# Frontend Setup
-
-Open a second terminal.
-
-```powershell
-cd RingWatch/frontend
-```
-
-Install frontend dependencies:
-
-```powershell
-npm install
-```
-
-Start the Vite development server:
-
-```powershell
-npm run dev
-```
-
-The frontend runs by default at:
-
-```text
-http://localhost:5173
-```
-
-Open the URL in a browser.
-
-Both servers need to remain running:
-
-```text
-Terminal 1
-FastAPI
-http://localhost:8000
-
-Terminal 2
-Vite
-http://localhost:5173
-```
-
----
-
-# Quick Start
-
-For a fresh checkout:
-
-### Terminal 1
-
-```powershell
-cd RingWatch
 uv sync
 uv run uvicorn backend.main:app --reload
 ```
 
-### Terminal 2
-
-```powershell
-cd RingWatch/frontend
-npm install
-npm run dev
-```
-
-Then open:
-
-```text
-http://localhost:5173
-```
-
----
-
-# Backend Health Check
-
-Once the backend is running, verify it with:
+Health check:
 
 ```powershell
 curl http://127.0.0.1:8000/health
 ```
 
-Expected response:
+Expected:
 
 ```json
 {
@@ -880,620 +668,265 @@ Expected response:
 }
 ```
 
-If the health endpoint works but the dashboard does not load, inspect the backend terminal first.
+## Frontend
 
----
-
-# API Endpoints
-
-The backend exposes multiple investigation-oriented API groups.
-
-```text
-/api/accounts
-/api/actions
-/api/address
-/api/audit
-/api/evidence
-/api/failure
-/api/graph
-/api/graph-overview
-/api/health
-/api/investigator
-/api/metrics
-/api/queue
-/api/reports
-/api/timeline
-```
-
-The most important operational endpoint is:
-
-```text
-GET /api/queue?limit=7
-```
-
-This provides the ranked investigation queue used by the dashboard.
-
----
-
-# Queue Data Flow
-
-The queue follows a clear separation between the data artifact, domain model, and API schema.
-
-```text
-bounded_actions_test.csv
-          |
-          | proba
-          v
-     QueueService
-          |
-          v
-      AccountRisk
-          |
-          v
-      QueueAccount
-          |
-          v
-     QueueResponse
-          |
-          v
-      /api/queue
-          |
-          v
-       Dashboard
-```
-
-The API exposes:
-
-```text
-account_id
-rank
-proba
-risk_tier
-recommended_action
-graph_links
-evidence_gaps
-```
-
----
-
-# Processed Artifacts
-
-The 30K processed dataset contains model and explainability artifacts.
-
-## Model artifacts
-
-```text
-data/v3_scaled_30k/processed/model/
-
-model_lgbm_A.pkl
-model_lgbm_B.pkl
-model_metrics.json
-model_predictions_test.csv
-model_leakage_report.txt
-model_feature_importance.csv
-model_a_feature_importance.csv
-model_b_feature_importance.csv
-ring_type_ablation.json
-```
-
-## Explainability artifacts
-
-```text
-data/v3_scaled_30k/processed/explainability/
-
-bounded_actions_test.csv
-case_reports_test.csv
-evidence_gap_test.csv
-graph_evidence_test.csv
-investigation_audit_log.csv
-shap_summary.png
-shap_values_test.csv
-graphs/
-```
-
----
-
-# Running the Notebooks
-
-The repository contains three major notebooks:
-
-```text
-notebooks/day6_7_lightgbm_evaluation.ipynb
-notebooks/day8_9_explainability.ipynb
-notebooks/ringwatch_30k_model_investigation.ipynb
-```
-
-They represent different stages of the project.
-
-## Day 6–7
-
-Model evaluation:
-
-```text
-Feature preparation
-       |
-       v
-Ring-aware split
-       |
-       v
-LightGBM
-       |
-       +----------+
-       |          |
-       v          v
-    Model A     Model B
-       |          |
-       +----------+
-              |
-              v
-        Evaluation
-```
-
-## Day 8–9
-
-Explainability and operational artifacts:
-
-```text
-Predictions
-    |
-    +--> SHAP
-    |
-    +--> Evidence gaps
-    |
-    +--> Graph evidence
-    |
-    +--> Case reports
-    |
-    +--> Bounded actions
-    |
-    +--> Investigation audit log
-```
-
-## Day 10–11
-
-Application and investigation workflow:
-
-```text
-FastAPI
-   +
-React
-   |
-   v
-Investigation Dashboard
-```
-
----
-
-# Data Generation
-
-The `generator/` package is responsible for creating and validating the synthetic environment.
-
-Important modules include:
-
-```text
-generate_dataset.py
-entities.py
-rings.py
-features.py
-graph_features.py
-ground_truth.py
-hard_negatives.py
-lightgbm.py
-validate.py
-```
-
-The generator is treated as the source of truth.
-
-If a dataset-generation bug is found, the preferred workflow is:
-
-```text
-Fix generator
-      |
-      v
-Regenerate dataset
-      |
-      v
-Validate dataset
-      |
-      v
-Regenerate downstream artifacts
-```
-
-rather than manually editing generated CSV files.
-
----
-
-# Validation
-
-Validation is an important part of the RingWatch pipeline.
-
-The project checks:
-
-```text
-Schema
-Timestamps
-Foreign keys
-Graph structure
-Missing values
-Forbidden columns
-Cutoff boundaries
-Ground-truth isolation
-Feature leakage
-```
-
-The validated 30K dataset has:
-
-```text
-Foreign-key failures: 0
-Duplicate IDs:        0
-Timestamp violations: 0
-```
-
-The model pipeline also includes leakage reports and ring-aware evaluation.
-
----
-
-# Testing
-
-Backend tests are located at:
-
-```text
-backend/tests/
-```
-
-Current tests include:
-
-```text
-test_address_normalization.py
-test_api.py
-```
-
-Run the test suite from the project root:
-
-```powershell
-uv run pytest
-```
-
----
-
-# Frontend Production Build
-
-To create a production frontend build:
+In another terminal:
 
 ```powershell
 cd frontend
+npm install
+npm run dev
+```
+
+Default URL:
+
+```text
+http://localhost:5173
+```
+
+Optional backend override:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+---
+
+# Production frontend build
+
+The frontend now includes the complete Vite build configuration:
+
+```text
+frontend/index.html
+frontend/package.json
+frontend/vite.config.js
+frontend/tailwind.config.js
+frontend/postcss.config.js
+```
+
+Build with:
+
+```powershell
+cd frontend
+npm install
 npm run build
 ```
 
-The generated build is placed in:
-
-```text
-frontend/dist/
-```
-
-To preview the production build locally:
+Preview with:
 
 ```powershell
 npm run preview
 ```
 
----
-
-# Development Workflow
-
-A typical development workflow is:
+The expected output directory is:
 
 ```text
-1. Start backend
-        |
-        v
-2. Start frontend
-        |
-        v
-3. Open dashboard
-        |
-        v
-4. Verify /health
-        |
-        v
-5. Verify /api/queue
-        |
-        v
-6. Test investigation workflow
-        |
-        v
-7. Run backend tests
-        |
-        v
-8. Build frontend
+frontend/dist/
 ```
+
+**Build verification note:** the source was syntax-checked in this environment, but the npm registry was unavailable during dependency installation, so a real `vite build` could not be executed here. Run the command above on a normal networked checkout before submission.
 
 ---
 
-# Troubleshooting
+# Testing
 
-## Dashboard shows "Failed to fetch"
-
-First check that the backend is running:
+Backend API tests:
 
 ```powershell
-uv run uvicorn backend.main:app --reload
+uv run pytest -q backend/tests/test_api.py
 ```
 
-Then check:
+The current test suite covers health/readiness, queue behavior, account details, graph endpoints, investigation behavior, audit access, and failure-demo compatibility.
+
+The latest local run completed with:
 
 ```text
-http://127.0.0.1:8000/health
+16 passed
 ```
 
-If `/health` works, inspect:
-
-```text
-/api/queue
-```
-
-The frontend API client defaults to:
-
-```text
-http://localhost:8000
-```
-
-If the backend runs elsewhere, configure:
-
-```env
-VITE_API_BASE_URL=http://your-backend-host:port
-```
-
-and restart Vite.
+The address-normalization file is a standalone diagnostic script rather than a pytest test module.
 
 ---
 
-## `/api/queue` returns 404
-
-Verify that the FastAPI router is registered and that the frontend is calling:
+# Useful API endpoints
 
 ```text
-/api/queue
-```
-
-rather than:
-
-```text
-/queue
-```
-
-The intended API path is:
-
-```text
-GET /api/queue?limit=7
+GET  /health
+GET  /ready
+GET  /api/queue
+GET  /api/accounts/{account_id}
+GET  /api/accounts/{account_id}/graph
+GET  /api/accounts/{account_id}/feature-ablation
+POST /api/accounts/{account_id}/investigate
+GET  /api/graph/overview
+GET  /api/evidence/{account_id}
+GET  /api/audit
+GET  /api/metrics
+GET  /api/metrics/feature-ablation
+GET  /api/metrics/curves
+POST /api/failure-demo/razorpay
+POST /api/failure-demo/razorpay-synthetic
+POST /api/address/normalize
 ```
 
 ---
 
-## `/api/queue` returns 500
+# Five-minute demo script
 
-Check the FastAPI terminal for the Python traceback.
+The demo should be rehearsed as a single investigator workflow rather than a tour of every page.
 
-The queue pipeline expects the processed action artifact to provide:
+### 0:00–0:40 — Problem
+
+Explain that account-level scoring misses coordinated refund abuse and that RingWatch prioritizes relationships and evidence before a merchant loses more money.
+
+### 0:40–1:20 — Detection
+
+Open the dashboard and show the ranked queue. Open a high-risk account.
+
+### 1:20–2:30 — Ring investigation
+
+Show:
 
 ```text
-account_id
-rank
-proba
-risk_tier
-recommended_action
+risk score
+→ selected community
+→ graph relationships
+→ strongest relationship
+→ SHAP contributors
+→ feature sensitivity
 ```
 
-The domain queue object and API response model must remain consistent.
+### 2:30–3:25 — Evidence + AI
+
+Show the Razorpay-aligned evidence fields, run the investigator, and show the case report/tool trace.
+
+### 3:25–4:00 — Bounded action
+
+Show the recommendation and explicitly point out that the system does not autonomously ban/block the customer.
+
+### 4:00–4:35 — Failure
+
+Run the synthetic malformed-batch demo. Show quarantine, valid-row continuation, human-review routing, and audit logging.
+
+### 4:35–5:00 — Metrics
+
+Finish with the held-out precision/recall and the modeled cost comparison against the rule baseline.
 
 ---
 
-# Design Principles
+# What broke and how it was recovered
 
-## 1. Human-in-the-loop
+The project has deliberately retained failure and integration lessons rather than presenting a perfect-looking prototype.
+
+Examples include:
+
+- frontend white-screen/runtime failures caused by missing imports and graph data-shape mismatches
+- queue API contract mismatches between limits and total counts
+- LLM dependency availability without an API key/package
+- malformed external-style records requiring quarantine rather than silent processing
+- stale investigation data requiring versioned local-storage handling
+
+The current implementation keeps deterministic fallbacks where an optional LLM dependency is unavailable and quarantines malformed synthetic input before it can enter downstream processing.
+
+---
+
+# Limitations
+
+1. **Synthetic data:** the reported model metrics are not production performance.
+2. **Ring-aware, not future-time validated:** the current V4 headline evaluation should be described as a ring-aware held-out test, not as a future-time generalization result.
+3. **Community IDs:** the UI uses the persisted community artifact; community quality therefore depends on graph construction quality.
+4. **Relationship weights:** weights prioritize evidence and are not causal proof.
+5. **Feature ablation:** median replacement measures model sensitivity, not causality.
+6. **Razorpay integration:** the current demo uses Test Mode fetching; live webhook ingestion is not implemented.
+7. **Human decisions:** the demo records audit context but does not fabricate a human approval decision.
+
+---
+
+# Submission-readiness checklist
+
+```text
+[x] Synthetic 30K dataset
+[x] Cutoff-aware feature engineering
+[x] Graph construction
+[x] Rule baseline
+[x] LightGBM A / B
+[x] GNN
+[x] V4 Ensemble selection
+[x] Held-out precision / recall
+[x] False-positive cost
+[x] Ring/community visualization
+[x] Ring-first selection/highlighting
+[x] Strongest-edge explanation
+[x] SHAP
+[x] Held-out feature ablation
+[x] Evidence gaps
+[x] AI investigator
+[x] Bounded actions
+[x] Failure/quarantine path
+[x] Razorpay Test Mode fetch/display
+[x] Auditability fields
+[x] Architecture documentation
+[x] Judge-facing README
+[x] Frontend build configuration
+[x] Backend API tests
+[ ] Networked npm install + final `npm run build` verification
+[ ] Final 5-minute pitch recording/rehearsal
+[ ] Public GitHub submission
+```
+
+---
+
+# Design principles
+
+### Human-in-the-loop
 
 Model output is an investigation signal, not an automatic punishment.
 
-## 2. Explainability
+### Explainability
 
-A high score should lead to an investigation workflow rather than a black-box decision.
+A high score should lead to inspectable evidence, relationships, and model attribution.
 
-## 3. Leakage awareness
+### Leakage awareness
 
 Features must only use information available at the prediction cutoff.
 
-## 4. Evidence before action
+### Evidence before action
 
-Model output alone is not treated as sufficient evidence.
+A score alone is not treated as sufficient evidence.
 
-## 5. Bounded actions
+### Bounded actions
 
-Recommendations should remain defensive, reversible, and reviewable.
+Recommendations remain defensive, reversible, and reviewable.
 
-## 6. Reproducibility
+### Honest evaluation
 
-Generated data and processed artifacts should come from deterministic pipeline stages.
+More complex modeling is not automatically treated as better. The V4 Ensemble is the operating model because it produced the strongest tested combination in the current evaluation, while the graph remains valuable for investigation.
 
-## 7. Honest evaluation
+### Investigability over raw accuracy
 
-The project does not force graph features or more complex models into the final system simply because they are more sophisticated.
-
----
-
-# Why LightGBM Instead of a GNN?
-
-The project explored graph-based modeling.
-
-The conclusion was not:
-
-> GNNs are unnecessary for fraud detection.
-
-The conclusion is specific to the current RingWatch dataset:
-
-> Behavioral and identity features already contain enough predictive information for the current LightGBM system, and the tested graph-enhanced representation did not provide sufficient incremental value to justify introducing a GNN.
-
-Therefore:
-
-```text
-LightGBM
-    |
-    +--> Model A
-    |
-    +--> Model B for comparison
-```
-
-is retained as the modeling path.
-
-Graph analysis remains valuable for:
-
-```text
-Investigation
-Relationship discovery
-Community analysis
-Evidence
-Explainability
-```
-
----
-
-# Operational Model
-
-The current production/demo path is:
-
-```text
-30K Dataset
-     |
-     v
-Cutoff-safe Features
-     |
-     v
-Behavioral + Identity Features
-     |
-     v
-LightGBM Model A
-     |
-     v
-Predictions
-     |
-     v
-Investigation Queue
-     |
-     +-----------------------+
-     |                       |
-     v                       v
-Risk Score              Risk Tier
-     |                       |
-     +-----------+-----------+
-                 |
-                 v
-          Account Investigation
-                 |
-       +---------+---------+
-       |         |         |
-       v         v         v
-      SHAP     Graph    Evidence
-       |         |         |
-       +---------+---------+
-                 |
-                 v
-             Case Report
-                 |
-                 v
-          Bounded Action
-                 |
-                 v
-             Audit Log
-```
-
----
-
-# Security and Safety Considerations
-
-RingWatch is intended as a defensive investigation system.
-
-The application should not be used to automatically make irreversible decisions about customers based solely on model predictions.
-
-A model score is a prioritization signal.
-
-Investigation evidence, business rules, and human review should be considered before consequential actions.
-
----
-
-# Current Project Status
-
-```text
-Dataset generation              Complete
-30K dataset                     Complete
-Data validation                 Complete
-Behavioral features             Complete
-Identity features               Complete
-Graph construction              Complete
-Graph features                  Complete
-Rule baseline                   Complete
-LightGBM evaluation             Complete
-Model A                         Operational
-Model B                         Evaluation / comparison
-SHAP explainability             Complete
-Evidence gaps                   Complete
-Case reports                    Complete
-Bounded actions                 Complete
-Audit logging                   Complete
-FastAPI backend                 Complete
-React frontend                  Complete
-Investigation dashboard         Complete
-Failure demonstration          Complete
-Address normalization           Complete
-```
-
----
-
-# Project Philosophy
-
-RingWatch is not intended to be:
-
-```text
-"Give a model a dataset and display a fraud score."
-```
-
-The intended system is:
+The central product goal is:
 
 ```text
 Detect
-  |
-  v
+  ↓
 Prioritize
-  |
-  v
+  ↓
 Explain
-  |
-  v
+  ↓
 Investigate
-  |
-  v
-Verify Evidence
-  |
-  v
-Recommend a Bounded Action
-  |
-  v
-Record the Decision
+  ↓
+Verify evidence
+  ↓
+Recommend a bounded action
+  ↓
+Record the decision
 ```
-
-The central design goal is therefore **investigability**, not merely prediction accuracy.
 
 ---
 
 # License
 
-Add the project's chosen license here before publishing the repository publicly.
-
-For example:
-
-```text
-MIT License
-```
-
-if an MIT license is added to the repository.
+Add the project's chosen license before publishing the repository publicly.
 
 ---
 
@@ -1501,12 +934,15 @@ if an MIT license is added to the repository.
 
 RingWatch was developed as an end-to-end exploration of:
 
-- Synthetic fraud-ring generation
-- Temporal feature engineering
-- Graph-based relationship analysis
-- Gradient-boosted tree models
+- synthetic fraud-ring generation
+- temporal/cutoff-aware feature engineering
+- heterogeneous relationship graphs
+- gradient-boosted tree models
+- graph neural networks
 - SHAP explainability
-- Evidence-driven investigation
-- Human-in-the-loop decision workflows
+- feature sensitivity analysis
+- evidence-driven investigation
+- human-in-the-loop decision workflows
 - FastAPI application architecture
 - React investigation interfaces
+- Razorpay Test Mode integration
