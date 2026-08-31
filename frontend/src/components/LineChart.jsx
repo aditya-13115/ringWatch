@@ -34,13 +34,14 @@ export default function LineChart({
   return (
     <div className="space-y-2">
       {title && <h4 className="text-sm font-medium">{title}</h4>}
-      <svg width="100%" viewBox={`0 0 ${width} ${height}`}>
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`} className="text-foreground">
         <line
           x1={margin.left}
           y1={margin.top + innerHeight}
           x2={width - margin.right}
           y2={margin.top + innerHeight}
-          stroke="black"
+          stroke="currentColor"
+          strokeOpacity="0.25"
           strokeWidth="1"
         />
         <line
@@ -48,14 +49,15 @@ export default function LineChart({
           y1={margin.top}
           x2={margin.left}
           y2={margin.top + innerHeight}
-          stroke="black"
+          stroke="currentColor"
+          strokeOpacity="0.25"
           strokeWidth="1"
         />
 
         <polyline
           points={points}
           fill="none"
-          stroke="black"
+          stroke="currentColor"
           strokeWidth="2"
         />
 
@@ -64,7 +66,7 @@ export default function LineChart({
           y={height - 5}
           textAnchor="middle"
           fontSize="12"
-          fill="black"
+          fill="currentColor"
         >
           {xLabel}
         </text>
@@ -73,7 +75,7 @@ export default function LineChart({
           y={height / 2}
           textAnchor="middle"
           fontSize="12"
-          fill="black"
+          fill="currentColor"
           transform={`rotate(-90, 15, ${height / 2})`}
         >
           {yLabel}

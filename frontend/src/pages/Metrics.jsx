@@ -818,7 +818,7 @@ function ScatterPlot({ points }) {
     <div className="w-full">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full"
+        className="w-full text-foreground"
       >
         {/* X axis */}
         <line
@@ -826,7 +826,8 @@ function ScatterPlot({ points }) {
           y1={margin.top + innerHeight}
           x2={width - margin.right}
           y2={margin.top + innerHeight}
-          stroke="black"
+          stroke="currentColor"
+          strokeOpacity="0.25"
           strokeWidth="1"
         />
 
@@ -836,7 +837,8 @@ function ScatterPlot({ points }) {
           y1={margin.top}
           x2={margin.left}
           y2={margin.top + innerHeight}
-          stroke="black"
+          stroke="currentColor"
+          strokeOpacity="0.25"
           strokeWidth="1"
         />
 
@@ -857,7 +859,7 @@ function ScatterPlot({ points }) {
           );
 
           const color =
-            modelColors[point.name] || "#000000";
+            modelColors[point.name] || "currentColor";
 
           return (
             <g
@@ -869,7 +871,8 @@ function ScatterPlot({ points }) {
                 cy={cy}
                 r={5}
                 fill={color}
-                stroke="black"
+                stroke="currentColor"
+                strokeOpacity="0.4"
                 strokeWidth="0.8"
               />
 
@@ -902,7 +905,7 @@ function ScatterPlot({ points }) {
           y={height - 12}
           textAnchor="middle"
           fontSize="13"
-          fill="black"
+          fill="currentColor"
         >
           Recall
         </text>
@@ -913,7 +916,7 @@ function ScatterPlot({ points }) {
           y={height / 2}
           textAnchor="middle"
           fontSize="13"
-          fill="black"
+          fill="currentColor"
           transform={`rotate(-90, 18, ${height / 2})`}
         >
           Precision

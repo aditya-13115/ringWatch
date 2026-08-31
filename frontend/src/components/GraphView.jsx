@@ -136,7 +136,7 @@ export default function GraphView({ accountId }) {
           {visibleEdges.map((edge, i) => {
             const source = positions[edge.source];
             const target = positions[edge.target];
-            const color = EDGE_COLORS[edge.edge_type] || "var(--border)";
+            const color = EDGE_COLORS[edge.edge_type] || "hsl(var(--border))";
             const isHighlighted =
               hoveredNode &&
               (edge.source === hoveredNode || edge.target === hoveredNode);
@@ -179,8 +179,8 @@ export default function GraphView({ accountId }) {
                   cx={pos.x}
                   cy={pos.y}
                   r={nodeRadius}
-                  fill={node.is_focus ? "var(--primary)" : "var(--card)"}
-                  stroke={isHovered ? "var(--destructive)" : "var(--foreground)"}
+                  fill={node.is_focus ? "hsl(var(--primary))" : "hsl(var(--muted))"}
+                  stroke={isHovered ? "hsl(var(--destructive))" : "hsl(var(--foreground))"}
                   strokeWidth={isHovered ? 3 : 1.5}
                 />
                 {node.is_focus && (
@@ -189,7 +189,7 @@ export default function GraphView({ accountId }) {
                     y={pos.y + nodeRadius / 2}
                     textAnchor="middle"
                     fontSize="8"
-                    fill="var(--primary-foreground)"
+                    fill="hsl(var(--primary-foreground))"
                   >
                     FOCUS
                   </text>
@@ -199,7 +199,7 @@ export default function GraphView({ accountId }) {
                   y={pos.y + nodeRadius + 12}
                   textAnchor="middle"
                   fontSize="10"
-                  fill="var(--foreground)"
+                  fill="hsl(var(--foreground))"
                 >
                   {node.id}
                 </text>

@@ -6,6 +6,13 @@
     <meta name="description" content="RingWatch — Explainable detection and investigation of coordinated refund abuse rings." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>RingWatch</title>
+    <script>
+      // Apply the persisted theme before paint (dark by default) to avoid a flash.
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "dark" || (t === null && true)) document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

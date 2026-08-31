@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
+import LiveOps from "./pages/LiveOps";
 import AccountInvestigation from "./pages/AccountInvestigation";
 import Rings from "./pages/Rings";
 import About from "./pages/About";
@@ -22,6 +23,7 @@ export default function App() {
 
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/live" element={<LiveOps />} />
             <Route path="/investigations/:accountId" element={<AccountInvestigation />} />
             <Route path="/rings" element={<Rings />} />
             <Route path="/about" element={<About />} />

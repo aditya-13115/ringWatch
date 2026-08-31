@@ -1332,12 +1332,16 @@ export default function Rings() {
 
   const getCSSVar = (
     name
-  ) =>
-    getComputedStyle(
+  ) => {
+    const raw = getComputedStyle(
       document.documentElement
     )
       .getPropertyValue(name)
       .trim();
+
+    // Vars store raw HSL channels; wrap so the value is a valid canvas color.
+    return raw ? `hsl(${raw})` : "";
+  };
 
   /*
    * ------------------------------------------------------------

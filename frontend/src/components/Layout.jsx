@@ -1,8 +1,10 @@
 import Logo from "../components/Logo";
+import AmbientBackground from "./AmbientBackground";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
+  Radar,
   Search,
   ScrollText,
   Activity,
@@ -15,6 +17,7 @@ import {
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/live", label: "Live Ops", icon: Radar },
   { to: "/rings", label: "Ring Network", icon: Search },
   { to: "/audit", label: "Audit Log", icon: ScrollText },
   { to: "/metrics", label: "Metrics", icon: Activity },
@@ -24,15 +27,25 @@ const navItems = [
 ];
 
 export default function Layout() {
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = localStorage.getItem("theme");
+    return stored === null ? true : stored === "dark";
+  });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
+    try {
+      localStorage.setItem("theme", dark ? "dark" : "light");
+    } catch {
+      /* storage unavailable — theme still applies for this session */
+    }
   }, [dark]);
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      <aside className="w-56 border-r border-border bg-card flex flex-col">
+    <div className="relative flex h-screen overflow-hidden bg-background text-foreground">
+      <AmbientBackground />
+      <aside className="relative z-10 w-56 border-r border-border bg-card backdrop-blur-lg flex flex-col">
         <div className="h-16 flex items-center px-4 border-b border-border">
           <Logo size="md" />
         </div>
@@ -64,8 +77,8 @@ export default function Layout() {
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-y-auto">
-        <header className="h-16 border-b border-border flex items-center px-6">
+      <main className="relative z-10 flex-1 overflow-y-auto">
+        <header className="h-16 border-b border-border bg-card/60 backdrop-blur-lg flex items-center px-6">
           <h1 className="text-sm font-medium text-muted-foreground">
             Post-delivery abuse investigation
           </h1>
