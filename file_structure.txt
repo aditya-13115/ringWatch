@@ -1,70 +1,329 @@
-frontend
-├── .claude
-│   └── launch.json
-├── dist
-│   ├── assets
-│   │   ├── index-CDNKPBkU.js
-│   │   ├── index-CWPy87kK.css
-│   │   └── ringwatch-logo-B-otNojC.png
-│   ├── favicon.svg
-│   ├── favicon(1).svg
-│   └── index.html
-├── public
-│   ├── favicon.svg
-│   ├── favicon(1).svg
-│   └── favicon0.svg
-├── src
+RingWatch
+├── backend
 │   ├── api
-│   │   ├── account.js
-│   │   ├── address.js
-│   │   ├── audit.js
-│   │   ├── client.js
-│   │   ├── failure.js
-│   │   ├── graph.js
-│   │   ├── metrics.js
-│   │   └── queue.js
-│   ├── assets
-│   │   ├── ringwatch-logo.png
-│   │   └── ringwatch-logo(1).png
-│   ├── components
-│   │   ├── ActionWorkflow.jsx
-│   │   ├── AmbientBackground.jsx
-│   │   ├── Badge.jsx
-│   │   ├── Card.jsx
-│   │   ├── CountUp.jsx
-│   │   ├── ErrorBoundary.jsx
-│   │   ├── GlassPanel.jsx
-│   │   ├── GraphView.jsx
-│   │   ├── Layout.jsx
-│   │   ├── LineChart.jsx
-│   │   ├── Logo.jsx
-│   │   └── Sparkline.jsx
-│   ├── hooks
-│   ├── pages
-│   │   ├── About.jsx
-│   │   ├── AccountInvestigation.jsx
-│   │   ├── AddressNormalization.jsx
-│   │   ├── AuditLog.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── FailureDemo.jsx
-│   │   ├── HumanReviewQueue.jsx
-│   │   ├── Landing.jsx
-│   │   ├── LiveOps.jsx
-│   │   ├── Metrics.jsx
-│   │   ├── Rings.jsx
-│   │   └── VerificationWorkflow.jsx
-│   ├── utils
-│   ├── App.css
-│   ├── App.jsx
-│   ├── constants.js
-│   ├── index.css
-│   └── main.jsx
+│   │   ├── __init__.py
+│   │   ├── accounts.py
+│   │   ├── actions.py
+│   │   ├── address.py
+│   │   ├── audit.py
+│   │   ├── evidence.py
+│   │   ├── failure.py
+│   │   ├── graph_overview.py
+│   │   ├── graph.py
+│   │   ├── health.py
+│   │   ├── investigator.py
+│   │   ├── metrics.py
+│   │   ├── queue.py
+│   │   ├── reports.py
+│   │   └── timeline.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── concurrency.py
+│   │   ├── config.py
+│   │   ├── exceptions.py
+│   │   ├── logging.py
+│   │   └── middleware.py
+│   ├── domain
+│   │   ├── __init__.py
+│   │   ├── account.py
+│   │   ├── action.py
+│   │   ├── audit.py
+│   │   ├── evidence.py
+│   │   └── graph.py
+│   ├── repositories
+│   │   ├── __init__.py
+│   │   ├── event_repository.py
+│   │   ├── explainability_repository.py
+│   │   └── feature_repository.py
+│   ├── schemas
+│   │   ├── __init__.py
+│   │   ├── account.py
+│   │   ├── action.py
+│   │   ├── address.py
+│   │   ├── audit.py
+│   │   ├── evidence.py
+│   │   ├── graph.py
+│   │   ├── llm.py
+│   │   ├── queue.py
+│   │   └── report.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── account_service.py
+│   │   ├── action_service.py
+│   │   ├── address_normalizer_service.py
+│   │   ├── audit_service.py
+│   │   ├── data_loader.py
+│   │   ├── evidence_service.py
+│   │   ├── failure_service.py
+│   │   ├── graph_service.py
+│   │   ├── llm_investigator_service.py
+│   │   ├── metrics_service.py
+│   │   ├── queue_service.py
+│   │   ├── report_service.py
+│   │   └── timeline_service.py
+│   ├── tests
+│   │   ├── test_address_normalization.py
+│   │   └── test_api.py
+│   ├── __init__.py
+│   ├── dependencies.py
+│   └── main.py
+├── data
+│   ├── v1_1k
+│   │   ├── processed
+│   │   │   ├── explainability
+│   │   │   │   ├── bounded_actions_test.csv
+│   │   │   │   ├── case_reports_test.csv
+│   │   │   │   ├── evidence_gap_test.csv
+│   │   │   │   ├── graph_evidence_test.csv
+│   │   │   │   ├── investigation_audit_log.csv
+│   │   │   │   ├── shap_summary.png
+│   │   │   │   └── shap_values_test.csv
+│   │   │   ├── model
+│   │   │   │   ├── model_feature_importance.csv
+│   │   │   │   ├── model_leakage_report.txt
+│   │   │   │   ├── model_lgbm_A.pkl
+│   │   │   │   ├── model_lgbm_B.pkl
+│   │   │   │   ├── model_metrics.json
+│   │   │   │   └── model_predictions_test.csv
+│   │   │   ├── account_graph_edges.csv
+│   │   │   ├── baseline_metrics.json
+│   │   │   ├── communities.csv
+│   │   │   ├── features_accounts.csv
+│   │   │   ├── features_graph.csv
+│   │   │   ├── leakage_report_day5.txt
+│   │   │   └── leakage_report_features.txt
+│   │   ├── accounts.csv
+│   │   ├── addresses.csv
+│   │   ├── devices.csv
+│   │   ├── disputes.csv
+│   │   ├── orders.csv
+│   │   ├── payment_instruments.csv
+│   │   ├── phones.csv
+│   │   ├── refunds.csv
+│   │   └── ring_ground_truth.csv
+│   ├── v3_scaled_30k
+│   │   ├── processed
+│   │   │   ├── explainability
+│   │   │   │   ├── graphs
+│   │   │   │   │   ├── A024050_graph.png
+│   │   │   │   │   ├── A024090_graph.png
+│   │   │   │   │   ├── A024117_graph.png
+│   │   │   │   │   ├── A024152_graph.png
+│   │   │   │   │   ├── A024156_graph.png
+│   │   │   │   │   ├── A024157_graph.png
+│   │   │   │   │   ├── A024159_graph.png
+│   │   │   │   │   ├── A024288_graph.png
+│   │   │   │   │   ├── A024289_graph.png
+│   │   │   │   │   └── A024295_graph.png
+│   │   │   │   ├── bounded_actions_test.csv
+│   │   │   │   ├── case_reports_test.csv
+│   │   │   │   ├── evidence_gap_test.csv
+│   │   │   │   ├── graph_evidence_test.csv
+│   │   │   │   ├── investigation_audit_log.csv
+│   │   │   │   ├── shap_summary.png
+│   │   │   │   └── shap_values_test.csv
+│   │   │   ├── model
+│   │   │   │   ├── model_a_feature_importance.csv
+│   │   │   │   ├── model_b_feature_importance.csv
+│   │   │   │   ├── model_feature_importance.csv
+│   │   │   │   ├── model_leakage_report.txt
+│   │   │   │   ├── model_lgbm_A.pkl
+│   │   │   │   ├── model_lgbm_B.pkl
+│   │   │   │   ├── model_metrics.json
+│   │   │   │   ├── model_predictions_test.csv
+│   │   │   │   └── ring_type_ablation.json
+│   │   │   ├── account_graph_edges.csv
+│   │   │   ├── baseline_metrics.json
+│   │   │   ├── communities.csv
+│   │   │   ├── features_accounts.csv
+│   │   │   ├── features_graph.csv
+│   │   │   ├── leakage_report_day5.txt
+│   │   │   └── leakage_report_features.txt
+│   │   ├── accounts.csv
+│   │   ├── addresses.csv
+│   │   ├── devices.csv
+│   │   ├── disputes.csv
+│   │   ├── orders.csv
+│   │   ├── payment_instruments.csv
+│   │   ├── phones.csv
+│   │   ├── refunds.csv
+│   │   └── ring_ground_truth.csv
+│   └── v4_realistic_30k
+│       ├── processed
+│       │   ├── explainability
+│       │   │   ├── graphs
+│       │   │   │   ├── A010538_graph.png
+│       │   │   │   ├── A011351_graph.png
+│       │   │   │   ├── A022581_graph.png
+│       │   │   │   ├── A025455_graph.png
+│       │   │   │   └── A026494_graph.png
+│       │   │   ├── bounded_actions_test.csv
+│       │   │   ├── case_reports_test.csv
+│       │   │   ├── evidence_gap_test.csv
+│       │   │   ├── graph_evidence_test.csv
+│       │   │   ├── investigation_audit_log.csv
+│       │   │   ├── pr_curves_all.png
+│       │   │   ├── roc_curves_all.png
+│       │   │   ├── score_dist_Ensemble.png
+│       │   │   ├── score_dist_GNN.png
+│       │   │   ├── score_dist_Model_A.png
+│       │   │   ├── score_dist_Model_B.png
+│       │   │   ├── shap_summary_A.png
+│       │   │   ├── shap_summary_B.png
+│       │   │   ├── shap_summary.png
+│       │   │   └── shap_values_test.csv
+│       │   ├── model
+│       │   │   ├── best_params_tuned.json
+│       │   │   ├── ensemble_metrics.json
+│       │   │   ├── feature_ablation_test.json
+│       │   │   ├── gnn_metrics.json
+│       │   │   ├── gnn_model.pt
+│       │   │   ├── model_a_feature_importance.csv
+│       │   │   ├── model_b_feature_importance.csv
+│       │   │   ├── model_leakage_report.txt
+│       │   │   ├── model_lgbm_A_tuned.pkl
+│       │   │   ├── model_lgbm_A.pkl
+│       │   │   ├── model_lgbm_B_tuned.pkl
+│       │   │   ├── model_lgbm_B.pkl
+│       │   │   ├── model_metrics_tuned.json
+│       │   │   ├── model_metrics.json
+│       │   │   ├── model_predictions_test.csv
+│       │   │   └── ring_type_ablation.json
+│       │   ├── plots
+│       │   │   ├── pr_curves.png
+│       │   │   ├── roc_curves.png
+│       │   │   ├── score_dist_proba_a.png
+│       │   │   ├── score_dist_proba_b.png
+│       │   │   ├── score_dist_proba_ensemble.png
+│       │   │   └── score_dist_proba_gnn.png
+│       │   ├── account_graph_edges.csv
+│       │   ├── baseline_metrics.json
+│       │   ├── communities.csv
+│       │   ├── features_accounts.csv
+│       │   ├── features_graph.csv
+│       │   ├── leakage_report_day5.txt
+│       │   ├── leakage_report_features.txt
+│       │   ├── v4_quality_audit_extended.json
+│       │   └── v4_quality_audit.json
+│       ├── account_population_labels_private.csv
+│       ├── accounts.csv
+│       ├── addresses.csv
+│       ├── devices.csv
+│       ├── disputes.csv
+│       ├── orders.csv
+│       ├── payment_instruments.csv
+│       ├── phones.csv
+│       ├── refunds.csv
+│       └── ring_ground_truth.csv
+├── docs
+│   └── architecture.md
+├── frontend
+│   ├── dist
+│   │   ├── assets
+│   │   │   ├── index-CDNKPBkU.js
+│   │   │   ├── index-CWPy87kK.css
+│   │   │   └── ringwatch-logo-B-otNojC.png
+│   │   ├── favicon.svg
+│   │   ├── favicon(1).svg
+│   │   └── index.html
+│   ├── public
+│   │   ├── favicon.svg
+│   │   ├── favicon(1).svg
+│   │   └── favicon0.svg
+│   ├── src
+│   │   ├── api
+│   │   │   ├── account.js
+│   │   │   ├── address.js
+│   │   │   ├── audit.js
+│   │   │   ├── client.js
+│   │   │   ├── failure.js
+│   │   │   ├── graph.js
+│   │   │   ├── metrics.js
+│   │   │   └── queue.js
+│   │   ├── assets
+│   │   │   ├── ringwatch-logo.png
+│   │   │   └── ringwatch-logo(1).png
+│   │   ├── components
+│   │   │   ├── ActionWorkflow.jsx
+│   │   │   ├── AmbientBackground.jsx
+│   │   │   ├── Badge.jsx
+│   │   │   ├── Card.jsx
+│   │   │   ├── CountUp.jsx
+│   │   │   ├── ErrorBoundary.jsx
+│   │   │   ├── GlassPanel.jsx
+│   │   │   ├── GraphView.jsx
+│   │   │   ├── Layout.jsx
+│   │   │   ├── LineChart.jsx
+│   │   │   ├── Logo.jsx
+│   │   │   └── Sparkline.jsx
+│   │   ├── hooks
+│   │   ├── pages
+│   │   │   ├── About.jsx
+│   │   │   ├── AccountInvestigation.jsx
+│   │   │   ├── AddressNormalization.jsx
+│   │   │   ├── AuditLog.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── FailureDemo.jsx
+│   │   │   ├── HumanReviewQueue.jsx
+│   │   │   ├── Landing.jsx
+│   │   │   ├── LiveOps.jsx
+│   │   │   ├── Metrics.jsx
+│   │   │   ├── Rings.jsx
+│   │   │   └── VerificationWorkflow.jsx
+│   │   ├── utils
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── constants.js
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── README.md
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── generator
+│   ├── __init__.py
+│   ├── address_utils.py
+│   ├── analysis.py
+│   ├── config.py
+│   ├── ensemble.py
+│   ├── entities.py
+│   ├── feature_ablation.py
+│   ├── features_config.py
+│   ├── features.py
+│   ├── generate_dataset.py
+│   ├── gnn_model.py
+│   ├── graph_features.py
+│   ├── ground_truth.py
+│   ├── hard_negatives.py
+│   ├── ids.py
+│   ├── lightgbm_tuned.py
+│   ├── lightgbm.py
+│   ├── normal_orders.py
+│   ├── plot_curves.py
+│   ├── quality_audit.py
+│   ├── realistic_engine.py
+│   ├── refunds_disputes.py
+│   ├── ring_ablation.py
+│   ├── rings.py
+│   └── validate.py
+├── notebooks
+│   ├── day6_7_lightgbm_evaluation.ipynb
+│   ├── day8_9_explainability.ipynb
+│   ├── ringwatch_30k_model_investigation.ipynb
+│   └── ringwatch_v4_model_investigation.ipynb
+├── scripts
+│   └── generate_razorpay_batch.py
+├── .env
 ├── .gitignore
-├── eslint.config.js
-├── index.html
-├── package-lock.json
-├── package.json
-├── postcss.config.js
+├── .python-version
+├── example.env
+├── pyproject.toml
+├── razorpay_test_batch.json
 ├── README.md
-├── tailwind.config.js
-└── vite.config.js
+├── run_generate_validate.py
+└── uv.lock
