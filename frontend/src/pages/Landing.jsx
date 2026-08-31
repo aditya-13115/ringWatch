@@ -2240,10 +2240,6 @@ export default function Landing() {
                 )}
               </div>
 
-              {/* Interaction hint */}
-              <div className="mt-3 text-center text-[10px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                Hover • Click • Drag network nodes
-              </div>
             </div>
           </motion.div>
         </div>
