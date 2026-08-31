@@ -6,12 +6,12 @@ import {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+    <div className="rounded-lg border border-border bg-card/50 p-4">
+      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </div>
 
-      <div className="mt-1 text-2xl font-semibold text-gray-900">
+      <div className="mt-1 text-2xl font-semibold text-foreground">
         {value}
       </div>
     </div>
@@ -24,115 +24,114 @@ function StatusBadge({ status }) {
   const normalized = String(status).toUpperCase();
 
   let className =
-    "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold";
+    "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold";
 
   if (
     normalized.includes("FAIL") ||
     normalized.includes("QUARANT")
   ) {
-    className += " bg-red-100 text-red-700";
+    className +=
+      " border-red-500/30 bg-red-500/15 text-red-300";
   } else if (
     normalized.includes("SUCCESS") ||
     normalized.includes("PROCESSED")
   ) {
-    className += " bg-green-100 text-green-700";
+    className +=
+      " border-emerald-500/30 bg-emerald-500/15 text-emerald-300";
   } else {
-    className += " bg-gray-100 text-gray-700";
+    className +=
+      " border-slate-500/30 bg-slate-500/15 text-slate-300";
   }
 
-  return (
-    <span className={className}>
-      {status}
-    </span>
-  );
+  return <span className={className}>{status}</span>;
 }
 
 function RecordTable({ records, quarantined = false }) {
   if (!records || records.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500">
+      <div className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
         No records to display.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-50">
+    <div className="overflow-x-auto rounded-lg border border-border">
+      <table className="min-w-full divide-y divide-border text-sm">
+        <thead className="bg-muted/80">
           <tr>
-            <th className="px-4 py-3 text-left font-semibold text-gray-600">
+            <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
               Row
             </th>
 
-            <th className="px-4 py-3 text-left font-semibold text-gray-600">
+            <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
               Record ID
             </th>
 
-            <th className="px-4 py-3 text-left font-semibold text-gray-600">
+            <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
               Amount
             </th>
 
-            <th className="px-4 py-3 text-left font-semibold text-gray-600">
+            <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
               Currency
             </th>
 
-            <th className="px-4 py-3 text-left font-semibold text-gray-600">
+            <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
               Status
             </th>
 
             {quarantined && (
-              <th className="px-4 py-3 text-left font-semibold text-gray-600">
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
                 Failed Fields
               </th>
             )}
 
             {quarantined && (
-              <th className="px-4 py-3 text-left font-semibold text-gray-600">
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
                 Action
               </th>
             )}
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody className="divide-y divide-border">
           {records.map((record, index) => {
             const errors = record.failed_fields || [];
+            const isEven = index % 2 === 0;
 
             return (
-              <tr key={record.record_id || record.id || index}>
-                <td className="whitespace-nowrap px-4 py-3 text-gray-700">
+              <tr
+                key={record.record_id || record.id || index}
+                className={`transition-colors duration-150 hover:bg-accent/20 ${
+                  isEven ? "bg-card/30" : "bg-muted/10"
+                }`}
+              >
+                <td className="whitespace-nowrap px-4 py-3 text-foreground">
                   {record.row_number ?? index + 1}
                 </td>
 
-                <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-gray-700">
+                <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-foreground">
                   {record.record_id || record.id || "—"}
                 </td>
 
-                <td className="whitespace-nowrap px-4 py-3 text-gray-700">
+                <td className="whitespace-nowrap px-4 py-3 text-foreground">
                   {typeof record.amount === "number"
                     ? `₹${(record.amount / 100).toLocaleString("en-IN")}`
                     : typeof record.original_input?.amount === "number"
-                      ? `₹${(
-                          record.original_input.amount / 100
-                        ).toLocaleString("en-IN")}`
-                      : "—"}
+                    ? `₹${(
+                        record.original_input.amount / 100
+                      ).toLocaleString("en-IN")}`
+                    : "—"}
                 </td>
 
-                <td className="whitespace-nowrap px-4 py-3 text-gray-700">
+                <td className="whitespace-nowrap px-4 py-3 text-foreground">
                   {record.currency ||
                     record.original_input?.currency ||
                     "—"}
                 </td>
 
                 <td className="whitespace-nowrap px-4 py-3">
-                  <StatusBadge
-                    status={
-                      quarantined
-                        ? record.status
-                        : record.status
-                    }
-                  />
+                  <StatusBadge status={record.status} />
                 </td>
 
                 {quarantined && (
@@ -141,21 +140,23 @@ function RecordTable({ records, quarantined = false }) {
                       {errors.length > 0 ? (
                         errors.map((error, errorIndex) => (
                           <div key={errorIndex}>
-                            <div className="font-medium text-red-700">
+                            <div className="font-medium text-red-400">
                               {error.field}
                             </div>
 
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {error.code}
                             </div>
 
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                               {error.message}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <span className="text-gray-500">—</span>
+                        <span className="text-muted-foreground">
+                          —
+                        </span>
                       )}
                     </div>
                   </td>
@@ -163,7 +164,7 @@ function RecordTable({ records, quarantined = false }) {
 
                 {quarantined && (
                   <td className="whitespace-nowrap px-4 py-3">
-                    <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                    <span className="rounded-full border border-orange-500/30 bg-orange-500/15 px-2.5 py-1 text-xs font-semibold text-orange-300">
                       {record.action || "HUMAN_REVIEW"}
                     </span>
                   </td>
@@ -180,7 +181,7 @@ function RecordTable({ records, quarantined = false }) {
 function AuditTrail({ entries }) {
   if (!entries || entries.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-500">
+      <div className="rounded-lg border border-dashed border-border bg-muted/30 p-5 text-sm text-muted-foreground">
         No audit events.
       </div>
     );
@@ -191,19 +192,19 @@ function AuditTrail({ entries }) {
       {entries.map((entry, index) => (
         <div
           key={`${entry.timestamp}-${index}`}
-          className="rounded-lg border border-gray-200 bg-white p-4"
+          className="rounded-lg border border-border bg-card/50 p-4"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="font-medium text-gray-900">
+            <div className="font-medium text-foreground">
               {entry.event}
             </div>
 
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               {entry.timestamp}
             </div>
           </div>
 
-          <div className="mt-1 text-sm text-gray-600">
+          <div className="mt-1 text-sm text-muted-foreground">
             {entry.details}
           </div>
         </div>
@@ -216,7 +217,6 @@ function ResultPanel({ result, mode }) {
   if (!result) return null;
 
   const isRazorpay = mode === "razorpay";
-
   const razorpayPayments = result?.payments ?? [];
 
   const batchSize = result.batch_size ?? 0;
@@ -230,7 +230,7 @@ function ResultPanel({ result, mode }) {
       {/* Processing summary */}
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Processing Summary
           </h3>
 
@@ -249,62 +249,60 @@ function ResultPanel({ result, mode }) {
               value={razorpayPayments.length}
             />
 
-            <Stat
-              label="Malformed"
-              value={0}
-            />
+            <Stat label="Malformed" value={0} />
 
-            <Stat
-              label="Quarantined"
-              value={0}
-            />
+            <Stat label="Quarantined" value={0} />
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <Stat label="Batch Size" value={batchSize} />
+
             <Stat label="Malformed" value={malformed} />
+
             <Stat label="Quarantined" value={quarantined} />
+
             <Stat label="Valid Processed" value={processed} />
+
             <Stat label="Human Review" value={humanReview} />
           </div>
         )}
       </section>
 
       {/* Batch metadata */}
-      <section className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <section className="rounded-lg border border-border bg-muted/30 p-4">
         <div className="grid gap-3 text-sm md:grid-cols-2">
           <div>
-            <span className="font-medium text-gray-500">
+            <span className="font-medium text-muted-foreground">
               Source:
             </span>{" "}
-            <span className="text-gray-900">
+            <span className="text-foreground">
               {result.source || "—"}
             </span>
           </div>
 
           <div>
-            <span className="font-medium text-gray-500">
+            <span className="font-medium text-muted-foreground">
               Environment:
             </span>{" "}
-            <span className="text-gray-900">
+            <span className="text-foreground">
               {result.environment || "—"}
             </span>
           </div>
 
           <div>
-            <span className="font-medium text-gray-500">
+            <span className="font-medium text-muted-foreground">
               Batch ID:
             </span>{" "}
-            <span className="font-mono text-xs text-gray-900">
+            <span className="font-mono text-xs text-foreground">
               {result.batch_id || "—"}
             </span>
           </div>
 
           <div>
-            <span className="font-medium text-gray-500">
+            <span className="font-medium text-muted-foreground">
               Request ID:
             </span>{" "}
-            <span className="font-mono text-xs text-gray-900">
+            <span className="font-mono text-xs text-foreground">
               {result.request_id || "—"}
             </span>
           </div>
@@ -313,13 +311,13 @@ function ResultPanel({ result, mode }) {
 
       {/* Safety guarantee */}
       {result.safety && (
-        <section className="rounded-lg border border-green-200 bg-green-50 p-5">
-          <h3 className="font-semibold text-green-900">
+        <section className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-5">
+          <h3 className="font-semibold text-emerald-300">
             Safety Guarantee
           </h3>
 
           {isRazorpay ? (
-            <div className="mt-3 space-y-2 text-sm text-green-800">
+            <div className="mt-3 space-y-2 text-sm text-emerald-200">
               <div>
                 ✓ Sent to model inference:{" "}
                 <strong>NO</strong>
@@ -336,11 +334,12 @@ function ResultPanel({ result, mode }) {
               </div>
             </div>
           ) : (
-            <div className="mt-3 space-y-2 text-sm text-green-800">
+            <div className="mt-3 space-y-2 text-sm text-emerald-200">
               <div>
                 ✓ Malformed entered investigation pipeline:{" "}
                 <strong>
-                  {result.safety.malformed_entered_investigation_pipeline
+                  {result.safety
+                    .malformed_entered_investigation_pipeline
                     ? "YES"
                     : "NO"}
                 </strong>
@@ -349,7 +348,8 @@ function ResultPanel({ result, mode }) {
               <div>
                 ✓ Quarantined before model inference:{" "}
                 <strong>
-                  {result.safety.quarantined_before_model_inference
+                  {result.safety
+                    .quarantined_before_model_inference
                     ? "YES"
                     : "NO"}
                 </strong>
@@ -371,7 +371,7 @@ function ResultPanel({ result, mode }) {
       {/* Razorpay actual records */}
       {isRazorpay && (
         <section>
-          <h3 className="mb-3 text-lg font-semibold text-gray-900">
+          <h3 className="mb-3 text-lg font-semibold text-foreground">
             Original Razorpay Test Mode Payments
           </h3>
 
@@ -382,7 +382,7 @@ function ResultPanel({ result, mode }) {
       {/* Quarantined records */}
       {!isRazorpay && (
         <section>
-          <h3 className="mb-3 text-lg font-semibold text-gray-900">
+          <h3 className="mb-3 text-lg font-semibold text-foreground">
             Quarantined Records
           </h3>
 
@@ -395,7 +395,7 @@ function ResultPanel({ result, mode }) {
 
       {/* Audit trail */}
       <section>
-        <h3 className="mb-3 text-lg font-semibold text-gray-900">
+        <h3 className="mb-3 text-lg font-semibold text-foreground">
           Audit Trail
         </h3>
 
@@ -404,16 +404,18 @@ function ResultPanel({ result, mode }) {
 
       {/* Fault injection */}
       {!isRazorpay && result.fault_injection && (
-        <section className="rounded-lg border border-yellow-200 bg-yellow-50 p-5">
-          <h3 className="font-semibold text-yellow-900">
+        <section className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-5">
+          <h3 className="font-semibold text-yellow-300">
             Fault Injection
           </h3>
 
-          <div className="mt-2 text-sm text-yellow-800">
+          <div className="mt-2 text-sm text-yellow-200">
             <div>
               Enabled:{" "}
               <strong>
-                {result.fault_injection.enabled ? "YES" : "NO"}
+                {result.fault_injection.enabled
+                  ? "YES"
+                  : "NO"}
               </strong>
             </div>
 
@@ -437,11 +439,17 @@ function ResultPanel({ result, mode }) {
 export default function FailureDemo() {
   const [activeMode, setActiveMode] = useState("razorpay");
 
-  const [razorpayResult, setRazorpayResult] = useState(null);
-  const [syntheticResult, setSyntheticResult] = useState(null);
+  const [razorpayResult, setRazorpayResult] =
+    useState(null);
 
-  const [loadingRazorpay, setLoadingRazorpay] = useState(false);
-  const [loadingSynthetic, setLoadingSynthetic] = useState(false);
+  const [syntheticResult, setSyntheticResult] =
+    useState(null);
+
+  const [loadingRazorpay, setLoadingRazorpay] =
+    useState(false);
+
+  const [loadingSynthetic, setLoadingSynthetic] =
+    useState(false);
 
   const [error, setError] = useState(null);
 
@@ -469,7 +477,8 @@ export default function FailureDemo() {
     setLoadingSynthetic(true);
 
     try {
-      const result = await generateSyntheticFailureBatch();
+      const result =
+        await generateSyntheticFailureBatch();
 
       setSyntheticResult(result);
       setActiveMode("synthetic");
@@ -483,36 +492,33 @@ export default function FailureDemo() {
     }
   }
 
-  const activeResult =
-    activeMode === "razorpay"
-      ? razorpayResult
-      : syntheticResult;
-
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           Post-delivery abuse investigation
         </h1>
 
-        <p className="mt-2 max-w-3xl text-sm text-gray-600">
-          Fetch actual Razorpay Test Mode payments and display the original
-          records exactly as returned by Razorpay. These records are not
-          modified, fault-injected, quarantined, or sent to model inference.
+        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+          Fetch actual Razorpay Test Mode payments and
+          display the original records exactly as returned
+          by Razorpay. These records are not modified,
+          fault-injected, quarantined, or sent to model
+          inference.
         </p>
       </div>
 
       {/* Mode selector */}
-      <div className="mt-8 border-b border-gray-200">
+      <div className="mt-8 border-b border-border">
         <div className="flex gap-6">
           <button
             type="button"
             onClick={() => setActiveMode("razorpay")}
             className={`border-b-2 px-1 pb-3 text-sm font-medium ${
               activeMode === "razorpay"
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             Razorpay Test API
@@ -523,8 +529,8 @@ export default function FailureDemo() {
             onClick={() => setActiveMode("synthetic")}
             className={`border-b-2 px-1 pb-3 text-sm font-medium ${
               activeMode === "synthetic"
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             Scripted Demo
@@ -534,28 +540,29 @@ export default function FailureDemo() {
 
       {/* Error */}
       {error && (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="mt-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
           {error}
         </div>
       )}
 
       {/* Razorpay section */}
       {activeMode === "razorpay" && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="mt-6 rounded-xl border border-border bg-card/50 p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-foreground">
                 Razorpay Test Mode
               </h2>
 
-              <p className="mt-1 max-w-2xl text-sm text-gray-600">
-                Fetch actual payments from the Razorpay Test API
-                and display the original Test Mode records without
-                modifying, fault-injecting, quarantining, or sending
-                them to model inference.
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Fetch actual payments from the Razorpay Test
+                API and display the original Test Mode records
+                without modifying, fault-injecting,
+                quarantining, or sending them to model
+                inference.
               </p>
 
-              <div className="mt-3 text-xs text-gray-500">
+              <div className="mt-3 text-xs text-muted-foreground">
                 Endpoint:{" "}
                 <span className="font-mono">
                   POST /api/failure-demo/razorpay
@@ -567,7 +574,7 @@ export default function FailureDemo() {
               type="button"
               onClick={handleRazorpay}
               disabled={loadingRazorpay}
-              className="rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loadingRazorpay
                 ? "Fetching..."
@@ -586,39 +593,39 @@ export default function FailureDemo() {
 
       {/* Synthetic section */}
       {activeMode === "synthetic" && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="mt-6 rounded-xl border border-border bg-card/50 p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-foreground">
                 Scripted 100-Record Demo
               </h2>
 
-              <p className="mt-1 max-w-2xl text-sm text-gray-600">
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                 Generate 100 Razorpay-shaped records locally.
                 Ten records are deliberately corrupted after
-                generation to demonstrate validation, quarantine,
-                and human-review routing.
+                generation to demonstrate validation,
+                quarantine, and human-review routing.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-700">
+                <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-muted-foreground">
                   100 total
                 </span>
 
-                <span className="rounded-full bg-green-100 px-3 py-1 text-green-700">
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-emerald-300">
                   90 valid
                 </span>
 
-                <span className="rounded-full bg-red-100 px-3 py-1 text-red-700">
+                <span className="rounded-full border border-red-500/30 bg-red-500/15 px-3 py-1 text-red-300">
                   10 malformed
                 </span>
 
-                <span className="rounded-full bg-orange-100 px-3 py-1 text-orange-700">
+                <span className="rounded-full border border-orange-500/30 bg-orange-500/15 px-3 py-1 text-orange-300">
                   10 quarantined
                 </span>
               </div>
 
-              <div className="mt-3 text-xs text-gray-500">
+              <div className="mt-3 text-xs text-muted-foreground">
                 Endpoint:{" "}
                 <span className="font-mono">
                   POST /api/failure-demo/razorpay-synthetic
@@ -630,7 +637,7 @@ export default function FailureDemo() {
               type="button"
               onClick={handleSynthetic}
               disabled={loadingSynthetic}
-              className="rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loadingSynthetic
                 ? "Generating..."
