@@ -15,6 +15,7 @@ RingWatch
 │   │   ├── metrics.py
 │   │   ├── queue.py
 │   │   ├── reports.py
+│   │   ├── rings.py
 │   │   └── timeline.py
 │   ├── core
 │   │   ├── __init__.py
@@ -45,7 +46,8 @@ RingWatch
 │   │   ├── graph.py
 │   │   ├── llm.py
 │   │   ├── queue.py
-│   │   └── report.py
+│   │   ├── report.py
+│   │   └── ring.py
 │   ├── services
 │   │   ├── __init__.py
 │   │   ├── account_service.py
@@ -60,6 +62,7 @@ RingWatch
 │   │   ├── metrics_service.py
 │   │   ├── queue_service.py
 │   │   ├── report_service.py
+│   │   ├── ring_service.py
 │   │   └── timeline_service.py
 │   ├── tests
 │   │   ├── test_address_normalization.py
@@ -188,6 +191,14 @@ RingWatch
 │       │   │   ├── model_metrics_tuned.json
 │       │   │   ├── model_metrics.json
 │       │   │   ├── model_predictions_test.csv
+│       │   │   ├── ring_candidates.csv
+│       │   │   ├── ring_feature_importance.csv
+│       │   │   ├── ring_features.csv
+│       │   │   ├── ring_leakage_report.txt
+│       │   │   ├── ring_metrics.json
+│       │   │   ├── ring_model_lgbm.pkl
+│       │   │   ├── ring_predictions_all.csv
+│       │   │   ├── ring_predictions_test.csv
 │       │   │   └── ring_type_ablation.json
 │       │   ├── plots
 │       │   │   ├── pr_curves.png
@@ -239,7 +250,8 @@ RingWatch
 │   │   │   ├── failure.js
 │   │   │   ├── graph.js
 │   │   │   ├── metrics.js
-│   │   │   └── queue.js
+│   │   │   ├── queue.js
+│   │   │   └── rings.js
 │   │   ├── assets
 │   │   │   ├── ringwatch-logo.png
 │   │   │   └── ringwatch-logo(1).png
@@ -282,7 +294,6 @@ RingWatch
 │   ├── package-lock.json
 │   ├── package.json
 │   ├── postcss.config.js
-│   ├── README.md
 │   ├── tailwind.config.js
 │   └── vite.config.js
 ├── generator
@@ -309,6 +320,7 @@ RingWatch
 │   ├── realistic_engine.py
 │   ├── refunds_disputes.py
 │   ├── ring_ablation.py
+│   ├── ring_model.py
 │   ├── rings.py
 │   └── validate.py
 ├── notebooks
