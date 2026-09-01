@@ -1,3 +1,23 @@
+<div align="center">
+
+<img src="frontend/public/favicon.svg" alt="RingWatch" width="96" />
+
+# RingWatch
+
+### Explainable Detection and Investigation of Coordinated Refund Abuse Rings
+
+A defense-only risk investigation platform that combines behavioral signals, identity relationships, machine learning, graph analysis, SHAP explainability, evidence gaps, bounded actions, Razorpay Test Mode data, and audit trails.
+
+![Python](https://img.shields.io/badge/Python-3.x-blue?style=flat-square)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square)
+![Vite](https://img.shields.io/badge/Vite-Build%20Tool-646CFF?style=flat-square)
+![LightGBM](https://img.shields.io/badge/ML-LightGBM-green?style=flat-square)
+
+</div>
+
+---
+
 # RingWatch
 
 RingWatch is a defense-oriented investigation prototype for coordinated post-delivery refund and return abuse. It uses synthetic commerce data to identify suspicious account relationships, rank account and ring candidates, and present the evidence an investigator would need before recommending a bounded action.
