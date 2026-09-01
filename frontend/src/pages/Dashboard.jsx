@@ -16,19 +16,30 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     setLoading(true);
     setError(null);
 
-    // Load the complete queue so tier filters can reach MEDIUM/LOW
-    // accounts instead of filtering only the first high-risk rows.
-    getQueue(100000)
+    // Fetch once. Changing the display limit should never re-download the
+    // entire queue; it only changes how many already-loaded rows are shown.
+    getQueue(1000)
       .then((data) => {
-        setQueue(data.accounts);
-        setTotalFlagged(data.total);
+        if (cancelled) return;
+        setQueue(Array.isArray(data?.accounts) ? data.accounts : []);
+        setTotalFlagged(Number(data?.total ?? 0));
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [limit]);
+      .catch((e) => {
+        if (!cancelled) setError(e.message || "Failed to load queue");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredQueue =
     tierFilter === "ALL"
@@ -55,18 +66,21 @@ export default function Dashboard() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-4">
+      <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold">
             Investigation Queue
           </h2>
 
           <p className="text-sm text-muted-foreground">
-            Showing {visibleQueue.length} of {totalFlagged} flagged accounts
-            {" · "}
-            V4 Ensemble
+            Showing {visibleQueue.length} of {totalFlagged} flagged accounts · V4 Ensemble
           </p>
+          {totalFlagged > queue.length && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Top 1,000 flagged accounts are loaded for fast filtering.
+            </p>
+          )}
         </div>
 
         <select
@@ -82,7 +96,7 @@ export default function Dashboard() {
         </select>
       </div>
 
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 flex-wrap">
         {TIERS.map((tier) => (
           <button
             key={tier}
@@ -100,8 +114,9 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <Card>
-        <table className="w-full">
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto max-h-[calc(100vh-280px)] overflow-y-auto">
+        <table className="w-full min-w-[760px]">
           <thead>
             <tr className="border-b border-border text-left text-sm text-muted-foreground">
               <th className="px-4 py-2">Rank</th>
@@ -169,6 +184,7 @@ export default function Dashboard() {
             )}
           </tbody>
         </table>
+        </div>
       </Card>
     </div>
   );
