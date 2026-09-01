@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ForceGraph2D from "react-force-graph-2d";
 import { getGraphOverview } from "../api/graph";
 import { getQueue } from "../api/queue";
+import { getRing, getRings } from "../api/rings";
 
 const EDGE_COLORS = {
   shares_device: "#3b82f6",
@@ -71,6 +72,21 @@ export default function Rings() {
 
   const [queue, setQueue] = useState([]);
 
+  /*
+   * Ring-level detector state.
+   *
+   * The existing account queue, graph, and community visualisation remain
+   * unchanged. RingWatch now overlays the trained ring model on top of those
+   * communities so the UI can treat the network as the primary object while
+   * preserving the existing account-level investigation workflow.
+   */
+  const [ringCandidates, setRingCandidates] = useState([]);
+  const [ringModel, setRingModel] = useState({});
+  const [selectedRingId, setSelectedRingId] = useState(null);
+  const [selectedRing, setSelectedRing] = useState(null);
+  const [ringLoading, setRingLoading] = useState(true);
+  const [ringError, setRingError] = useState(null);
+
   const [communityLimit, setCommunityLimit] = useState(3);
   const [selectedCommunityIndex, setSelectedCommunityIndex] =
     useState(0);
@@ -88,11 +104,15 @@ export default function Rings() {
    */
 
   useEffect(() => {
+    let cancelled = false;
+
     Promise.all([
       getGraphOverview(),
       getQueue(1000),
     ])
       .then(([data, queueData]) => {
+        if (cancelled) return;
+
         setGraph({
           nodes: data.nodes || [],
 
@@ -109,10 +129,78 @@ export default function Rings() {
         setLoading(false);
       })
       .catch((e) => {
-        setError(e.message);
+        if (cancelled) return;
+        setError(e.message || "Failed to load graph");
         setLoading(false);
       });
+
+    /*
+     * Ring detector is loaded independently so a transient ring-artifact
+     * problem cannot blank the existing graph page.
+     */
+    getRings(250, false)
+      .then((data) => {
+        if (cancelled) return;
+
+        const nextRings = Array.isArray(data?.rings)
+          ? data.rings
+          : [];
+
+        setRingCandidates(nextRings);
+        setRingModel(data?.model || {});
+        setSelectedRingId((current) => {
+          if (current && nextRings.some((r) => r.candidate_id === current)) {
+            return current;
+          }
+          return nextRings[0]?.candidate_id || null;
+        });
+        setRingLoading(false);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+
+        setRingError(
+          e?.message ||
+            "Ring detector is unavailable; showing graph/community fallback."
+        );
+        setRingLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!selectedRingId) {
+      setSelectedRing(null);
+      return;
+    }
+
+    let cancelled = false;
+    setRingLoading(true);
+
+    getRing(selectedRingId)
+      .then((data) => {
+        if (!cancelled) {
+          setSelectedRing(data || null);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setRingError(e?.message || "Failed to load ring details");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setRingLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRingId]);
 
   /*
    * ------------------------------------------------------------
@@ -122,6 +210,44 @@ export default function Rings() {
    * Prefer backend-provided community_id assignments.
    * Fall back to connected components for older artifacts.
    */
+
+  const ringByMember = useMemo(() => {
+    const map = new Map();
+
+    for (const ring of ringCandidates) {
+      for (const memberId of ring.member_ids || []) {
+        const key = String(memberId);
+        const current = map.get(key);
+
+        if (
+          !current ||
+          Number(ring.ring_score || 0) >
+            Number(current.ring_score || 0)
+        ) {
+          map.set(key, ring);
+        }
+      }
+    }
+
+    return map;
+  }, [ringCandidates]);
+
+  /*
+   * Ring detector cards are ordered by model score. The graph/community view
+   * remains available below it so existing visual investigation controls are
+   * preserved.
+   */
+  const detectedRings = useMemo(
+    () =>
+      ringCandidates
+        .filter((ring) => Boolean(ring.detected))
+        .sort(
+          (a, b) =>
+            Number(b.ring_score || 0) -
+            Number(a.ring_score || 0)
+        ),
+    [ringCandidates]
+  );
 
   const communities = useMemo(() => {
     const queueById = new Map(
@@ -233,6 +359,19 @@ export default function Rings() {
         null
       );
 
+      const candidateRings = members
+        .map((memberId) =>
+          ringByMember.get(String(memberId))
+        )
+        .filter(Boolean)
+        .sort(
+          (a, b) =>
+            Number(b.ring_score || 0) -
+            Number(a.ring_score || 0)
+        );
+
+      const ringCandidate = candidateRings[0] || null;
+
       const internalLinks = graph.links.filter(
         (link) => {
           const source = getEdgeEndpointId(
@@ -299,6 +438,13 @@ export default function Rings() {
         memberLinks: internalLinks.length,
         edgeCounts,
         strongestEdge,
+        ringCandidate,
+        ringScore: Number(ringCandidate?.ring_score || 0),
+        ringDetected: Boolean(ringCandidate?.detected),
+        ringTier: ringCandidate?.risk_tier || "LOW",
+        ringAction:
+          ringCandidate?.recommended_action ||
+          "Monitor — no immediate refund action",
       });
     }
 
@@ -308,15 +454,25 @@ export default function Rings() {
           community.members.length > 1 ||
           community.flaggedMembers.length > 0
       )
-      .sort(
-        (a, b) =>
+      .sort((a, b) => {
+        const ringDelta =
+          Number(b.ringScore || 0) -
+          Number(a.ringScore || 0);
+
+        if (Math.abs(ringDelta) > 0.000001) {
+          return ringDelta;
+        }
+
+        return (
           Number(b.peak?.proba || 0) -
           Number(a.peak?.proba || 0)
-      );
+        );
+      });
   }, [
     graph.nodes,
     graph.links,
     queue,
+    ringByMember,
   ]);
 
   /*
@@ -1403,6 +1559,21 @@ export default function Rings() {
     );
   };
 
+  const selectRingCandidate = (candidateId) => {
+    setSelectedRingId(candidateId || null);
+  };
+
+  const detectedRingCount = detectedRings.length;
+  const ringCandidateCount = ringCandidates.length;
+  const ringOperatingThreshold =
+    Number(ringModel?.operating_threshold);
+
+  const ringThresholdLabel = Number.isFinite(
+    ringOperatingThreshold
+  )
+    ? `${(ringOperatingThreshold * 100).toFixed(2)}%`
+    : "—";
+
   /*
    * ------------------------------------------------------------
    * Loading / error states
@@ -1441,6 +1612,288 @@ export default function Rings() {
 
   return (
     <div className="space-y-6">
+
+      {/* Ring-level detector overview */}
+
+      <div>
+        <div className="flex items-end justify-between gap-3 mb-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Ring-level detection
+            </p>
+
+            <h2 className="text-xl font-semibold">
+              Suspicious abuse networks
+            </h2>
+
+            <p className="text-sm text-muted-foreground mt-1 max-w-3xl">
+              The trained ring model scores candidate networks first. The
+              existing account-level model then ranks members inside each
+              detected ring for investigation.
+            </p>
+          </div>
+
+          <div className="text-right text-xs text-muted-foreground">
+            {ringLoading
+              ? "Loading detector…"
+              : `${ringCandidateCount} candidates`}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <span className="text-xs text-muted-foreground block">
+              Ring candidates
+            </span>
+            <span className="font-semibold text-lg mt-1 block">
+              {ringCandidateCount || "—"}
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-4">
+            <span className="text-xs text-muted-foreground block">
+              Detected rings
+            </span>
+            <span className="font-semibold text-lg mt-1 block">
+              {ringCandidates.length
+                ? detectedRingCount
+                : "—"}
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-4">
+            <span className="text-xs text-muted-foreground block">
+              Test precision
+            </span>
+            <span className="font-semibold text-lg mt-1 block">
+              {Number.isFinite(
+                Number(ringModel?.test?.precision)
+              )
+                ? `${(
+                    Number(
+                      ringModel.test.precision
+                    ) * 100
+                  ).toFixed(1)}%`
+                : "—"}
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-4">
+            <span className="text-xs text-muted-foreground block">
+              Test recall
+            </span>
+            <span className="font-semibold text-lg mt-1 block">
+              {Number.isFinite(
+                Number(ringModel?.test?.recall)
+              )
+                ? `${(
+                    Number(
+                      ringModel.test.recall
+                    ) * 100
+                  ).toFixed(1)}%`
+                : "—"}
+            </span>
+          </div>
+        </div>
+
+        {ringError && (
+          <div className="mb-4 rounded-md border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-muted-foreground">
+            {ringError}
+          </div>
+        )}
+
+        {ringCandidates.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {ringCandidates.slice(0, 6).map((ring) => (
+              <button
+                key={ring.candidate_id}
+                type="button"
+                onClick={() => selectRingCandidate(ring.candidate_id)}
+                className={`w-full text-left rounded-lg border bg-card p-4 transition-colors ${
+                  String(selectedRingId) ===
+                  String(ring.candidate_id)
+                    ? "border-black dark:border-white ring-1 ring-black/10 dark:ring-white/10"
+                    : "border-border hover:bg-accent"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      {ring.candidate_id}
+                    </p>
+                    <p className="font-semibold mt-1">
+                      {ring.member_count} connected accounts
+                    </p>
+                  </div>
+
+                  <span className="text-xs font-semibold rounded-full border border-border px-2 py-1">
+                    {(
+                      Number(ring.ring_score || 0) * 100
+                    ).toFixed(1)}
+                    %
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
+                  <div>
+                    <span className="text-muted-foreground block">
+                      Risk tier
+                    </span>
+                    <span className="font-semibold">
+                      {ring.risk_tier || "LOW"}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-muted-foreground block">
+                      Exposure
+                    </span>
+                    <span className="font-semibold">
+                      ₹{Number(
+                        ring.exposure || 0
+                      ).toLocaleString("en-IN", {
+                        maximumFractionDigits: 0,
+                      })}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-muted-foreground block">
+                      Mean member risk
+                    </span>
+                    <span className="font-semibold">
+                      {(
+                        Number(
+                          ring.mean_account_risk || 0
+                        ) * 100
+                      ).toFixed(1)}
+                      %
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-muted-foreground block">
+                      Internal links
+                    </span>
+                    <span className="font-semibold">
+                      {ring.internal_edge_count ?? "—"}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground mt-4">
+                  {ring.detected
+                    ? ring.recommended_action ||
+                      "Route to investigation"
+                    : `Below operating threshold ${ringThresholdLabel}`}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {selectedRing && (
+          <div className="mt-4 rounded-lg border border-border bg-muted/20 p-4">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Selected ring
+                </p>
+
+                <h3 className="text-lg font-semibold mt-1">
+                  {selectedRing.candidate_id}
+                </h3>
+
+                <p className="text-sm text-muted-foreground mt-1">
+                  Model score{" "}
+                  <span className="font-semibold text-foreground">
+                    {(
+                      Number(selectedRing.ring_score || 0) *
+                      100
+                    ).toFixed(1)}
+                    %
+                  </span>
+                  {" · "}
+                  {selectedRing.risk_tier || "LOW"}
+                  {" · "}
+                  {selectedRing.member_count || 0} accounts
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const first =
+                    selectedRing.members?.[0]
+                      ?.account_id;
+
+                  if (first) {
+                    navigate(
+                      `/investigations/${first}`
+                    );
+                  }
+                }}
+                className="border border-border rounded-md px-3 py-2 text-xs hover:bg-accent whitespace-nowrap"
+              >
+                Investigate highest-risk member →
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
+              <div>
+                <span className="text-xs text-muted-foreground block">
+                  Exposure
+                </span>
+                <span className="font-semibold">
+                  ₹{Number(
+                    selectedRing.exposure || 0
+                  ).toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-xs text-muted-foreground block">
+                  Max member risk
+                </span>
+                <span className="font-semibold">
+                  {(
+                    Number(
+                      selectedRing.max_account_risk || 0
+                    ) * 100
+                  ).toFixed(1)}
+                  %
+                </span>
+              </div>
+
+              <div>
+                <span className="text-xs text-muted-foreground block">
+                  Strongest link
+                </span>
+                <span className="font-semibold">
+                  {selectedRing.metrics?.strongest_edge
+                    ?.label ||
+                    EDGE_LABELS[
+                      selectedRing.strongest_edge_type
+                    ] ||
+                    selectedRing.strongest_edge_type ||
+                    "—"}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-xs text-muted-foreground block">
+                  Operating threshold
+                </span>
+                <span className="font-semibold">
+                  {ringThresholdLabel}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Ring / community overview */}
 
@@ -1489,11 +1942,21 @@ export default function Rings() {
                     key={`${community.communityId}-${index}`}
                     role="button"
                     tabIndex={0}
-                    onClick={() =>
+                    onClick={() => {
                       setSelectedCommunityIndex(
                         index
-                      )
-                    }
+                      );
+
+                      if (
+                        community.ringCandidate
+                          ?.candidate_id
+                      ) {
+                        selectRingCandidate(
+                          community.ringCandidate
+                            .candidate_id
+                        );
+                      }
+                    }}
                     onKeyDown={(
                       event
                     ) => {
@@ -1534,20 +1997,25 @@ export default function Rings() {
                         </p>
                       </div>
 
-                      {community.peak && (
-                        <span className="text-xs font-medium rounded-full border border-border px-2 py-1">
-                          {(
-                            Number(
-                              community
-                                .peak
-                                .proba ||
-                                0
-                            ) *
-                            100
-                          ).toFixed(2)}
-                          %
-                        </span>
-                      )}
+                      <span className="text-xs font-medium rounded-full border border-border px-2 py-1">
+                        {community.ringCandidate
+                          ? `${(
+                              Number(
+                                community.ringScore ||
+                                  0
+                              ) * 100
+                            ).toFixed(2)}% ring`
+                          : community.peak
+                          ? `${(
+                              Number(
+                                community
+                                  .peak
+                                  .proba ||
+                                  0
+                              ) * 100
+                            ).toFixed(2)}% member`
+                          : "No score"}
+                      </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
@@ -1562,6 +2030,23 @@ export default function Rings() {
                               .flaggedMembers
                               .length
                           }
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-muted-foreground block">
+                          Ring risk
+                        </span>
+
+                        <span className="font-semibold">
+                          {community.ringCandidate
+                            ? `${(
+                                Number(
+                                  community.ringScore ||
+                                    0
+                                ) * 100
+                              ).toFixed(1)}%`
+                            : "—"}
                         </span>
                       </div>
 
@@ -1756,6 +2241,25 @@ export default function Rings() {
                   }{" "}
                   internal relationships
                 </p>
+
+                {selectedCommunity.ringCandidate && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Ring model:{" "}
+                    <span className="font-semibold text-foreground">
+                      {(
+                        Number(
+                          selectedCommunity.ringScore ||
+                            0
+                        ) * 100
+                      ).toFixed(1)}
+                      %
+                    </span>
+                    {" · "}
+                    {selectedCommunity.ringTier}
+                    {" · "}
+                    {selectedCommunity.ringAction}
+                  </p>
+                )}
               </div>
 
               {selectedCommunity.peak && (

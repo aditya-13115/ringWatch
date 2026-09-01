@@ -1,0 +1,14 @@
+RingWatch ring-level model leakage report
+===========================================
+Candidate seed threshold: 0.7
+Strong-edge threshold: 0.7
+Model features: 38
+Forbidden feature violations: NONE
+Ground-truth fields are used for labels/split grouping only.
+Candidate ring IDs are never passed into the model.
+Ring model threshold is selected on validation only.
+Same positive ring IDs are kept inside one grouped split.
+
+Important limitation:
+Candidate generation is model-assisted and therefore ring-level recall is
+bounded by the existing account model and strong-edge candidate generator.

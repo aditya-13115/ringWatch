@@ -78,6 +78,17 @@ class Settings(BaseSettings):
         / "baseline_metrics.json"
     )
 
+    # Ring-level candidate detector artifacts
+    ring_model_path: Path = (
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "model" / "ring_model_lgbm.pkl"
+    )
+    ring_candidates_path: Path = (
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "model" / "ring_candidates.csv"
+    )
+    ring_metrics_path: Path = (
+        PROJECT_ROOT / "data" / "v4_realistic_30k" / "processed" / "model" / "ring_metrics.json"
+    )
+
     feature_ablation_path: Path = (
         PROJECT_ROOT
         / "data"

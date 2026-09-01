@@ -22,6 +22,7 @@ from backend.api import (
     failure,
     investigator,
     address,
+    rings,
 )
 
 settings = get_settings()
@@ -70,3 +71,4 @@ app.include_router(investigator.router, prefix=settings.api_prefix)
 app.include_router(address.router, prefix=settings.api_prefix)
 app.include_router(timeline.router, prefix=settings.api_prefix)
 app.include_router(graph_overview.router, prefix=settings.api_prefix)
+app.include_router(rings.router, prefix=settings.api_prefix)

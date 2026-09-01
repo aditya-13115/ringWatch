@@ -1,0 +1,93 @@
+{
+  "candidate_generation": {
+    "seed_threshold": 0.7,
+    "strong_edge_min_weight": 0.7,
+    "candidate_count": 173,
+    "candidate_positive_count": 80
+  },
+  "split": {
+    "train_candidates": 120,
+    "validation_candidates": 26,
+    "test_candidates": 27,
+    "train_positive": 52,
+    "validation_positive": 17,
+    "test_positive": 11
+  },
+  "validation": {
+    "threshold": 0.03,
+    "precision": 0.85,
+    "recall": 1.0,
+    "f1": 0.918918918918919,
+    "roc_auc": 0.9411764705882353,
+    "pr_auc": 0.9695968583511836,
+    "tn": 6,
+    "fp": 3,
+    "fn": 0,
+    "tp": 17,
+    "cost": 6000.0
+  },
+  "test": {
+    "threshold": 0.03,
+    "precision": 0.5,
+    "recall": 0.9090909090909091,
+    "f1": 0.6451612903225806,
+    "roc_auc": 0.8238636363636364,
+    "pr_auc": 0.8141053391053392,
+    "tn": 6,
+    "fp": 10,
+    "fn": 1,
+    "tp": 10,
+    "cost": 35000.0
+  },
+  "costs": {
+    "false_positive": 2000.0,
+    "false_negative": 15000.0
+  },
+  "model_features": [
+    "member_count",
+    "mean_account_risk",
+    "median_account_risk",
+    "max_account_risk",
+    "min_account_risk",
+    "std_account_risk",
+    "p90_account_risk",
+    "internal_edge_count",
+    "internal_edge_density",
+    "mean_edge_weight",
+    "max_edge_weight",
+    "shared_device_edges",
+    "shared_address_edges",
+    "shared_phone_edges",
+    "shared_payment_edges",
+    "shared_ip_edges",
+    "shared_coupon_edges",
+    "candidate_community_count",
+    "ring_total_orders_sum",
+    "ring_total_amount_sum",
+    "ring_avg_order_value_mean",
+    "ring_total_returns_sum",
+    "ring_return_rate_mean",
+    "ring_return_rate_last_30d_mean",
+    "ring_total_refunds_sum",
+    "ring_total_refund_amount_sum",
+    "ring_refund_rate_mean",
+    "ring_total_disputes_sum",
+    "ring_dispute_rate_mean",
+    "ring_transaction_burst_score_mean",
+    "ring_refund_burst_score_mean",
+    "ring_account_creation_burst_score_mean",
+    "ring_discount_dependency_score_mean",
+    "ring_shared_entity_types_count_mean",
+    "ring_shared_edge_weight_sum_mean",
+    "ring_community_return_rate_mean",
+    "ring_community_refund_rate_mean",
+    "ring_community_avg_order_value_mean"
+  ],
+  "test_ring_coverage": {
+    "candidate_generator_represented_true_rings": 99,
+    "candidate_generator_total_true_rings": 140,
+    "test_true_rings": 9,
+    "test_detected_true_rings": 8,
+    "test_ring_recall": 0.8888888888888888
+  }
+}
