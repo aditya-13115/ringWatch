@@ -9,7 +9,6 @@ import pandas as pd
 
 from backend.core.config import get_settings
 
-
 EDGE_LABELS = {
     "shares_device": "shared device",
     "shares_phone": "shared phone",
@@ -160,8 +159,7 @@ class RingService:
             return edges
         ids = set(member_ids)
         return edges[
-            edges["account_id_1"].isin(ids)
-            & edges["account_id_2"].isin(ids)
+            edges["account_id_1"].isin(ids) & edges["account_id_2"].isin(ids)
         ].copy()
 
     def _strongest_edge_type(self, member_ids: list[str]) -> str | None:
@@ -201,8 +199,12 @@ class RingService:
             "detected_count": detected_count,
             "model": {
                 "name": "Ring LightGBM",
-                "candidate_seed_threshold": metrics.get("candidate_generation", {}).get("seed_threshold", 0.70),
-                "strong_edge_threshold": metrics.get("candidate_generation", {}).get("strong_edge_min_weight", 0.70),
+                "candidate_seed_threshold": metrics.get("candidate_generation", {}).get(
+                    "seed_threshold", 0.70
+                ),
+                "strong_edge_threshold": metrics.get("candidate_generation", {}).get(
+                    "strong_edge_min_weight", 0.70
+                ),
                 "operating_threshold": metrics.get("test", {}).get("threshold"),
                 "test": metrics.get("test", {}),
                 "test_ring_coverage": metrics.get("test_ring_coverage", {}),
@@ -233,7 +235,9 @@ class RingService:
             member["rank_in_ring"] = idx
 
         edges = self._internal_edges(member_ids)
-        edge_counts = edges["edge_type"].value_counts().to_dict() if not edges.empty else {}
+        edge_counts = (
+            edges["edge_type"].value_counts().to_dict() if not edges.empty else {}
+        )
         strongest = None
         if not edges.empty:
             e = edges.sort_values("weight", ascending=False).iloc[0]
@@ -266,6 +270,7 @@ class RingService:
 
     def _load_metrics(self) -> dict:
         import json as _json
+
         if not self.metrics_path.exists():
             return {}
         try:

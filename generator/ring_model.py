@@ -40,7 +40,6 @@ from .features_config import (
     PATHS,
 )
 
-
 SEED = 42
 CANDIDATE_SEED_THRESHOLD = 0.70
 MIN_CANDIDATE_SIZE = 2
@@ -72,8 +71,13 @@ def _json_list(values: Iterable[str]) -> str:
 
 def load_inputs():
     features = pd.read_csv(FEATURES_GRAPH_PATH, low_memory=False)
-    edges = pd.read_csv(PATHS["accounts"].parent / "processed" / "account_graph_edges.csv", low_memory=False)
-    communities = pd.read_csv(PATHS["accounts"].parent / "processed" / "communities.csv", low_memory=False)
+    edges = pd.read_csv(
+        PATHS["accounts"].parent / "processed" / "account_graph_edges.csv",
+        low_memory=False,
+    )
+    communities = pd.read_csv(
+        PATHS["accounts"].parent / "processed" / "communities.csv", low_memory=False
+    )
     gt = pd.read_csv(GROUND_TRUTH_PATH, low_memory=False)
 
     features[ID_COL] = features[ID_COL].astype(str)
@@ -91,7 +95,9 @@ def load_inputs():
         raise KeyError(f"features_graph.csv missing account-model columns: {missing}")
 
     features = features.copy()
-    features["account_proba"] = account_model.predict_proba(features[feature_columns])[:, 1]
+    features["account_proba"] = account_model.predict_proba(features[feature_columns])[
+        :, 1
+    ]
 
     return features, edges, communities, gt
 
@@ -107,14 +113,17 @@ def build_candidate_graph(features: pd.DataFrame, edges: pd.DataFrame) -> nx.Gra
 
     strong = edges[edges["weight"] >= STRONG_EDGE_MIN_WEIGHT].copy()
     strong = strong[
-        strong["account_id_1"].isin(seed_ids)
-        & strong["account_id_2"].isin(seed_ids)
+        strong["account_id_1"].isin(seed_ids) & strong["account_id_2"].isin(seed_ids)
     ]
 
     graph = nx.Graph()
     graph.add_nodes_from(seed_ids)
     graph.add_edges_from(
-        (row.account_id_1, row.account_id_2, {"edge_type": row.edge_type, "weight": float(row.weight)})
+        (
+            row.account_id_1,
+            row.account_id_2,
+            {"edge_type": row.edge_type, "weight": float(row.weight)},
+        )
         for row in strong.itertuples(index=False)
     )
     return graph
@@ -151,7 +160,11 @@ def build_candidates(
         member_features = feature_lookup.loc[members]
 
         community_ids = sorted(
-            {community_lookup.get(member) for member in members if community_lookup.get(member) is not None}
+            {
+                community_lookup.get(member)
+                for member in members
+                if community_lookup.get(member) is not None
+            }
         )
 
         edge_counts = sub_edges["edge_type"].value_counts().to_dict()
@@ -177,7 +190,9 @@ def build_candidates(
             "shared_device_edges": int(edge_counts.get("shares_device", 0)),
             "shared_address_edges": int(edge_counts.get("shares_address", 0)),
             "shared_phone_edges": int(edge_counts.get("shares_phone", 0)),
-            "shared_payment_edges": int(edge_counts.get("shares_payment_instrument", 0)),
+            "shared_payment_edges": int(
+                edge_counts.get("shares_payment_instrument", 0)
+            ),
             "shared_ip_edges": int(edge_counts.get("shares_ip_prefix", 0)),
             "shared_coupon_edges": int(edge_counts.get("shares_coupon", 0)),
             "candidate_community_count": int(len(community_ids)),
@@ -269,7 +284,9 @@ def assign_groups(candidates: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def split_candidates(candidates: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def split_candidates(
+    candidates: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Deterministic grouped 70/15/15 split.
 
     Positive ring groups are assigned as indivisible groups; negative candidates
@@ -293,8 +310,8 @@ def split_candidates(candidates: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
         n_val = 1
 
     train_groups = set(groups.iloc[:n_train]["split_group"])
-    val_groups = set(groups.iloc[n_train:n_train + n_val]["split_group"])
-    test_groups = set(groups.iloc[n_train + n_val:]["split_group"])
+    val_groups = set(groups.iloc[n_train : n_train + n_val]["split_group"])
+    test_groups = set(groups.iloc[n_train + n_val :]["split_group"])
 
     train = candidates[candidates["split_group"].isin(train_groups)].copy()
     val = candidates[candidates["split_group"].isin(val_groups)].copy()
@@ -336,8 +353,14 @@ def evaluate(y_true: np.ndarray, proba: np.ndarray, threshold: float) -> dict:
         "precision": float(precision_score(y_true, pred, zero_division=0)),
         "recall": float(recall_score(y_true, pred, zero_division=0)),
         "f1": float(f1_score(y_true, pred, zero_division=0)),
-        "roc_auc": float(roc_auc_score(y_true, proba)) if len(np.unique(y_true)) > 1 else 0.0,
-        "pr_auc": float(average_precision_score(y_true, proba)) if len(np.unique(y_true)) > 1 else 0.0,
+        "roc_auc": (
+            float(roc_auc_score(y_true, proba)) if len(np.unique(y_true)) > 1 else 0.0
+        ),
+        "pr_auc": (
+            float(average_precision_score(y_true, proba))
+            if len(np.unique(y_true)) > 1
+            else 0.0
+        ),
         "tn": int(tn),
         "fp": int(fp),
         "fn": int(fn),
@@ -376,7 +399,9 @@ def train_and_evaluate(candidates: pd.DataFrame):
     val_proba = model.predict_proba(X_val)[:, 1]
     threshold = choose_threshold(y_val.to_numpy(), val_proba)
 
-    all_X = candidates[feature_columns].apply(pd.to_numeric, errors="coerce").fillna(0.0)
+    all_X = (
+        candidates[feature_columns].apply(pd.to_numeric, errors="coerce").fillna(0.0)
+    )
     candidates = candidates.copy()
     candidates["ring_proba"] = model.predict_proba(all_X)[:, 1]
     candidates["ring_pred"] = (candidates["ring_proba"] >= threshold).astype(int)
@@ -400,7 +425,15 @@ def train_and_evaluate(candidates: pd.DataFrame):
             "test_positive": int(y_test.sum()),
         },
         "validation": evaluate(y_val.to_numpy(), val_proba, threshold),
-        "test": evaluate(y_test.to_numpy(), test["ring_proba"].to_numpy() if "ring_proba" in test.columns else model.predict_proba(X_test)[:, 1], threshold),
+        "test": evaluate(
+            y_test.to_numpy(),
+            (
+                test["ring_proba"].to_numpy()
+                if "ring_proba" in test.columns
+                else model.predict_proba(X_test)[:, 1]
+            ),
+            threshold,
+        ),
         "costs": {"false_positive": COST_FP, "false_negative": COST_FN},
         "model_features": feature_columns,
     }
@@ -413,23 +446,21 @@ def train_and_evaluate(candidates: pd.DataFrame):
     ).sort_values("importance", ascending=False)
 
     # Ring-level coverage is evaluated against true rings, not candidate rows.
-    gt_ring_ids = set(
-        pd.read_csv(GROUND_TRUTH_PATH)[RING_ID_COL].dropna().astype(str)
-    )
+    gt_ring_ids = set(pd.read_csv(GROUND_TRUTH_PATH)[RING_ID_COL].dropna().astype(str))
     ring_detected = defaultdict(bool)
     for _, row in test_out[test_out["ring_pred"] == 1].iterrows():
         for ring_id in json.loads(row["positive_ring_ids"]):
             ring_detected[ring_id] = True
-    test_true_rings = set(
-        r for r in test["positive_ring_ids"] for r in json.loads(r)
-    )
+    test_true_rings = set(r for r in test["positive_ring_ids"] for r in json.loads(r))
     metrics["test_ring_coverage"] = {
         "candidate_generator_represented_true_rings": len(
             set(r for r in candidates["positive_ring_ids"] for r in json.loads(r))
         ),
         "candidate_generator_total_true_rings": len(gt_ring_ids),
         "test_true_rings": len(test_true_rings),
-        "test_detected_true_rings": int(sum(ring_detected.get(r, False) for r in test_true_rings)),
+        "test_detected_true_rings": int(
+            sum(ring_detected.get(r, False) for r in test_true_rings)
+        ),
         "test_ring_recall": _safe_div(
             sum(ring_detected.get(r, False) for r in test_true_rings),
             len(test_true_rings),
@@ -445,9 +476,9 @@ def write_artifacts(candidates, model, metrics, importance):
     candidates.to_csv(RING_FEATURES_PATH, index=False)
     candidates.to_csv(RING_PREDICTIONS_ALL_PATH, index=False)
 
-    split_test = candidates[candidates["split_group"].isin(
-        set(candidates["split_group"].unique())
-    )].copy()
+    split_test = candidates[
+        candidates["split_group"].isin(set(candidates["split_group"].unique()))
+    ].copy()
     # Recompute the test split deterministically for the saved test artifact.
     _, _, test = split_candidates(candidates)
     test_ids = set(test["candidate_id"])
@@ -501,9 +532,13 @@ def main():
     candidates = assign_groups(candidates)
 
     if candidates["is_abuse_ring"].nunique() < 2:
-        raise RuntimeError("Ring candidates do not contain both positive and negative examples.")
+        raise RuntimeError(
+            "Ring candidates do not contain both positive and negative examples."
+        )
 
-    print(f"Candidates: {len(candidates):,} | positives: {int(candidates['is_abuse_ring'].sum()):,}")
+    print(
+        f"Candidates: {len(candidates):,} | positives: {int(candidates['is_abuse_ring'].sum()):,}"
+    )
     model, predictions, metrics, importance = train_and_evaluate(candidates)
     write_artifacts(predictions, model, metrics, importance)
 

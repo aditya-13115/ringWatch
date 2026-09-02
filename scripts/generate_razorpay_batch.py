@@ -3,7 +3,6 @@ import uuid
 import random
 from datetime import datetime, timezone
 
-
 OUTPUT_FILE = "razorpay_test_batch.json"
 BATCH_SIZE = 100
 
@@ -39,17 +38,12 @@ def generate_payment(index: int) -> dict:
         "description": f"RingWatch demo payment {index}",
         "email": f"demo{index}@example.com",
         "contact": f"+9198{index:08d}",
-        "created_at": int(
-            datetime.now(timezone.utc).timestamp()
-        ),
+        "created_at": int(datetime.now(timezone.utc).timestamp()),
     }
 
 
 def main():
-    payments = [
-        generate_payment(index)
-        for index in range(1, BATCH_SIZE + 1)
-    ]
+    payments = [generate_payment(index) for index in range(1, BATCH_SIZE + 1)]
 
     payload = {
         "entity": "collection",

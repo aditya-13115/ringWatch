@@ -25,13 +25,9 @@ router = APIRouter(
 )
 async def extract_address(
     request: AddressExtractRequest,
-    address_service: AddressNormalizerService = Depends(
-        get_address_normalizer_service
-    ),
+    address_service: AddressNormalizerService = Depends(get_address_normalizer_service),
 ):
-    components, source = await address_service.extract_components(
-        request.raw_address
-    )
+    components, source = await address_service.extract_components(request.raw_address)
 
     return AddressExtractResponse(
         raw_address=request.raw_address,
@@ -46,15 +42,11 @@ async def extract_address(
 )
 async def verify_address(
     request: AddressVerifyRequest,
-    address_service: AddressNormalizerService = Depends(
-        get_address_normalizer_service
-    ),
+    address_service: AddressNormalizerService = Depends(get_address_normalizer_service),
 ):
     result = address_service.verify_components(
         raw_address=request.raw_address,
-        components=request.components.model_dump(
-            exclude_none=True
-        ),
+        components=request.components.model_dump(exclude_none=True),
     )
 
     return AddressVerifyResponse(**result)
@@ -66,16 +58,12 @@ async def verify_address(
 )
 async def normalize_address(
     request: AddressNormalizeRequest,
-    address_service: AddressNormalizerService = Depends(
-        get_address_normalizer_service
-    ),
+    address_service: AddressNormalizerService = Depends(get_address_normalizer_service),
 ):
     result = await address_service.normalize(
         raw_address=request.raw_address,
         components=(
-            request.components.model_dump(
-                exclude_none=True
-            )
+            request.components.model_dump(exclude_none=True)
             if request.components is not None
             else None
         ),

@@ -15,7 +15,6 @@ from backend.core.concurrency import ADDRESS_LLM_SEMAPHORE
 from backend.core.config import get_settings
 from backend.schemas.address import AddressComponents
 
-
 # ============================================================================
 # FIELD WEIGHTS
 # ============================================================================
@@ -192,9 +191,7 @@ class AddressNormalizerService:
     """
 
     def __init__(self, addresses_path: Path):
-        self.addresses = pd.read_csv(
-            addresses_path
-        ).fillna("")
+        self.addresses = pd.read_csv(addresses_path).fillna("")
 
         required_columns = {
             "address_id",
@@ -203,35 +200,24 @@ class AddressNormalizerService:
             "pincode",
         }
 
-        missing = (
-            required_columns
-            - set(self.addresses.columns)
-        )
+        missing = required_columns - set(self.addresses.columns)
 
         if missing:
             raise ValueError(
-                "Address dataset is missing required columns: "
-                f"{sorted(missing)}"
+                "Address dataset is missing required columns: " f"{sorted(missing)}"
             )
 
         settings = get_settings()
 
         self.client = (
-            AsyncGroq(
-                api_key=settings.groq_api_key
-            )
-            if (
-                AsyncGroq is not None
-                and settings.groq_api_key
-            )
+            AsyncGroq(api_key=settings.groq_api_key)
+            if (AsyncGroq is not None and settings.groq_api_key)
             else None
         )
 
         self.model = settings.groq_model
 
-        self.records: list[
-            dict[str, Any]
-        ] = []
+        self.records: list[dict[str, Any]] = []
 
         self.record_by_id: dict[
             str,
@@ -279,35 +265,23 @@ class AddressNormalizerService:
         self,
         raw_address: str,
     ) -> tuple[AddressComponents, str]:
-        raw = str(
-            raw_address or ""
-        ).strip()
+        raw = str(raw_address or "").strip()
 
         if len(raw) < 3:
-            raise ValueError(
-                "Address must contain at least 3 characters."
-            )
+            raise ValueError("Address must contain at least 3 characters.")
 
-        parsed = await self._safe_llm_parse(
-            raw
-        )
+        parsed = await self._safe_llm_parse(raw)
 
         if parsed:
             source = "llm_structured"
         else:
-            parsed = self._deterministic_parse(
-                raw
-            )
+            parsed = self._deterministic_parse(raw)
             source = "deterministic_structured"
 
-        cleaned = self._clean_components(
-            parsed
-        )
+        cleaned = self._clean_components(parsed)
 
         return (
-            AddressComponents(
-                **cleaned
-            ),
+            AddressComponents(**cleaned),
             source,
         )
 
@@ -320,15 +294,9 @@ class AddressNormalizerService:
         raw_address: str | None,
         components: dict[str, Any],
     ) -> dict[str, Any]:
-        cleaned = self._clean_components(
-            components
-        )
+        cleaned = self._clean_components(components)
 
-        raw = (
-            str(raw_address).strip()
-            if raw_address
-            else None
-        )
+        raw = str(raw_address).strip() if raw_address else None
 
         if not any(cleaned.values()):
             return {
@@ -340,19 +308,11 @@ class AddressNormalizerService:
                 "components": cleaned,
                 "matches": [],
                 "candidate_count": 0,
-                "matching_strategy": (
-                    "structured:no_components"
-                ),
-                "review_reasons": [
-                    "At least one address component is required."
-                ],
+                "matching_strategy": ("structured:no_components"),
+                "review_reasons": ["At least one address component is required."],
             }
 
-        candidates, strategy = (
-            self._retrieve_candidates(
-                cleaned
-            )
-        )
+        candidates, strategy = self._retrieve_candidates(cleaned)
 
         ranked = self._rank(
             query=cleaned,
@@ -362,52 +322,32 @@ class AddressNormalizerService:
         if not ranked:
             return {
                 "raw_address": raw,
-                "normalized_address": (
-                    self._format_components(
-                        cleaned
-                    )
-                ),
+                "normalized_address": (self._format_components(cleaned)),
                 "candidate_address_id": None,
                 "confidence": 0.0,
                 "requires_human_review": True,
                 "components": cleaned,
                 "matches": [],
-                "candidate_count": len(
-                    candidates
-                ),
-                "matching_strategy": (
-                    f"structured:{strategy}"
-                ),
+                "candidate_count": len(candidates),
+                "matching_strategy": (f"structured:{strategy}"),
                 "review_reasons": [
                     "No candidate address matched the supplied components."
                 ],
             }
 
         best = ranked[0]
-        second = (
-            ranked[1]
-            if len(ranked) > 1
-            else None
-        )
+        second = ranked[1] if len(ranked) > 1 else None
 
         reasons: list[str] = []
 
-        active_fields = sum(
-            bool(cleaned.get(field))
-            for field in FIELD_WEIGHTS
-        )
+        active_fields = sum(bool(cleaned.get(field)) for field in FIELD_WEIGHTS)
 
         if best["score"] < 0.72:
             reasons.append(
                 "Best candidate similarity is below the safe acceptance threshold."
             )
 
-        if (
-            second is not None
-            and best["score"]
-            - second["score"]
-            < 0.05
-        ):
+        if second is not None and best["score"] - second["score"] < 0.05:
             reasons.append(
                 "The top candidates are too close to distinguish confidently."
             )
@@ -418,9 +358,7 @@ class AddressNormalizerService:
             )
 
         if not cleaned.get("city"):
-            reasons.append(
-                "City is missing; location-level verification is weaker."
-            )
+            reasons.append("City is missing; location-level verification is weaker.")
 
         if active_fields < 3:
             reasons.append(
@@ -429,11 +367,7 @@ class AddressNormalizerService:
 
         confidence = self._confidence(
             best=best["score"],
-            second=(
-                second["score"]
-                if second
-                else None
-            ),
+            second=(second["score"] if second else None),
             components=cleaned,
         )
 
@@ -442,42 +376,25 @@ class AddressNormalizerService:
                 "Overall confidence is below the automatic acceptance threshold."
             )
 
-        accepted = (
-            best["score"] >= 0.60
-        )
+        accepted = best["score"] >= 0.60
 
         return {
             "raw_address": raw,
             "normalized_address": (
                 best["canonical_address"]
                 if accepted
-                else self._format_components(
-                    cleaned
-                )
+                else self._format_components(cleaned)
             ),
-            "candidate_address_id": (
-                best["address_id"]
-                if accepted
-                else None
-            ),
+            "candidate_address_id": (best["address_id"] if accepted else None),
             "confidence": round(
                 confidence,
                 3,
             ),
-            "requires_human_review": bool(
-                reasons
-            ),
+            "requires_human_review": bool(reasons),
             "components": cleaned,
-            "matches": [
-                self._public_match(item)
-                for item in ranked[:3]
-            ],
-            "candidate_count": len(
-                candidates
-            ),
-            "matching_strategy": (
-                f"structured:{strategy}"
-            ),
+            "matches": [self._public_match(item) for item in ranked[:3]],
+            "candidate_count": len(candidates),
+            "matching_strategy": (f"structured:{strategy}"),
             "review_reasons": reasons,
         }
 
@@ -490,31 +407,20 @@ class AddressNormalizerService:
         raw_address: str,
         components: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        raw = str(
-            raw_address or ""
-        ).strip()
+        raw = str(raw_address or "").strip()
 
         if len(raw) < 3:
-            raise ValueError(
-                "Address must contain at least 3 characters."
-            )
+            raise ValueError("Address must contain at least 3 characters.")
 
         if components is None:
-            extracted, source = (
-                await self.extract_components(
-                    raw
-                )
-            )
+            extracted, source = await self.extract_components(raw)
 
             result = self.verify_components(
                 raw_address=raw,
                 components=extracted.model_dump(),
             )
 
-            result["matching_strategy"] = (
-                f"{source}+"
-                f"{result['matching_strategy']}"
-            )
+            result["matching_strategy"] = f"{source}+" f"{result['matching_strategy']}"
 
             return result
 
@@ -528,24 +434,14 @@ class AddressNormalizerService:
     # ========================================================================
 
     def _build_indexes(self) -> None:
-        for row_index, row in (
-            self.addresses.iterrows()
-        ):
-            address_id = str(
-                row["address_id"]
-            ).strip()
+        for row_index, row in self.addresses.iterrows():
+            address_id = str(row["address_id"]).strip()
 
-            canonical = str(
-                row["canonical_address"]
-            ).strip()
+            canonical = str(row["canonical_address"]).strip()
 
-            city = self._canonical_city(
-                str(row["city"])
-            )
+            city = self._canonical_city(str(row["city"]))
 
-            pincode = self._clean_pincode(
-                row["pincode"]
-            )
+            pincode = self._clean_pincode(row["pincode"])
 
             components = self._parse_canonical(
                 canonical=canonical,
@@ -561,49 +457,29 @@ class AddressNormalizerService:
                 "components": components,
             }
 
-            self.records.append(
-                record
-            )
+            self.records.append(record)
 
-            self.record_by_id[
-                address_id
-            ] = record
+            self.record_by_id[address_id] = record
 
             if pincode:
-                self.by_pincode[
-                    pincode
-                ].add(row_index)
+                self.by_pincode[pincode].add(row_index)
 
             if city:
-                self.by_city[
-                    city
-                ].add(row_index)
+                self.by_city[city].add(row_index)
 
-            state = components.get(
-                "state"
-            )
+            state = components.get("state")
 
             if state:
-                self.by_state[
-                    state
-                ].add(row_index)
+                self.by_state[state].add(row_index)
 
             if pincode and city:
-                self.by_pincode_city[
-                    (pincode, city)
-                ].add(row_index)
+                self.by_pincode_city[(pincode, city)].add(row_index)
 
             if city and state:
-                self.by_city_state[
-                    (city, state)
-                ].add(row_index)
+                self.by_city_state[(city, state)].add(row_index)
 
-            for token in self._tokens(
-                canonical
-            ):
-                self.token_index[
-                    token
-                ].add(row_index)
+            for token in self._tokens(canonical):
+                self.token_index[token].add(row_index)
 
     # ========================================================================
     # CANONICAL ADDRESS PARSING
@@ -615,27 +491,15 @@ class AddressNormalizerService:
         city: str,
         pincode: str,
     ) -> dict[str, str | None]:
-        text = self._expand(
-            self._basic(canonical)
-        )
+        text = self._expand(self._basic(canonical))
 
-        house = self._extract_house(
-            text
-        )
+        house = self._extract_house(text)
 
-        detected_city = (
-            city
-            or self._detect_city(text)
-        )
+        detected_city = city or self._detect_city(text)
 
-        state = self._detect_state(
-            text
-        )
+        state = self._detect_state(text)
 
-        detected_pin = (
-            pincode
-            or self._extract_pincode(text)
-        )
+        detected_pin = pincode or self._extract_pincode(text)
 
         segments = [
             self._basic(segment)
@@ -646,9 +510,7 @@ class AddressNormalizerService:
             if self._basic(segment)
         ]
 
-        street = self._extract_street(
-            text
-        )
+        street = self._extract_street(text)
 
         residual = text
 
@@ -693,10 +555,7 @@ class AddressNormalizerService:
             }
 
             for segment in segments:
-                if (
-                    not segment
-                    or segment in excluded
-                ):
+                if not segment or segment in excluded:
                     continue
 
                 if re.fullmatch(
@@ -714,15 +573,9 @@ class AddressNormalizerService:
             "street": street,
             "area": area,
             "landmark": None,
-            "city": (
-                detected_city
-                or None
-            ),
+            "city": (detected_city or None),
             "district": None,
-            "state": (
-                state
-                or None
-            ),
+            "state": (state or None),
             "country": (
                 "india"
                 if re.search(
@@ -731,10 +584,7 @@ class AddressNormalizerService:
                 )
                 else None
             ),
-            "pincode": (
-                detected_pin
-                or None
-            ),
+            "pincode": (detected_pin or None),
         }
 
     # ========================================================================
@@ -782,51 +632,33 @@ Rules:
 
         try:
             async with ADDRESS_LLM_SEMAPHORE:
-                response = (
-                    await self.client.chat.completions.create(
-                        model=self.model,
-                        messages=[
-                            {
-                                "role": "system",
-                                "content": (
-                                    "You are a high-precision "
-                                    "Indian postal-address "
-                                    "information extraction "
-                                    "system. Return valid JSON only."
-                                ),
-                            },
-                            {
-                                "role": "user",
-                                "content": prompt,
-                            },
-                        ],
-                        response_format={
-                            "type": "json_object"
+                response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a high-precision "
+                                "Indian postal-address "
+                                "information extraction "
+                                "system. Return valid JSON only."
+                            ),
                         },
-                        temperature=0.0,
-                        max_tokens=300,
-                    )
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        },
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.0,
+                    max_tokens=300,
                 )
 
-            content = (
-                response
-                .choices[0]
-                .message
-                .content
-                or ""
-            )
+            content = response.choices[0].message.content or ""
 
-            parsed = json.loads(
-                self._strip_code_fence(
-                    content
-                )
-            )
+            parsed = json.loads(self._strip_code_fence(content))
 
-            return (
-                parsed
-                if isinstance(parsed, dict)
-                else None
-            )
+            return parsed if isinstance(parsed, dict) else None
 
         except Exception:
             # Extraction must gracefully fall back to deterministic parsing.
@@ -840,29 +672,17 @@ Rules:
         self,
         raw_address: str,
     ) -> dict[str, Any]:
-        text = self._expand(
-            self._basic(raw_address)
-        )
+        text = self._expand(self._basic(raw_address))
 
         components = {
-            "house_no": self._extract_house(
-                text
-            ),
+            "house_no": self._extract_house(text),
             "building": None,
-            "street": self._extract_street(
-                text
-            ),
+            "street": self._extract_street(text),
             "area": None,
             "landmark": None,
-            "city": (
-                self._detect_city(text)
-                or None
-            ),
+            "city": (self._detect_city(text) or None),
             "district": None,
-            "state": (
-                self._detect_state(text)
-                or None
-            ),
+            "state": (self._detect_state(text) or None),
             "country": (
                 "india"
                 if re.search(
@@ -871,10 +691,7 @@ Rules:
                 )
                 else None
             ),
-            "pincode": (
-                self._extract_pincode(text)
-                or None
-            ),
+            "pincode": (self._extract_pincode(text) or None),
         }
 
         residual = text
@@ -899,20 +716,16 @@ Rules:
             residual,
         ).strip()
 
-        components["area"] = (
-            self._derive_area(
-                residual=residual,
-                street=components["street"],
-            )
+        components["area"] = self._derive_area(
+            residual=residual,
+            street=components["street"],
         )
 
-        components["building"] = (
-            self._derive_building(
-                residual=residual,
-                street=components["street"],
-                area=components["area"],
-                house_no=components["house_no"],
-            )
+        components["building"] = self._derive_building(
+            residual=residual,
+            street=components["street"],
+            area=components["area"],
+            house_no=components["house_no"],
         )
 
         return components
@@ -925,31 +738,17 @@ Rules:
         self,
         components: dict[str, Any],
     ) -> tuple[list[int], str]:
-        pincode = self._clean_pincode(
-            components.get("pincode")
-        )
+        pincode = self._clean_pincode(components.get("pincode"))
 
-        city = self._canonical_city(
-            str(
-                components.get("city")
-                or ""
-            )
-        )
+        city = self._canonical_city(str(components.get("city") or ""))
 
-        state = self._canonical_state(
-            str(
-                components.get("state")
-                or ""
-            )
-        )
+        state = self._canonical_state(str(components.get("state") or ""))
 
         # Strongest: pincode + city.
         if pincode and city:
-            candidates = (
-                self.by_pincode_city.get(
-                    (pincode, city),
-                    set(),
-                )
+            candidates = self.by_pincode_city.get(
+                (pincode, city),
+                set(),
             )
 
             if candidates:
@@ -960,11 +759,9 @@ Rules:
 
         # Next: exact pincode.
         if pincode:
-            candidates = (
-                self.by_pincode.get(
-                    pincode,
-                    set(),
-                )
+            candidates = self.by_pincode.get(
+                pincode,
+                set(),
             )
 
             if candidates:
@@ -975,11 +772,9 @@ Rules:
 
         # Next: city + state.
         if city and state:
-            candidates = (
-                self.by_city_state.get(
-                    (city, state),
-                    set(),
-                )
+            candidates = self.by_city_state.get(
+                (city, state),
+                set(),
             )
 
             if candidates:
@@ -1002,9 +797,7 @@ Rules:
                 )
 
         # Token retrieval for incomplete addresses.
-        query_tokens = self._query_tokens(
-            components
-        )
+        query_tokens = self._query_tokens(components)
 
         ranked_tokens = sorted(
             query_tokens,
@@ -1025,9 +818,7 @@ Rules:
                 for token in ranked_tokens
             ]
 
-            intersection = set(
-                token_sets[0]
-            )
+            intersection = set(token_sets[0])
 
             for values in token_sets[1:]:
                 intersection &= values
@@ -1038,9 +829,7 @@ Rules:
                     "token_intersection",
                 )
 
-            union = set().union(
-                *token_sets
-            )
+            union = set().union(*token_sets)
 
             if union:
                 return (
@@ -1050,11 +839,7 @@ Rules:
 
         # Last resort only.
         return (
-            list(
-                range(
-                    len(self.records)
-                )
-            ),
+            list(range(len(self.records))),
             "full_scan_fallback",
         )
 
@@ -1072,19 +857,15 @@ Rules:
         for index in candidate_indexes:
             record = self.records[index]
 
-            score, field_scores, exact_fields = (
-                self._score_components(
-                    query=query,
-                    candidate=record["components"],
-                )
+            score, field_scores, exact_fields = self._score_components(
+                query=query,
+                candidate=record["components"],
             )
 
             results.append(
                 {
                     "address_id": record["address_id"],
-                    "canonical_address": (
-                        record["canonical_address"]
-                    ),
+                    "canonical_address": (record["canonical_address"]),
                     "score": score,
                     "matched_fields": field_scores,
                     "exact_fields": exact_fields,
@@ -1095,9 +876,7 @@ Rules:
         results.sort(
             key=lambda item: (
                 item["score"],
-                len(
-                    item["exact_fields"]
-                ),
+                len(item["exact_fields"]),
             ),
             reverse=True,
         )
@@ -1127,10 +906,7 @@ Rules:
             left = query.get(field)
             right = candidate.get(field)
 
-            if (
-                self._missing(left)
-                or self._missing(right)
-            ):
+            if self._missing(left) or self._missing(right):
                 continue
 
             left = self._field_normalize(
@@ -1146,12 +922,10 @@ Rules:
             if not left or not right:
                 continue
 
-            similarity = (
-                self._field_similarity(
-                    field,
-                    left,
-                    right,
-                )
+            similarity = self._field_similarity(
+                field,
+                left,
+                right,
             )
 
             field_scores[field] = round(
@@ -1159,16 +933,12 @@ Rules:
                 4,
             )
 
-            weighted_sum += (
-                weight * similarity
-            )
+            weighted_sum += weight * similarity
 
             active_weight += weight
 
             if similarity >= 0.999:
-                exact_fields.append(
-                    field
-                )
+                exact_fields.append(field)
 
         if active_weight == 0:
             return (
@@ -1178,10 +948,7 @@ Rules:
             )
 
         # Renormalize when some fields are missing.
-        score = (
-            weighted_sum
-            / active_weight
-        )
+        score = weighted_sum / active_weight
 
         strong_exact = sum(
             field in exact_fields
@@ -1222,11 +989,9 @@ Rules:
         if field == "pincode":
             return 0.0
 
-        token_score = (
-            self._token_similarity(
-                left,
-                right,
-            )
+        token_score = self._token_similarity(
+            left,
+            right,
         )
 
         # Strong categorical/location fields.
@@ -1238,25 +1003,16 @@ Rules:
         }:
             return token_score
 
-        ngram_score = (
-            self._ngram_similarity(
-                left,
-                right,
-            )
+        ngram_score = self._ngram_similarity(
+            left,
+            right,
         )
 
-        containment = float(
-            left in right
-            or right in left
-        )
+        containment = float(left in right or right in left)
 
         return min(
             1.0,
-            (
-                0.55 * token_score
-                + 0.30 * ngram_score
-                + 0.15 * containment
-            ),
+            (0.55 * token_score + 0.30 * ngram_score + 0.15 * containment),
         )
 
     # ========================================================================
@@ -1281,11 +1037,7 @@ Rules:
             )
 
         strong_field_count = sum(
-            bool(
-                components.get(
-                    field
-                )
-            )
+            bool(components.get(field))
             for field in (
                 "pincode",
                 "city",
@@ -1316,46 +1068,30 @@ Rules:
         self,
         components: dict[str, Any] | None,
     ) -> dict[str, Any]:
-        result = {
-            field: None
-            for field in FIELD_WEIGHTS
-        }
+        result = {field: None for field in FIELD_WEIGHTS}
 
-        for key, value in (
-            components or {}
-        ).items():
+        for key, value in (components or {}).items():
             field = ALIASES.get(
                 key,
                 key,
             )
 
-            if (
-                field not in result
-                or self._missing(value)
-            ):
+            if field not in result or self._missing(value):
                 continue
 
             text = str(value).strip()
 
             if field == "pincode":
-                text = self._clean_pincode(
-                    text
-                )
+                text = self._clean_pincode(text)
 
             elif field == "city":
-                text = self._canonical_city(
-                    text
-                )
+                text = self._canonical_city(text)
 
             elif field == "state":
-                text = self._canonical_state(
-                    text
-                )
+                text = self._canonical_state(text)
 
             elif field == "country":
-                normalized = self._basic(
-                    text
-                )
+                normalized = self._basic(text)
 
                 text = (
                     "india"
@@ -1369,18 +1105,12 @@ Rules:
                 )
 
             elif field == "house_no":
-                text = self._canonical_house(
-                    text
-                )
+                text = self._canonical_house(text)
 
             else:
-                text = self._expand(
-                    self._basic(text)
-                )
+                text = self._expand(self._basic(text))
 
-            result[field] = (
-                text or None
-            )
+            result[field] = text or None
 
         return result
 
@@ -1389,29 +1119,19 @@ Rules:
         field: str,
         value: Any,
     ) -> str:
-        text = str(
-            value or ""
-        ).strip()
+        text = str(value or "").strip()
 
         if field == "pincode":
-            return self._clean_pincode(
-                text
-            )
+            return self._clean_pincode(text)
 
         if field == "city":
-            return self._canonical_city(
-                text
-            )
+            return self._canonical_city(text)
 
         if field == "state":
-            return self._canonical_state(
-                text
-            )
+            return self._canonical_state(text)
 
         if field == "country":
-            normalized = self._basic(
-                text
-            )
+            normalized = self._basic(text)
 
             return (
                 "india"
@@ -1425,13 +1145,9 @@ Rules:
             )
 
         if field == "house_no":
-            return self._canonical_house(
-                text
-            )
+            return self._canonical_house(text)
 
-        return self._expand(
-            self._basic(text)
-        )
+        return self._expand(self._basic(text))
 
     # ========================================================================
     # EXTRACTION HELPERS
@@ -1471,25 +1187,17 @@ Rules:
             text,
         )
 
-        return (
-            match.group(1)
-            if match
-            else ""
-        )
+        return match.group(1) if match else ""
 
     def _detect_city(
         self,
         text: str,
     ) -> str:
-        normalized = self._basic(
-            text
-        )
+        normalized = self._basic(text)
 
         for alias, canonical in sorted(
             CITY_ALIASES.items(),
-            key=lambda item: len(
-                item[0]
-            ),
+            key=lambda item: len(item[0]),
             reverse=True,
         ):
             if re.search(
@@ -1504,15 +1212,11 @@ Rules:
         self,
         text: str,
     ) -> str:
-        normalized = self._basic(
-            text
-        )
+        normalized = self._basic(text)
 
         for alias, canonical in sorted(
             STATE_ALIASES.items(),
-            key=lambda item: len(
-                item[0]
-            ),
+            key=lambda item: len(item[0]),
             reverse=True,
         ):
             if re.search(
@@ -1539,13 +1243,7 @@ Rules:
         }
 
         marker_index = next(
-            (
-                index
-                for index, word in enumerate(
-                    words
-                )
-                if word in markers
-            ),
+            (index for index, word in enumerate(words) if word in markers),
             None,
         )
 
@@ -1557,17 +1255,12 @@ Rules:
             marker_index - 2,
         )
 
-        selected = words[
-            start : marker_index + 1
-        ]
+        selected = words[start : marker_index + 1]
 
         # Do not let a leading house number become part of street.
-        if (
-            selected
-            and re.fullmatch(
-                r"[a-z]?\d+[a-z]?",
-                selected[0],
-            )
+        if selected and re.fullmatch(
+            r"[a-z]?\d+[a-z]?",
+            selected[0],
         ):
             selected = selected[1:]
 
@@ -1577,11 +1270,7 @@ Rules:
         }:
             selected = selected[1:]
 
-        return (
-            " ".join(selected)
-            if selected
-            else None
-        )
+        return " ".join(selected) if selected else None
 
     def _derive_area(
         self,
@@ -1596,11 +1285,15 @@ Rules:
                 " ",
             )
 
-        words = re.sub(
-            r"\s+",
-            " ",
-            text,
-        ).strip().split()
+        words = (
+            re.sub(
+                r"\s+",
+                " ",
+                text,
+            )
+            .strip()
+            .split()
+        )
 
         if not words:
             return None
@@ -1613,20 +1306,12 @@ Rules:
             "phase",
         ):
             if marker in words:
-                index = words.index(
-                    marker
-                )
+                index = words.index(marker)
 
-                return " ".join(
-                    words[
-                        index : index + 2
-                    ]
-                )
+                return " ".join(words[index : index + 2])
 
         if len(words) >= 2:
-            return " ".join(
-                words[-2:]
-            )
+            return " ".join(words[-2:])
 
         return words[0]
 
@@ -1656,11 +1341,7 @@ Rules:
             text,
         ).strip()
 
-        return (
-            text[:120]
-            if text
-            else None
-        )
+        return text[:120] if text else None
 
     # ========================================================================
     # TOKEN / SIMILARITY HELPERS
@@ -1672,18 +1353,9 @@ Rules:
     ) -> set[str]:
         tokens: set[str] = set()
 
-        for field, value in (
-            components.items()
-        ):
-            if (
-                value
-                and field != "pincode"
-            ):
-                tokens.update(
-                    self._tokens(
-                        str(value)
-                    )
-                )
+        for field, value in components.items():
+            if value and field != "pincode":
+                tokens.update(self._tokens(str(value)))
 
         return tokens
 
@@ -1691,9 +1363,7 @@ Rules:
         self,
         text: str,
     ) -> set[str]:
-        normalized = self._expand(
-            self._basic(text)
-        )
+        normalized = self._expand(self._basic(text))
 
         return {
             token
@@ -1717,34 +1387,16 @@ Rules:
         left: str,
         right: str,
     ) -> float:
-        left_tokens = self._tokens(
-            left
-        )
+        left_tokens = self._tokens(left)
 
-        right_tokens = self._tokens(
-            right
-        )
+        right_tokens = self._tokens(right)
 
-        if (
-            not left_tokens
-            or not right_tokens
-        ):
+        if not left_tokens or not right_tokens:
             return 0.0
 
-        union = (
-            left_tokens
-            | right_tokens
-        )
+        union = left_tokens | right_tokens
 
-        return (
-            len(
-                left_tokens
-                & right_tokens
-            )
-            / len(union)
-            if union
-            else 0.0
-        )
+        return len(left_tokens & right_tokens) / len(union) if union else 0.0
 
     def _ngram_similarity(
         self,
@@ -1752,51 +1404,23 @@ Rules:
         right: str,
         n: int = 3,
     ) -> float:
-        left = self._basic(
-            left
-        ).replace(" ", "")
+        left = self._basic(left).replace(" ", "")
 
-        right = self._basic(
-            right
-        ).replace(" ", "")
+        right = self._basic(right).replace(" ", "")
 
         if left == right:
             return 1.0
 
-        if (
-            len(left) < n
-            or len(right) < n
-        ):
+        if len(left) < n or len(right) < n:
             return 0.0
 
-        left_ngrams = {
-            left[index : index + n]
-            for index in range(
-                len(left) - n + 1
-            )
-        }
+        left_ngrams = {left[index : index + n] for index in range(len(left) - n + 1)}
 
-        right_ngrams = {
-            right[index : index + n]
-            for index in range(
-                len(right) - n + 1
-            )
-        }
+        right_ngrams = {right[index : index + n] for index in range(len(right) - n + 1)}
 
-        union = (
-            left_ngrams
-            | right_ngrams
-        )
+        union = left_ngrams | right_ngrams
 
-        return (
-            len(
-                left_ngrams
-                & right_ngrams
-            )
-            / len(union)
-            if union
-            else 0.0
-        )
+        return len(left_ngrams & right_ngrams) / len(union) if union else 0.0
 
     # ========================================================================
     # CANONICALIZATION
@@ -1806,9 +1430,7 @@ Rules:
         self,
         value: str,
     ) -> str:
-        text = self._basic(
-            value
-        )
+        text = self._basic(value)
 
         return CITY_ALIASES.get(
             text,
@@ -1819,9 +1441,7 @@ Rules:
         self,
         value: str,
     ) -> str:
-        text = self._basic(
-            value
-        )
+        text = self._basic(value)
 
         return STATE_ALIASES.get(
             text,
@@ -1832,13 +1452,10 @@ Rules:
         self,
         value: str,
     ) -> str:
-        text = self._basic(
-            value
-        )
+        text = self._basic(value)
 
         return re.sub(
-            r"^(?:flat|apartment|house number|"
-            r"house no|house|hno|plot)\s+",
+            r"^(?:flat|apartment|house number|" r"house no|house|hno|plot)\s+",
             "",
             text,
         ).strip()
@@ -1847,14 +1464,9 @@ Rules:
     def _clean_pincode(
         value: Any,
     ) -> str:
-        text = str(
-            value or ""
-        ).strip()
+        text = str(value or "").strip()
 
-        if (
-            text.endswith(".0")
-            and text[:-2].isdigit()
-        ):
+        if text.endswith(".0") and text[:-2].isdigit():
             text = text[:-2]
 
         match = re.search(
@@ -1862,21 +1474,13 @@ Rules:
             text,
         )
 
-        return (
-            match.group(1)
-            if match
-            else ""
-        )
+        return match.group(1) if match else ""
 
     @staticmethod
     def _basic(
         text: str,
     ) -> str:
-        text = (
-            str(text or "")
-            .lower()
-            .replace("&", " and ")
-        )
+        text = str(text or "").lower().replace("&", " and ")
 
         text = re.sub(
             r"[^a-z0-9\s]",
@@ -1906,9 +1510,7 @@ Rules:
                 result,
             )
 
-        return self._basic(
-            result
-        )
+        return self._basic(result)
 
     @staticmethod
     def _strip_code_fence(
@@ -1954,9 +1556,7 @@ Rules:
         ]
 
         return ", ".join(
-            str(
-                components[field]
-            ).strip()
+            str(components[field]).strip()
             for field in field_order
             if components.get(field)
         )
@@ -1966,24 +1566,14 @@ Rules:
         match: dict[str, Any],
     ) -> dict[str, Any]:
         return {
-            "address_id": match[
-                "address_id"
-            ],
-            "canonical_address": match[
-                "canonical_address"
-            ],
+            "address_id": match["address_id"],
+            "canonical_address": match["canonical_address"],
             "score": round(
-                float(
-                    match["score"]
-                ),
+                float(match["score"]),
                 3,
             ),
-            "matched_fields": match[
-                "matched_fields"
-            ],
-            "exact_fields": match[
-                "exact_fields"
-            ],
+            "matched_fields": match["matched_fields"],
+            "exact_fields": match["exact_fields"],
         }
 
     @staticmethod
@@ -2002,6 +1592,4 @@ Rules:
         ):
             pass
 
-        return not str(
-            value
-        ).strip()
+        return not str(value).strip()

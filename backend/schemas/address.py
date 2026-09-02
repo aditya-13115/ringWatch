@@ -79,12 +79,8 @@ class AddressMatch(BaseModel):
         ge=0.0,
         le=1.0,
     )
-    matched_fields: dict[str, float] = Field(
-        default_factory=dict
-    )
-    exact_fields: list[str] = Field(
-        default_factory=list
-    )
+    matched_fields: dict[str, float] = Field(default_factory=dict)
+    exact_fields: list[str] = Field(default_factory=list)
 
 
 class AddressExtractResponse(BaseModel):
@@ -107,17 +103,13 @@ class AddressVerifyResponse(BaseModel):
 
     components: AddressComponents
 
-    matches: list[AddressMatch] = Field(
-        default_factory=list
-    )
+    matches: list[AddressMatch] = Field(default_factory=list)
 
     candidate_count: int = 0
 
     matching_strategy: str = "structured"
 
-    review_reasons: list[str] = Field(
-        default_factory=list
-    )
+    review_reasons: list[str] = Field(default_factory=list)
 
 
 class AddressNormalizeResponse(AddressVerifyResponse):

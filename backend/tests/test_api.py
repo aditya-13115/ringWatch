@@ -28,9 +28,7 @@ def test_ready():
         response = client.get("/ready")
 
         assert response.status_code == 200
-        assert response.json()[
-            "data_store_initialized"
-        ] is True
+        assert response.json()["data_store_initialized"] is True
 
 
 def test_queue():
@@ -42,48 +40,31 @@ def test_queue():
         data = response.json()
 
         assert data["total"] > 0
-        assert (
-            0
-            < len(data["accounts"])
-            <= data["total"]
-        )
+        assert 0 < len(data["accounts"]) <= data["total"]
 
 
 def test_account_detail_valid():
     with TestClient(app) as client:
-        account_id = get_first_account_id(
-            client
-        )
+        account_id = get_first_account_id(client)
 
-        response = client.get(
-            f"/api/accounts/{account_id}"
-        )
+        response = client.get(f"/api/accounts/{account_id}")
 
         assert response.status_code == 200
-        assert (
-            response.json()["account_id"]
-            == account_id
-        )
+        assert response.json()["account_id"] == account_id
 
 
 def test_account_detail_not_found():
     with TestClient(app) as client:
-        response = client.get(
-            "/api/accounts/UNKNOWN"
-        )
+        response = client.get("/api/accounts/UNKNOWN")
 
         assert response.status_code == 404
 
 
 def test_graph_valid():
     with TestClient(app) as client:
-        account_id = get_first_account_id(
-            client
-        )
+        account_id = get_first_account_id(client)
 
-        response = client.get(
-            f"/api/accounts/{account_id}/graph"
-        )
+        response = client.get(f"/api/accounts/{account_id}/graph")
 
         assert response.status_code == 200
 
@@ -95,13 +76,9 @@ def test_graph_valid():
 
 def test_evidence_valid():
     with TestClient(app) as client:
-        account_id = get_first_account_id(
-            client
-        )
+        account_id = get_first_account_id(client)
 
-        response = client.get(
-            f"/api/accounts/{account_id}/evidence"
-        )
+        response = client.get(f"/api/accounts/{account_id}/evidence")
 
         assert response.status_code == 200
         assert "fields" in response.json()
@@ -109,13 +86,9 @@ def test_evidence_valid():
 
 def test_report_valid():
     with TestClient(app) as client:
-        account_id = get_first_account_id(
-            client
-        )
+        account_id = get_first_account_id(client)
 
-        response = client.get(
-            f"/api/accounts/{account_id}/report"
-        )
+        response = client.get(f"/api/accounts/{account_id}/report")
 
         assert response.status_code == 200
         assert "case_report_text" in response.json()
@@ -123,19 +96,13 @@ def test_report_valid():
 
 def test_action_valid():
     with TestClient(app) as client:
-        account_id = get_first_account_id(
-            client
-        )
+        account_id = get_first_account_id(client)
 
-        response = client.get(
-            f"/api/accounts/{account_id}/action"
-        )
+        response = client.get(f"/api/accounts/{account_id}/action")
 
         assert response.status_code == 200
 
-        assert response.json()[
-            "risk_tier"
-        ] in {
+        assert response.json()["risk_tier"] in {
             "CRITICAL",
             "HIGH",
             "MEDIUM",
@@ -145,9 +112,7 @@ def test_action_valid():
 
 def test_audit():
     with TestClient(app) as client:
-        response = client.get(
-            "/api/audit"
-        )
+        response = client.get("/api/audit")
 
         assert response.status_code == 200
         assert "records" in response.json()
@@ -155,9 +120,7 @@ def test_audit():
 
 def test_metrics():
     with TestClient(app) as client:
-        response = client.get(
-            "/api/metrics"
-        )
+        response = client.get("/api/metrics")
 
         assert response.status_code == 200
         assert "model_metrics" in response.json()
@@ -165,15 +128,10 @@ def test_metrics():
 
 def test_failure_demo():
     with TestClient(app) as client:
-        response = client.post(
-            "/api/failure-demo"
-        )
+        response = client.post("/api/failure-demo")
 
         assert response.status_code == 200
-        assert (
-            response.json()["status"]
-            == "GRACEFUL_FAILURE_HANDLED"
-        )
+        assert response.json()["status"] == "GRACEFUL_FAILURE_HANDLED"
 
 
 # ============================================================================
@@ -187,9 +145,7 @@ def test_address_extract_returns_structured_components():
             "/api/address/extract",
             json={
                 "raw_address": (
-                    "Flat 654, Kale St, "
-                    "Sector 50, Bangalore, "
-                    "Karnataka 560779"
+                    "Flat 654, Kale St, " "Sector 50, Bangalore, " "Karnataka 560779"
                 )
             },
         )
@@ -200,9 +156,7 @@ def test_address_extract_returns_structured_components():
 
         assert data["raw_address"]
 
-        assert data[
-            "extraction_source"
-        ] in {
+        assert data["extraction_source"] in {
             "llm_structured",
             "deterministic_structured",
         }
@@ -222,9 +176,7 @@ def test_address_extract_returns_structured_components():
             "pincode",
         }
 
-        assert set(
-            components.keys()
-        ) == expected_fields
+        assert set(components.keys()) == expected_fields
 
 
 def test_address_extract_does_not_return_matching_results():
@@ -237,12 +189,7 @@ def test_address_extract_does_not_return_matching_results():
     with TestClient(app) as client:
         response = client.post(
             "/api/address/extract",
-            json={
-                "raw_address": (
-                    "654 Kale St, "
-                    "Bangalore 560779"
-                )
-            },
+            json={"raw_address": ("654 Kale St, " "Bangalore 560779")},
         )
 
         assert response.status_code == 200
@@ -276,31 +223,20 @@ def test_address_verify_accepts_manual_components():
 
         data = response.json()
 
-        assert data["components"][
-            "city"
-        ] == "bengaluru"
+        assert data["components"]["city"] == "bengaluru"
 
-        assert data["components"][
-            "state"
-        ] == "karnataka"
+        assert data["components"]["state"] == "karnataka"
 
-        assert data["components"][
-            "pincode"
-        ] == "560779"
+        assert data["components"]["pincode"] == "560779"
 
         assert isinstance(
             data["matches"],
             list,
         )
 
-        assert (
-            len(data["matches"])
-            <= 3
-        )
+        assert len(data["matches"]) <= 3
 
-        assert 0 <= data[
-            "confidence"
-        ] <= 1
+        assert 0 <= data["confidence"] <= 1
 
         assert isinstance(
             data["review_reasons"],
@@ -313,10 +249,7 @@ def test_address_verify_returns_top_three_or_fewer():
         response = client.post(
             "/api/address/verify",
             json={
-                "raw_address": (
-                    "654 Kale St, "
-                    "Bangalore 560779"
-                ),
+                "raw_address": ("654 Kale St, " "Bangalore 560779"),
                 "components": {
                     "house_no": "654",
                     "street": "Kale Street",
@@ -330,43 +263,24 @@ def test_address_verify_returns_top_three_or_fewer():
 
         data = response.json()
 
-        assert (
-            0
-            <= len(data["matches"])
-            <= 3
-        )
+        assert 0 <= len(data["matches"]) <= 3
 
-        assert (
-            data["candidate_count"]
-            >= 0
-        )
+        assert data["candidate_count"] >= 0
 
-        for match in data[
-            "matches"
-        ]:
-            assert match[
-                "address_id"
-            ]
+        for match in data["matches"]:
+            assert match["address_id"]
 
-            assert match[
-                "canonical_address"
-            ]
+            assert match["canonical_address"]
 
-            assert 0 <= match[
-                "score"
-            ] <= 1
+            assert 0 <= match["score"] <= 1
 
             assert isinstance(
-                match[
-                    "matched_fields"
-                ],
+                match["matched_fields"],
                 dict,
             )
 
             assert isinstance(
-                match[
-                    "exact_fields"
-                ],
+                match["exact_fields"],
                 list,
             )
 
@@ -389,60 +303,29 @@ def test_address_verify_missing_pincode_requests_review():
 
         data = response.json()
 
-        assert (
-            data[
-                "requires_human_review"
-            ]
-            is True
-        )
+        assert data["requires_human_review"] is True
 
-        assert any(
-            "pincode"
-            in reason.lower()
-            for reason in data[
-                "review_reasons"
-            ]
-        )
+        assert any("pincode" in reason.lower() for reason in data["review_reasons"])
 
 
 def test_address_verify_empty_components_requests_review():
     with TestClient(app) as client:
         response = client.post(
             "/api/address/verify",
-            json={
-                "components": {}
-            },
+            json={"components": {}},
         )
 
         assert response.status_code == 200
 
         data = response.json()
 
-        assert (
-            data[
-                "requires_human_review"
-            ]
-            is True
-        )
+        assert data["requires_human_review"] is True
 
-        assert (
-            data[
-                "candidate_address_id"
-            ]
-            is None
-        )
+        assert data["candidate_address_id"] is None
 
-        assert data[
-            "matches"
-        ] == []
+        assert data["matches"] == []
 
-        assert any(
-            "component"
-            in reason.lower()
-            for reason in data[
-                "review_reasons"
-            ]
-        )
+        assert any("component" in reason.lower() for reason in data["review_reasons"])
 
 
 def test_address_verify_normalizes_location_aliases():
@@ -462,17 +345,11 @@ def test_address_verify_normalizes_location_aliases():
 
         data = response.json()
 
-        assert data[
-            "components"
-        ]["city"] == "bengaluru"
+        assert data["components"]["city"] == "bengaluru"
 
-        assert data[
-            "components"
-        ]["state"] == "karnataka"
+        assert data["components"]["state"] == "karnataka"
 
-        assert data[
-            "components"
-        ]["pincode"] == "560779"
+        assert data["components"]["pincode"] == "560779"
 
 
 def test_address_normalize_legacy_endpoint_still_works():
@@ -481,9 +358,7 @@ def test_address_normalize_legacy_endpoint_still_works():
             "/api/address/normalize",
             json={
                 "raw_address": (
-                    "654 Kale St, "
-                    "Sector 50, Bangalore, "
-                    "Karnataka 560779"
+                    "654 Kale St, " "Sector 50, Bangalore, " "Karnataka 560779"
                 )
             },
         )
@@ -506,9 +381,7 @@ def test_address_normalize_with_reviewed_components():
         response = client.post(
             "/api/address/normalize",
             json={
-                "raw_address": (
-                    "user supplied address"
-                ),
+                "raw_address": ("user supplied address"),
                 "components": {
                     "house_no": "654",
                     "street": "Kale St",
@@ -525,31 +398,20 @@ def test_address_normalize_with_reviewed_components():
 
         data = response.json()
 
-        assert data[
-            "components"
-        ]["city"] == "bengaluru"
+        assert data["components"]["city"] == "bengaluru"
 
-        assert data[
-            "components"
-        ]["state"] == "karnataka"
+        assert data["components"]["state"] == "karnataka"
 
-        assert data[
-            "components"
-        ]["pincode"] == "560779"
+        assert data["components"]["pincode"] == "560779"
 
-        assert (
-            len(data["matches"])
-            <= 3
-        )
+        assert len(data["matches"]) <= 3
 
 
 def test_address_extract_rejects_too_short_input():
     with TestClient(app) as client:
         response = client.post(
             "/api/address/extract",
-            json={
-                "raw_address": "ab"
-            },
+            json={"raw_address": "ab"},
         )
 
         assert response.status_code == 422
@@ -559,10 +421,7 @@ def test_address_verify_requires_components_object():
     with TestClient(app) as client:
         response = client.post(
             "/api/address/verify",
-            json={
-                "raw_address":
-                    "some address"
-            },
+            json={"raw_address": "some address"},
         )
 
         assert response.status_code == 422
@@ -572,9 +431,7 @@ def test_address_normalize_rejects_too_short_input():
     with TestClient(app) as client:
         response = client.post(
             "/api/address/normalize",
-            json={
-                "raw_address": "ab"
-            },
+            json={"raw_address": "ab"},
         )
 
         assert response.status_code == 422
@@ -584,20 +441,12 @@ def test_address_normalize_unresolved():
     with TestClient(app) as client:
         response = client.post(
             "/api/address/normalize",
-            json={
-                "raw_address":
-                    "some random address"
-            },
+            json={"raw_address": "some random address"},
         )
 
         assert response.status_code == 200
 
-        assert (
-            response.json()[
-                "requires_human_review"
-            ]
-            is True
-        )
+        assert response.json()["requires_human_review"] is True
 
 
 # ============================================================================
@@ -607,13 +456,9 @@ def test_address_normalize_unresolved():
 
 def test_timeline_valid():
     with TestClient(app) as client:
-        account_id = get_first_account_id(
-            client
-        )
+        account_id = get_first_account_id(client)
 
-        response = client.get(
-            f"/api/accounts/{account_id}/timeline"
-        )
+        response = client.get(f"/api/accounts/{account_id}/timeline")
 
         assert response.status_code == 200
 
@@ -628,13 +473,9 @@ def test_timeline_valid():
 
 def test_investigate_valid():
     with TestClient(app) as client:
-        account_id = get_first_account_id(
-            client
-        )
+        account_id = get_first_account_id(client)
 
-        response = client.post(
-            f"/api/accounts/{account_id}/investigate"
-        )
+        response = client.post(f"/api/accounts/{account_id}/investigate")
 
         assert response.status_code == 200
 
@@ -643,9 +484,7 @@ def test_investigate_valid():
         assert "summary" in data
         assert "recommended_action" in data
 
-        assert data[
-            "source"
-        ] in [
+        assert data["source"] in [
             "llm",
             "deterministic",
         ]
@@ -653,169 +492,85 @@ def test_investigate_valid():
 
 def test_failure_demo_razorpay():
     with TestClient(app) as client:
-        response = client.post(
-            "/api/failure-demo/razorpay-synthetic"
-        )
+        response = client.post("/api/failure-demo/razorpay-synthetic")
 
         assert response.status_code == 200
 
         data = response.json()
 
-        assert (
-            data["status"]
-            == "GRACEFUL_FAILURE_HANDLED"
-        )
+        assert data["status"] == "GRACEFUL_FAILURE_HANDLED"
 
-        assert (
-            data["source"]
-            == "razorpay_style_synthetic"
-        )
+        assert data["source"] == "razorpay_style_synthetic"
 
-        assert (
-            data["batch_size"]
-            == 100
-        )
+        assert data["batch_size"] == 100
 
-        assert (
-            data["malformed_rows"]
-            == 10
-        )
+        assert data["malformed_rows"] == 10
 
-        assert (
-            data["quarantined"]
-            == 10
-        )
+        assert data["quarantined"] == 10
 
-        assert (
-            data["valid_processed"]
-            == 90
-        )
+        assert data["valid_processed"] == 90
 
-        assert (
-            data["human_review_routed"]
-            == 10
-        )
+        assert data["human_review_routed"] == 10
 
-        assert (
-            data["safety"][
-                "malformed_entered_investigation_pipeline"
-            ]
-            is False
-        )
+        assert data["safety"]["malformed_entered_investigation_pipeline"] is False
 
-        assert (
-            data["safety"][
-                "quarantined_before_model_inference"
-            ]
-            is True
-        )
+        assert data["safety"]["quarantined_before_model_inference"] is True
 
-        assert (
-            data["safety"][
-                "human_review_required"
-            ]
-            is True
-        )
+        assert data["safety"]["human_review_required"] is True
 
 
 def test_feature_ablation_endpoint():
     with TestClient(app) as client:
-        response = client.get(
-            "/api/metrics/feature-ablation"
-        )
+        response = client.get("/api/metrics/feature-ablation")
 
         assert response.status_code == 200
 
         data = response.json()
 
-        assert (
-            data["model_version"]
-            == "LightGBM_Model_A_Tuned"
-        )
+        assert data["model_version"] == "LightGBM_Model_A_Tuned"
 
-        assert (
-            data["test_accounts"]
-            > 0
-        )
+        assert data["test_accounts"] > 0
 
-        assert len(
-            data["features"]
-        ) > 0
+        assert len(data["features"]) > 0
 
 
 def test_graph_overview_includes_community_and_strongest_relationship():
     with TestClient(app) as client:
-        queue = client.get(
-            "/api/queue?limit=1"
-        ).json()
+        queue = client.get("/api/queue?limit=1").json()
 
-        account_id = queue[
-            "accounts"
-        ][0]["account_id"]
+        account_id = queue["accounts"][0]["account_id"]
 
-        response = client.get(
-            f"/api/accounts/{account_id}"
-        )
+        response = client.get(f"/api/accounts/{account_id}")
 
         assert response.status_code == 200
 
-        evidence = response.json()[
-            "graph_evidence"
-        ]
+        evidence = response.json()["graph_evidence"]
 
-        assert (
-            "community_id"
-            in evidence
-        )
+        assert "community_id" in evidence
 
-        assert (
-            "strongest_edge_explanation"
-            in evidence
-        )
+        assert "strongest_edge_explanation" in evidence
 
-        assert evidence[
-            "strongest_edge_explanation"
-        ]
+        assert evidence["strongest_edge_explanation"]
 
 
 def test_audit_exposes_auditability_fields():
     with TestClient(app) as client:
-        response = client.get(
-            "/api/audit"
-        )
+        response = client.get("/api/audit")
 
         assert response.status_code == 200
 
-        records = response.json()[
-            "records"
-        ]
+        records = response.json()["records"]
 
         assert records
 
         record = records[0]
 
-        assert record[
-            "input_data_hash"
-        ]
+        assert record["input_data_hash"]
 
-        assert (
-            record[
-                "threshold_used"
-            ]
-            is not None
-        )
+        assert record["threshold_used"] is not None
 
-        assert (
-            "human_decision"
-            in record
-        )
+        assert "human_decision" in record
 
-        assert (
-            "outcome"
-            in record
-        )
+        assert "outcome" in record
 
-        assert (
-            "error_path"
-            in record
-        )
+        assert "error_path" in record

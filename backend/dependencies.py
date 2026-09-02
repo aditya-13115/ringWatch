@@ -109,9 +109,7 @@ def get_event_repo() -> EventRepository:
 
 @lru_cache
 def get_address_normalizer_service() -> AddressNormalizerService:
-    return AddressNormalizerService(
-        settings.addresses_path
-    )
+    return AddressNormalizerService(settings.addresses_path)
 
 
 def get_timeline_service() -> TimelineService:
